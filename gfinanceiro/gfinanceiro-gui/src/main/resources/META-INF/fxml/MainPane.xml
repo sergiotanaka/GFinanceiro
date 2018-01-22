@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import java.lang.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.textfield.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.geometry.*?>
+<?import javafx.collections.*?>
+<?import javafx.scene.control.cell.*?>
+<?import javafx.scene.control.cell.*?>
+<?import jfxtras.scene.control.*?>
+
+<fx:root type="javafx.scene.layout.BorderPane" xmlns:fx="http://javafx.com/fxml">
+	<top>
+		<MenuBar>
+			<menus>
+				<Menu text="Ações">
+					<items>
+						<MenuItem text="Lançamento" onAction="#onJournalEntry" />
+						<MenuItem text="Consultar histórico" onAction="#onListJournalEntry" />
+						<MenuItem text="Consultar resumo" onAction="#onListBalance" />
+						<MenuItem text="Planejamento" onAction="#onPlanning" />
+					</items>
+				</Menu>
+				<Menu text="Cadastro">
+					<items>
+						<MenuItem text="Contas" onAction="#onMaintAccount" />
+					</items>
+				</Menu>
+			</menus>
+		</MenuBar>
+	</top>
+	<center>
+		<!-- <StackPane> -->
+		<ImageView>
+			<image>
+				<Image url="@../images/real-cifrao.jpg" />
+			</image>
+		</ImageView>
+		<!-- </StackPane> -->
+	</center>
+</fx:root>

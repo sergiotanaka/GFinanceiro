@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import java.lang.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.textfield.*?>
+<?import javafx.geometry.*?>
+<?import javafx.collections.*?>
+<?import javafx.scene.control.cell.*?>
+<?import javafx.scene.control.cell.*?>
+<?import jfxtras.scene.control.*?>
+<?import org.pinguin.gf.gui.control.*?>
+
+<fx:root type="javafx.scene.layout.AnchorPane" xmlns:fx="http://javafx.com/fxml"
+	AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+	AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+	<children>
+		<VBox spacing="10">
+			<padding>
+				<Insets top="10" right="10" bottom="10" left="10" />
+			</padding>
+			<GridPane hgap="10" vgap="10" gridLinesVisible="false">
+				<columnConstraints>
+					<ColumnConstraints halignment="LEFT" />
+					<ColumnConstraints halignment="LEFT" />
+				</columnConstraints>
+
+				<Label text="Origem:" GridPane.rowIndex="0"
+					GridPane.columnIndex="0" />
+				<AutoCompleteComboBox fx:id="creditCombo" GridPane.rowIndex="0"
+					GridPane.columnIndex="1" />
+
+				<Label text="Destino:" GridPane.rowIndex="1"
+					GridPane.columnIndex="0" />
+				<AutoCompleteComboBox fx:id="debitCombo" GridPane.rowIndex="1"
+					GridPane.columnIndex="1" />
+
+				<Label text="Valor:" GridPane.rowIndex="2"
+					GridPane.columnIndex="0" />
+				<TextField fx:id="valueText" GridPane.rowIndex="2"
+					GridPane.columnIndex="1" />
+
+				<Label text="Data:" GridPane.rowIndex="3"
+					GridPane.columnIndex="0" />
+				<CalendarTextField fx:id="dateText"
+					GridPane.rowIndex="3" GridPane.columnIndex="1" />
+
+				<Label text="Descrição:" GridPane.rowIndex="4"
+					GridPane.columnIndex="0" />
+				<TextField fx:id="descriptionText" GridPane.rowIndex="4"
+					GridPane.columnIndex="1" />
+			</GridPane>
+			<HBox spacing="10" alignment="CENTER_RIGHT">
+				<Button text="Salvar" onAction="#save" />
+				<Button text="Cancelar" onAction="#cancel" />
+			</HBox>
+		</VBox>
+
+	</children>
+</fx:root>
