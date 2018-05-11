@@ -12,6 +12,7 @@
 		<module>gfinanceiro-facade</module>
 		<module>domain-core</module>
 		<module>gui-utils</module>
+		<module>gfinanceiro-service</module>
 	</modules>
 
 	<build>
