@@ -44,7 +44,7 @@ public class AccountList extends AnchorPane {
 			@Override
 			public void handle(KeyEvent evt) {
 				if (evt.getCode().equals(KeyCode.DELETE)) {
-					int result = Dialog.showQuestionDialog(null, "Confirma a exclusão do item?");
+					int result = Dialog.showQuestionDialog(null, "Confirma a exclusao do item?");
 					if (result >= 0) {
 						presenter.deleteAccount(accountTView.getSelectionModel().getSelectedItem());
 					}

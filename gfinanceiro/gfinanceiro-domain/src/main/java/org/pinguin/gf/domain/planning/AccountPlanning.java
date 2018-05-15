@@ -8,7 +8,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
-import javax.validation.constraints.NotNull;
 
 import org.pinguin.gf.domain.account.Account;
 
@@ -17,10 +16,8 @@ public class AccountPlanning {
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private Long id;
-	@NotNull
 	@OneToOne(fetch = FetchType.EAGER)
 	private Account account;
-	@NotNull
 	private BigDecimal value;
 
 	public Long getId() {

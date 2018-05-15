@@ -3,12 +3,10 @@ package org.pinguin.gf.domain.planning;
 import javax.persistence.Embeddable;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.validation.constraints.NotNull;
 
 @Embeddable
 public class MonthYear {
 	@Enumerated(EnumType.STRING)
-	@NotNull
 	private Month month;
 	private int year;
 

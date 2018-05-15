@@ -1,12 +1,7 @@
 package org.pinguin.gf.domain.account;
 
-import org.pinguin.core.domain.RepositoryBase;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public class AccountRepository extends RepositoryBase<Account, Long> {
-
-    @Override
-    protected Class<Account> getEntityType() {
-        return Account.class;
-    }
+public interface AccountRepository extends JpaRepository<Account, Long> {
 
 }

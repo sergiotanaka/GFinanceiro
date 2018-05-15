@@ -1,14 +1,10 @@
 package org.pinguin.gf.domain.account;
 
-import javax.inject.Inject;
 import javax.persistence.EntityManager;
 
-import com.google.inject.persist.Transactional;
-
-@Transactional(rollbackOn = { Exception.class, RuntimeException.class })
 public class BasicAccountsRepository {
 
-	@Inject
+	// @Inject
 	private EntityManager entityManager;
 
 	public BasicAccounts retrieve() {

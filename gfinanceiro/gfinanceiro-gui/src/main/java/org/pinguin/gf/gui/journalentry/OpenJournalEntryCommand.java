@@ -24,7 +24,7 @@ public class OpenJournalEntryCommand implements Function<OpenJournalEntryParam, 
 	public Void apply(OpenJournalEntryParam param) {
 
 		final Stage formStage = new Stage();
-		formStage.setTitle("Lançamento");
+		formStage.setTitle("Lancamento");
 		JournalEntryForm form = injector.getInstance(JournalEntryForm.class);
 		AccountService accService = injector.getInstance(AccountService.class);
 		List<AccountTO> accs = accService.retrieveAnalyticalAccounts();

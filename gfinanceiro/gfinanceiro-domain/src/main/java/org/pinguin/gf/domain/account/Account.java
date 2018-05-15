@@ -8,7 +8,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
-import javax.validation.constraints.NotNull;
 
 @Entity
 public class Account {
@@ -16,9 +15,7 @@ public class Account {
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private Long id;
-	@NotNull
 	private String name;
-	@NotNull
 	@Enumerated(EnumType.STRING)
 	private AccountNature nature;
 	@OneToOne(fetch = FetchType.EAGER)

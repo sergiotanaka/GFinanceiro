@@ -3,8 +3,6 @@ package org.pinguin.gf.facade.planning;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
-
 import org.dozer.DozerBeanMapper;
 import org.pinguin.gf.domain.planning.Planning;
 import org.pinguin.gf.domain.planning.PlanningRepository;
@@ -13,14 +11,13 @@ public class PlanningService {
 
 	private final DozerBeanMapper mapper = new DozerBeanMapper();
 
-	@Inject
 	private PlanningRepository repo;
 
 	public PlanningTO createPlanning(PlanningTO planning) {
 
 		Planning entity = mapper.map(planning, Planning.class);
 
-		Planning created = repo.create(entity);
+		Planning created = repo.save(entity);
 
 		return mapper.map(created, PlanningTO.class);
 	}
@@ -29,7 +26,7 @@ public class PlanningService {
 
 		Planning entity = mapper.map(planning, Planning.class);
 
-		Planning updated = repo.update(entity);
+		Planning updated = repo.save(entity);
 
 		return mapper.map(updated, PlanningTO.class);
 	}
@@ -38,14 +35,14 @@ public class PlanningService {
 
 		Planning entity = mapper.map(planning, Planning.class);
 
-		Planning deleted = repo.delete(entity);
+		 repo.delete(entity);
 
-		return mapper.map(deleted, PlanningTO.class);
+		return mapper.map(entity, PlanningTO.class);
 	}
 
 	public List<PlanningTO> retrievePlannings() {
 
-		List<Planning> all = repo.retrieveAll();
+		Iterable<Planning> all = repo.findAll();
 
 		List<PlanningTO> result = new ArrayList<>();
 		for (Planning entity : all) {

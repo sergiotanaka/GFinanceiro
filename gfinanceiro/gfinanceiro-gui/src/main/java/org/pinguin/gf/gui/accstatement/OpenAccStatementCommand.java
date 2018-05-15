@@ -34,7 +34,7 @@ public class OpenAccStatementCommand implements Function<OpenAccStatementParam, 
 		}
 
 		Stage listStage = new Stage();
-		listStage.setTitle("Histórico");
+		listStage.setTitle("Historico");
 		listStage.setScene(new Scene(report));
 		listStage.sizeToScene();
 		listStage.initOwner(param.getOwner());

@@ -1,12 +1,9 @@
 package org.pinguin.gf.domain.journalentry;
 
-import org.pinguin.core.domain.RepositoryBase;
+import java.util.List;
 
-public class JournalEntryRepository extends RepositoryBase<JournalEntry, Long> {
+import org.springframework.data.jpa.repository.JpaRepository;
 
-    @Override
-    protected Class<JournalEntry> getEntityType() {
-        return JournalEntry.class;
-    }
+public interface JournalEntryRepository extends JpaRepository<JournalEntry, Long> {
 
 }

@@ -9,10 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.inject.Inject;
-
 import org.dozer.DozerBeanMapper;
-import org.pinguin.core.domain.Parameter;
 import org.pinguin.gf.domain.account.Account;
 import org.pinguin.gf.domain.account.AccountNature;
 import org.pinguin.gf.domain.account.AccountRepository;
@@ -27,18 +24,15 @@ public class JournalEntryService {
 
 	private final DozerBeanMapper mapper = new DozerBeanMapper();
 
-	@Inject
 	private JournalEntryRepository repo;
-	@Inject
 	private AccountRepository accRepo;
-	@Inject
 	private BasicAccountsRepository basicAccRepo;
 
 	public JournalEntryTO createJournalEntry(JournalEntryTO entry) {
 
 		JournalEntry entity = mapper.map(entry, JournalEntry.class);
 
-		JournalEntry created = repo.create(entity);
+		JournalEntry created = repo.save(entity);
 
 		return mapper.map(created, JournalEntryTO.class);
 	}
@@ -47,7 +41,7 @@ public class JournalEntryService {
 
 		JournalEntry entity = mapper.map(entry, JournalEntry.class);
 
-		JournalEntry updated = repo.update(entity);
+		JournalEntry updated = repo.save(entity);
 
 		return mapper.map(updated, JournalEntryTO.class);
 	}
@@ -56,9 +50,9 @@ public class JournalEntryService {
 
 		JournalEntry entity = mapper.map(entry, JournalEntry.class);
 
-		JournalEntry deleted = repo.delete(entity);
+		repo.delete(entity);
 
-		return mapper.map(deleted, JournalEntryTO.class);
+		return mapper.map(entity, JournalEntryTO.class);
 	}
 
 	public List<JournalEntryTO> retrieveJournalEntries() {
@@ -74,7 +68,7 @@ public class JournalEntryService {
 	}
 
 	public JournalEntryTO retrieveJournalEntryById(Long id) {
-		JournalEntry entity = repo.retrieveById(id);
+		JournalEntry entity = repo.findById(id).get();
 		return mapper.map(entity, JournalEntryTO.class);
 	}
 
@@ -83,24 +77,29 @@ public class JournalEntryService {
 
 		roundPeriod(period);
 
-		Account parent = accRepo.retrieveById(account.getId());
+		Account parent = accRepo.findById(account.getId()).get();
 
 		List<Account> accs = retrieveAnalyticalAccounts(parent);
 
 		final List<JournalEntry> retrieved = new ArrayList<>();
 
-		if (periodBalance) {
-			retrieved.addAll(repo.retrieveByQuery(
-					"select j from JournalEntry j where (j.debitAccount in (:debitAccount) or j.creditAccount in (:creditAccount))"
-							+ " and date >= :startDate and date <= :endDate order by date",
-					new Parameter<>("debitAccount", accs), new Parameter<>("creditAccount", accs),
-					new Parameter<>("startDate", period.getStart()), new Parameter<>("endDate", period.getEnd())));
-		} else {
-			retrieved.addAll(repo.retrieveByQuery(
-					"select j from JournalEntry j where (j.debitAccount in (:debitAccount) or j.creditAccount in (:creditAccount)) and date <= :endDate order by date",
-					new Parameter<>("debitAccount", accs), new Parameter<>("creditAccount", accs),
-					new Parameter<>("endDate", period.getEnd())));
-		}
+		// if (periodBalance) {
+		// retrieved.addAll(repo.retrieveByQuery(
+		// "select j from JournalEntry j where (j.debitAccount in (:debitAccount) or
+		// j.creditAccount in (:creditAccount))"
+		// + " and date >= :startDate and date <= :endDate order by date",
+		// new Parameter<>("debitAccount", accs), new Parameter<>("creditAccount",
+		// accs),
+		// new Parameter<>("startDate", period.getStart()), new Parameter<>("endDate",
+		// period.getEnd())));
+		// } else {
+		// retrieved.addAll(repo.retrieveByQuery(
+		// "select j from JournalEntry j where (j.debitAccount in (:debitAccount) or
+		// j.creditAccount in (:creditAccount)) and date <= :endDate order by date",
+		// new Parameter<>("debitAccount", accs), new Parameter<>("creditAccount",
+		// accs),
+		// new Parameter<>("endDate", period.getEnd())));
+		// }
 
 		BigDecimal balance = BigDecimal.ZERO;
 		List<AccStatementEntryTO> result = new ArrayList<>();
@@ -142,8 +141,7 @@ public class JournalEntryService {
 
 	private List<Account> retrieveAnalyticalAccounts(Account parent) {
 
-		List<Account> retrieved = accRepo.retrieveByQuery("select a from Account a where a.parent = :account",
-				new Parameter<>("account", parent));
+		List<Account> retrieved = accRepo.retrieveByQuery("select a from Account a where a.parent = :account");
 
 		if (retrieved.isEmpty()) {
 			return new ArrayList<>(Arrays.asList(parent));
@@ -161,8 +159,7 @@ public class JournalEntryService {
 		roundPeriod(period);
 
 		List<JournalEntry> retrieved = repo.retrieveByQuery(
-				"select j from JournalEntry j where date >= :startDate and date <= :endDate order by date",
-				new Parameter<>("startDate", period.getStart()), new Parameter<>("endDate", period.getEnd()));
+				"select j from JournalEntry j where date >= :startDate and date <= :endDate order by date");
 
 		final Map<Account, BalanceTO> balance = new HashMap<>();
 

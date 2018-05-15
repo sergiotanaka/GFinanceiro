@@ -9,7 +9,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
-import javax.validation.constraints.NotNull;
 
 import org.pinguin.gf.domain.account.Account;
 
@@ -20,16 +19,12 @@ public class JournalEntry {
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private Long id;
 	/** Destino */
-	@NotNull
 	@OneToOne(fetch = FetchType.EAGER)
 	private Account debitAccount;
 	/** Origem */
-	@NotNull
 	@OneToOne(fetch = FetchType.EAGER)
 	private Account creditAccount;
-	@NotNull
 	private BigDecimal value;
-	@NotNull
 	private Calendar date;
 
 	private String description;

@@ -1,8 +1,10 @@
 package org.pinguin.gf.service.api.account;
 
-public class AccountTO {
+import org.springframework.hateoas.ResourceSupport;
 
-	private Long id;
+public class AccountTO extends ResourceSupport {
+
+	private Long accountId;
 	private String name;
 	private AccountNatureTO nature;
 	private AccountTO parent;
@@ -15,12 +17,12 @@ public class AccountTO {
 		this.nature = nature;
 	}
 
-	public Long getId() {
-		return id;
+	public Long getAccountId() {
+		return accountId;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public void setAccountId(Long accountId) {
+		this.accountId = accountId;
 	}
 
 	public String getName() {
@@ -49,7 +51,17 @@ public class AccountTO {
 
 	@Override
 	public String toString() {
-		return "AccountTO [id=" + id + ", name=" + name + ", nature=" + nature + "]";
+		StringBuilder builder = new StringBuilder();
+		builder.append("AccountTO [accountId=");
+		builder.append(accountId);
+		builder.append(", name=");
+		builder.append(name);
+		builder.append(", nature=");
+		builder.append(nature);
+		builder.append(", parent=");
+		builder.append(parent);
+		builder.append("]");
+		return builder.toString();
 	}
 
 }

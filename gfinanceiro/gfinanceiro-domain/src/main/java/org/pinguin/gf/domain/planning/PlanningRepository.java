@@ -1,12 +1,8 @@
 package org.pinguin.gf.domain.planning;
 
-import org.pinguin.core.domain.RepositoryBase;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public class PlanningRepository extends RepositoryBase<Planning, Long> {
+public interface PlanningRepository extends JpaRepository<Planning, Long> {
 
-	@Override
-	protected Class<Planning> getEntityType() {
-		return Planning.class;
-	}
 
 }

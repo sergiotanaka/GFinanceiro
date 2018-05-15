@@ -1,13 +1,9 @@
 package org.pinguin.gf.facade.account;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import javax.inject.Inject;
-
 import org.dozer.DozerBeanMapper;
-import org.pinguin.core.domain.Parameter;
 import org.pinguin.gf.domain.account.Account;
 import org.pinguin.gf.domain.account.AccountRepository;
 import org.pinguin.gf.domain.account.BasicAccounts;
@@ -18,16 +14,14 @@ public class AccountService {
 
 	private final DozerBeanMapper mapper = new DozerBeanMapper();
 
-	@Inject
 	private AccountRepository repo;
-	@Inject
 	private BasicAccountsRepository basicAccRepo;
 
 	public AccountTO createAccount(AccountTO account) {
 
 		Account entity = mapper.map(account, Account.class);
 
-		Account created = repo.create(entity);
+		Account created = null;
 
 		return mapper.map(created, AccountTO.class);
 	}
@@ -36,7 +30,7 @@ public class AccountService {
 
 		Account entity = mapper.map(account, Account.class);
 
-		Account updated = repo.update(entity);
+		Account updated = null;
 
 		return mapper.map(updated, AccountTO.class);
 	}
@@ -45,14 +39,14 @@ public class AccountService {
 
 		Account entity = mapper.map(account, Account.class);
 
-		Account deleted = repo.delete(entity);
+		Account deleted = null;
 
 		return mapper.map(deleted, AccountTO.class);
 	}
 
 	public List<AccountTO> retrieveAccounts() {
 
-		List<Account> all = repo.retrieveAll();
+		List<Account> all = null;
 
 		List<AccountTO> result = new ArrayList<>();
 		for (Account entity : all) {
@@ -63,17 +57,19 @@ public class AccountService {
 	}
 
 	private List<Account> retrieveAnalyticalAccounts(Account parent) {
-		List<Account> retrieved = repo.retrieveByQuery("select a from Account a where a.parent = :account",
-				new Parameter<>("account", parent));
-		if (retrieved.isEmpty()) {
-			return new ArrayList<>(Arrays.asList(parent));
-		} else {
-			List<Account> result = new ArrayList<>();
-			for (Account item : retrieved) {
-				result.addAll(retrieveAnalyticalAccounts(item));
-			}
-			return result;
-		}
+		// List<Account> retrieved = repo.retrieveByQuery("select a from Account a where
+		// a.parent = :account",
+		// new Parameter<>("account", parent));
+		// if (retrieved.isEmpty()) {
+		// return new ArrayList<>(Arrays.asList(parent));
+		// } else {
+		// List<Account> result = new ArrayList<>();
+		// for (Account item : retrieved) {
+		// result.addAll(retrieveAnalyticalAccounts(item));
+		// }
+		// return result;
+		// }
+		return null;
 	}
 
 	public List<AccountTO> retrieveAnalyticalAccounts() {
@@ -128,30 +124,31 @@ public class AccountService {
 	}
 
 	public AccountTO retrieveAccountById(Long id) {
-		return mapper.map(repo.retrieveById(id), AccountTO.class);
+		// return mapper.map(repo.retrieveById(id), AccountTO.class);
+		return null;
 	}
 
 	public List<AccountTO> retrieveAccountByParams(String jpql, ParameterTO<?>... paramsTO) {
 
-		Parameter<?>[] params = transform(paramsTO);
-
-		List<Account> retrieved = repo.retrieveByQuery(jpql, params);
-		List<AccountTO> result = new ArrayList<>();
-		for (Account entity : retrieved) {
-			result.add(mapper.map(entity, AccountTO.class));
-		}
-
-		return result;
+//		Parameter<?>[] params = transform(paramsTO);
+//
+//		List<Account> retrieved = repo.retrieveByQuery(jpql, params);
+//		List<AccountTO> result = new ArrayList<>();
+//		for (Account entity : retrieved) {
+//			result.add(mapper.map(entity, AccountTO.class));
+//		}
+//
+//		return result;
+		return null;
 	}
 
-	@SuppressWarnings("rawtypes")
-	private Parameter<?>[] transform(ParameterTO<?>... paramsTO) {
-		Parameter[] params = new Parameter[paramsTO.length];
-		for (int i = 0; i < paramsTO.length; i++) {
-			params[i] = mapper.map(paramsTO[i], Parameter.class);
-		}
-		return params;
-	}
+//	private Parameter<?>[] transform(ParameterTO<?>... paramsTO) {
+//		Parameter[] params = new Parameter[paramsTO.length];
+//		for (int i = 0; i < paramsTO.length; i++) {
+//			params[i] = mapper.map(paramsTO[i], Parameter.class);
+//		}
+//		return params;
+//	}
 
 	public BasicAccountsTO retrieveBasicAccounts() {
 		return mapper.map(basicAccRepo.retrieve(), BasicAccountsTO.class);
