@@ -1,7 +1,7 @@
 package org.pinguin.gf.domain.journalentry;
 
 import java.math.BigDecimal;
-import java.util.Calendar;
+import java.time.LocalDateTime;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -17,7 +17,7 @@ public class JournalEntry {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
-	private Long id;
+	private Long entryId;
 	/** Destino */
 	@OneToOne(fetch = FetchType.EAGER)
 	private Account debitAccount;
@@ -25,7 +25,7 @@ public class JournalEntry {
 	@OneToOne(fetch = FetchType.EAGER)
 	private Account creditAccount;
 	private BigDecimal value;
-	private Calendar date;
+	private LocalDateTime date;
 
 	private String description;
 
@@ -33,7 +33,7 @@ public class JournalEntry {
 		super();
 	}
 
-	public JournalEntry(Account debitAccount, Account creditAccount, BigDecimal value, Calendar date,
+	public JournalEntry(Account debitAccount, Account creditAccount, BigDecimal value, LocalDateTime date,
 			String description) {
 		super();
 		this.debitAccount = debitAccount;
@@ -43,12 +43,12 @@ public class JournalEntry {
 		this.description = description;
 	}
 
-	public Long getId() {
-		return id;
+	public Long getEntryId() {
+		return entryId;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public void setEntryId(Long id) {
+		this.entryId = id;
 	}
 
 	public Account getDebitAccount() {
@@ -75,11 +75,11 @@ public class JournalEntry {
 		this.value = value;
 	}
 
-	public Calendar getDate() {
+	public LocalDateTime getDate() {
 		return date;
 	}
 
-	public void setDate(Calendar date) {
+	public void setDate(LocalDateTime date) {
 		this.date = date;
 	}
 
@@ -93,7 +93,7 @@ public class JournalEntry {
 
 	@Override
 	public String toString() {
-		return "JournalEntry [id=" + id + ", debitAccount=" + debitAccount + ", creditAccount=" + creditAccount
+		return "JournalEntry [id=" + entryId + ", debitAccount=" + debitAccount + ", creditAccount=" + creditAccount
 				+ ", value=" + value + ", date=" + date + ", description=" + description + "]";
 	}
 
