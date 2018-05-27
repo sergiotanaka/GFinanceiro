@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -96,7 +97,8 @@ public class AccountController {
 	 * @return
 	 */
 	@GetMapping(produces = MediaTypes.HAL_JSON_VALUE)
-	public List<AccountTO> retrieveAll() {
+	public List<AccountTO> retrieveAll(@RequestParam(value = "filters", required = false) String filters) {
+		System.out.println(filters);
 		List<AccountTO> list = new ArrayList<>();
 		for (Account entity : repo.findAll()) {
 			AccountTO to = mapper.asTO(entity);
