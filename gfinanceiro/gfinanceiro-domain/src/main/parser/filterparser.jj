@@ -1,0 +1,110 @@
+options {
+  UNICODE_INPUT = true;
+  LOOKAHEAD = 2;
+  CHOICE_AMBIGUITY_CHECK = 2;
+  OTHER_AMBIGUITY_CHECK = 1;
+  STATIC = false;
+  DEBUG_PARSER = false;
+}
+
+PARSER_BEGIN(FilterParser)
+
+package org.pinguin.gf.domain.journalentry;
+
+import com.querydsl.core.types.dsl.BooleanExpression;
+import org.pinguin.gf.domain.journalentry.FilterParserHelper;
+
+public class FilterParser<T> {
+	
+	private FilterParserHelper helper;
+
+	public void setHelper(FilterParserHelper helper) {
+		this.helper = helper;
+	}
+}
+
+PARSER_END(FilterParser)
+
+< * > SKIP: {
+	" " | "\t"
+}
+
+TOKEN: {
+	< FIELD:		(["A"-"Z","a"-"z","0"-"9","."])+ >
+|	< OPERATOR:		"=="|"!="|">"|"<"|">="|"<="|"=@"|"!@" > : VAL_STATE
+|  	< AND_OP:		";" >
+|  	< OR_OP:		"," >
+|	< NOT_OP:		"!" >
+|	< OPEN_PAR:		"(" >
+|	< CLOSE_PAR:	")" >
+}
+
+< VAL_STATE > TOKEN: {
+	< VALUE:		(["A"-"Z","a"-"z","0"-"9","."])+ > : DEFAULT
+}
+
+BooleanExpression expr():
+{
+	BooleanExpression p;
+	BooleanExpression p2;
+}
+{
+	p=term() 
+	(
+	<OR_OP> p2=expr() 		{ p = p.or(p2); }
+	)*
+	
+	{
+		return p;
+	}
+}
+
+BooleanExpression term():
+{
+	BooleanExpression p;
+	BooleanExpression p2;
+}
+{
+	p=unary() 
+	(
+	<AND_OP> p2=term()		{ p = p.and(p2); }
+	)*
+	
+	{
+		return p;
+	}
+}
+
+BooleanExpression unary():
+{
+	BooleanExpression p;
+}
+{
+	<NOT_OP> p=element()	{ p = p.not(); return p; }
+	| p=element()			{ return p; }
+}
+
+BooleanExpression element():
+{
+	BooleanExpression p;
+}
+{
+	p=filter() 			{ return p;	}
+	| <OPEN_PAR> p=expr() <CLOSE_PAR>	{ return p;	}
+}
+
+BooleanExpression filter():
+{
+	Token t = null;
+	String field;
+	String operator;
+	String value;
+}
+{
+	t=<FIELD>			{ field = t.image; }
+	t=<OPERATOR>		{ operator = t.image; }
+	t=<VALUE>			{ value = t.image; }
+	{
+		return helper.buildPredicate(field, operator, value);
+	}
+}

@@ -1,8 +1,7 @@
 package org.pinguin.gf.domain.account;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.querydsl.QuerydslPredicateExecutor;
+import org.pinguin.gf.domain.common.api.CustomQueryDslJpaRepository;
 
-public interface AccountRepository extends JpaRepository<Account, Long>, QuerydslPredicateExecutor<Account> {
+public interface AccountRepository extends CustomQueryDslJpaRepository<Account, Long> {
 
 }

@@ -6,6 +6,10 @@ import java.time.LocalDateTime;
 import org.pinguin.gf.service.api.account.AccountTO;
 import org.springframework.hateoas.ResourceSupport;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+@JsonInclude(Include.NON_NULL)
 public class JournalEntryTO extends ResourceSupport {
 
 	private Long entryId;

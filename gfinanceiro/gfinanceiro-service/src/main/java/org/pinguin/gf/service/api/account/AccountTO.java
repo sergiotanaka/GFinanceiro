@@ -2,6 +2,10 @@ package org.pinguin.gf.service.api.account;
 
 import org.springframework.hateoas.ResourceSupport;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+@JsonInclude(Include.NON_NULL)
 public class AccountTO extends ResourceSupport {
 
 	private Long accountId;

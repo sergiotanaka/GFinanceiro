@@ -1,5 +1,9 @@
 package org.pinguin.gf.service.api.account;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+@JsonInclude(Include.NON_NULL)
 public class BasicAccountsTO {
 	private Long id = 1L;
 	private AccountTO asset;
