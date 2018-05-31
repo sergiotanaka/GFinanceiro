@@ -18,7 +18,8 @@ import org.pinguin.gf.domain.account.Account;
 import org.pinguin.gf.domain.account.AccountNature;
 import org.pinguin.gf.domain.account.AccountRepository;
 import org.pinguin.gf.domain.account.QAccount;
-import org.pinguin.gf.domain.journalentry.RequestParamsMapper.Result;
+import org.pinguin.gf.domain.common.impl.RequestParamsMapper;
+import org.pinguin.gf.domain.common.impl.RequestParamsMapper.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
@@ -37,7 +38,7 @@ public class JournalEntryRepositoryTest {
 	@Autowired
 	private JournalEntryRepository repo;
 
-	private RequestParamsMapper reqMapper = new RequestParamsMapper();
+	private RequestParamsMapper<JournalEntry> reqMapper = new RequestParamsMapper<>(JournalEntry.class);
 
 	@Test
 	public void testFindJournalEntry() {

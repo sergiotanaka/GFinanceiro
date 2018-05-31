@@ -22,57 +22,59 @@ import org.pinguin.gf.facade.common.PeriodTO;
 
 public class JournalEntryService {
 
-	private final DozerBeanMapper mapper = new DozerBeanMapper();
+    private final DozerBeanMapper mapper = new DozerBeanMapper();
 
-	private JournalEntryRepository repo;
-	private AccountRepository accRepo;
-	private BasicAccountsRepository basicAccRepo;
+    private JournalEntryRepository repo;
+    private AccountRepository accRepo;
+    private BasicAccountsRepository basicAccRepo;
 
-	public JournalEntryTO createJournalEntry(JournalEntryTO entry) {
+    public JournalEntryTO createJournalEntry(JournalEntryTO entry) {
 
-		JournalEntry entity = mapper.map(entry, JournalEntry.class);
+        JournalEntry entity = mapper.map(entry, JournalEntry.class);
 
-		JournalEntry created = repo.save(entity);
+        JournalEntry created = repo.save(entity);
 
-		return mapper.map(created, JournalEntryTO.class);
-	}
+        return mapper.map(created, JournalEntryTO.class);
+    }
 
-	public JournalEntryTO updateJournalEntry(JournalEntryTO entry) {
+    public JournalEntryTO updateJournalEntry(JournalEntryTO entry) {
 
-		JournalEntry entity = mapper.map(entry, JournalEntry.class);
+        JournalEntry entity = mapper.map(entry, JournalEntry.class);
 
-		JournalEntry updated = repo.save(entity);
+        JournalEntry updated = repo.save(entity);
 
-		return mapper.map(updated, JournalEntryTO.class);
-	}
+        return mapper.map(updated, JournalEntryTO.class);
+    }
 
-	public JournalEntryTO deleteJournalEntry(JournalEntryTO entry) {
+    public JournalEntryTO deleteJournalEntry(JournalEntryTO entry) {
 
-		JournalEntry entity = mapper.map(entry, JournalEntry.class);
+        JournalEntry entity = mapper.map(entry, JournalEntry.class);
 
-		repo.delete(entity);
+        repo.delete(entity);
 
-		return mapper.map(entity, JournalEntryTO.class);
-	}
+        return mapper.map(entity, JournalEntryTO.class);
+    }
 
-	public List<JournalEntryTO> retrieveJournalEntries() {
+    public List<JournalEntryTO> retrieveJournalEntries() {
 
-		List<JournalEntry> all = repo.retrieveByQuery("select j from JournalEntry j");
+        // List<JournalEntry> all = repo.retrieveByQuery("select j from JournalEntry j");
+        //
+        // List<JournalEntryTO> result = new ArrayList<>();
+        // for (JournalEntry entity : all) {
+        // result.add(mapper.map(entity, JournalEntryTO.class));
+        // }
+        //
+        // return result;
 
-		List<JournalEntryTO> result = new ArrayList<>();
-		for (JournalEntry entity : all) {
-			result.add(mapper.map(entity, JournalEntryTO.class));
-		}
+        return null;
+    }
 
-		return result;
-	}
+    public JournalEntryTO retrieveJournalEntryById(Long id) {
+        JournalEntry entity = repo.findById(id).get();
+        return mapper.map(entity, JournalEntryTO.class);
+    }
 
-	public JournalEntryTO retrieveJournalEntryById(Long id) {
-		JournalEntry entity = repo.findById(id).get();
-		return mapper.map(entity, JournalEntryTO.class);
-	}
-
-	public List<AccStatementEntryTO> retrieveAccountStatement(AccountTO account, PeriodTO period,
+    public List<AccStatementEntryTO> retrieveAccountStatement(AccountTO account, PeriodTO period,
 			boolean periodBalance) {
 
 		roundPeriod(period);
@@ -83,23 +85,22 @@ public class JournalEntryService {
 
 		final List<JournalEntry> retrieved = new ArrayList<>();
 
-		// if (periodBalance) {
-		// retrieved.addAll(repo.retrieveByQuery(
-		// "select j from JournalEntry j where (j.debitAccount in (:debitAccount) or
-		// j.creditAccount in (:creditAccount))"
-		// + " and date >= :startDate and date <= :endDate order by date",
-		// new Parameter<>("debitAccount", accs), new Parameter<>("creditAccount",
-		// accs),
-		// new Parameter<>("startDate", period.getStart()), new Parameter<>("endDate",
-		// period.getEnd())));
-		// } else {
-		// retrieved.addAll(repo.retrieveByQuery(
-		// "select j from JournalEntry j where (j.debitAccount in (:debitAccount) or
-		// j.creditAccount in (:creditAccount)) and date <= :endDate order by date",
-		// new Parameter<>("debitAccount", accs), new Parameter<>("creditAccount",
-		// accs),
-		// new Parameter<>("endDate", period.getEnd())));
-		// }
+		 if (periodBalance) {
+		 retrieved.addAll(repo.retrieveByQuery(
+		 "select j from JournalEntry j where (j.debitAccount in (:debitAccount) or 	j.creditAccount in (:creditAccount))"
+		 + " and date >= :startDate and date <= :endDate order by date",
+		 new Parameter<>("debitAccount", accs), new Parameter<>("creditAccount",
+		 accs),
+		 new Parameter<>("startDate", period.getStart()), new Parameter<>("endDate",
+		 period.getEnd())));
+		 } else {
+		 retrieved.addAll(repo.retrieveByQuery(
+		 "select j from JournalEntry j where (j.debitAccount in (:debitAccount) or
+		 j.creditAccount in (:creditAccount)) and date <= :endDate order by date",
+		 new Parameter<>("debitAccount", accs), new Parameter<>("creditAccount",
+		 accs),
+		 new Parameter<>("endDate", period.getEnd())));
+		 }
 
 		BigDecimal balance = BigDecimal.ZERO;
 		List<AccStatementEntryTO> result = new ArrayList<>();
@@ -139,91 +140,91 @@ public class JournalEntryService {
 		return result;
 	}
 
-	private List<Account> retrieveAnalyticalAccounts(Account parent) {
+    private List<Account> retrieveAnalyticalAccounts(Account parent) {
 
-		List<Account> retrieved = accRepo.retrieveByQuery("select a from Account a where a.parent = :account");
+        List<Account> retrieved = accRepo.retrieveByQuery("select a from Account a where a.parent = :account");
 
-		if (retrieved.isEmpty()) {
-			return new ArrayList<>(Arrays.asList(parent));
-		} else {
-			List<Account> result = new ArrayList<>();
-			for (Account item : retrieved) {
-				result.addAll(retrieveAnalyticalAccounts(item));
-			}
-			return result;
-		}
-	}
+        if (retrieved.isEmpty()) {
+            return new ArrayList<>(Arrays.asList(parent));
+        } else {
+            List<Account> result = new ArrayList<>();
+            for (Account item : retrieved) {
+                result.addAll(retrieveAnalyticalAccounts(item));
+            }
+            return result;
+        }
+    }
 
-	public List<BalanceTO> retrieveBalance(PeriodTO period) {
+    public List<BalanceTO> retrieveBalance(PeriodTO period) {
 
-		roundPeriod(period);
+        roundPeriod(period);
 
-		List<JournalEntry> retrieved = repo.retrieveByQuery(
-				"select j from JournalEntry j where date >= :startDate and date <= :endDate order by date");
+        List<JournalEntry> retrieved = repo.retrieveByQuery(
+            "select j from JournalEntry j where date >= :startDate and date <= :endDate order by date");
 
-		final Map<Account, BalanceTO> balance = new HashMap<>();
+        final Map<Account, BalanceTO> balance = new HashMap<>();
 
-		for (JournalEntry entry : retrieved) {
-			// Tratar credito
-			sumToAccount(entry.getCreditAccount(), entry.getValue(), BigDecimal.ZERO, entry.getValue(), balance);
-			// Tratar debito
-			sumToAccount(entry.getDebitAccount(), BigDecimal.ZERO, entry.getValue(),
-					entry.getValue().multiply(BigDecimal.valueOf(-1.0)), balance);
-		}
+        for (JournalEntry entry : retrieved) {
+            // Tratar credito
+            sumToAccount(entry.getCreditAccount(), entry.getValue(), BigDecimal.ZERO, entry.getValue(), balance);
+            // Tratar debito
+            sumToAccount(entry.getDebitAccount(), BigDecimal.ZERO, entry.getValue(),
+                entry.getValue().multiply(BigDecimal.valueOf(-1.0)), balance);
+        }
 
-		List<BalanceTO> result = new ArrayList<>();
-		for (Entry<Account, BalanceTO> entry : balance.entrySet()) {
-			BalanceTO balanceTO = entry.getValue();
-			if (balanceTO.getAccount().getNature().equals(AccountNatureTO.DEBIT)) {
-				balanceTO.setBalance(balanceTO.getBalance().multiply(BigDecimal.valueOf(-1.0)));
-			}
-			balanceTO.setCredits(balanceTO.getCredits().setScale(2));
-			balanceTO.setDebits(balanceTO.getDebits().setScale(2));
-			balanceTO.setBalance(balanceTO.getBalance().setScale(2));
-			result.add(entry.getValue());
-		}
-		// TODO Adicionar resultado
-		// 1. Encontrar a despesa e a receita
-		Account income = basicAccRepo.retrieve().getIncome();
-		Account expense = basicAccRepo.retrieve().getExpense();
-		BigDecimal incomeBalance = balance.containsKey(income) ? balance.get(income).getBalance() : BigDecimal.ZERO;
-		BigDecimal expenseBalance = balance.containsKey(expense) ? balance.get(expense).getBalance() : BigDecimal.ZERO;
-		BalanceTO balanceResult = new BalanceTO(new AccountTO("Resultado", AccountNatureTO.CREDIT));
-		balanceResult.setCredits(expenseBalance);
-		balanceResult.setDebits(incomeBalance);
-		balanceResult.setBalance(incomeBalance.subtract(expenseBalance));
-		result.add(balanceResult);
+        List<BalanceTO> result = new ArrayList<>();
+        for (Entry<Account, BalanceTO> entry : balance.entrySet()) {
+            BalanceTO balanceTO = entry.getValue();
+            if (balanceTO.getAccount().getNature().equals(AccountNatureTO.DEBIT)) {
+                balanceTO.setBalance(balanceTO.getBalance().multiply(BigDecimal.valueOf(-1.0)));
+            }
+            balanceTO.setCredits(balanceTO.getCredits().setScale(2));
+            balanceTO.setDebits(balanceTO.getDebits().setScale(2));
+            balanceTO.setBalance(balanceTO.getBalance().setScale(2));
+            result.add(entry.getValue());
+        }
+        // TODO Adicionar resultado
+        // 1. Encontrar a despesa e a receita
+        Account income = basicAccRepo.retrieve().getIncome();
+        Account expense = basicAccRepo.retrieve().getExpense();
+        BigDecimal incomeBalance = balance.containsKey(income) ? balance.get(income).getBalance() : BigDecimal.ZERO;
+        BigDecimal expenseBalance = balance.containsKey(expense) ? balance.get(expense).getBalance() : BigDecimal.ZERO;
+        BalanceTO balanceResult = new BalanceTO(new AccountTO("Resultado", AccountNatureTO.CREDIT));
+        balanceResult.setCredits(expenseBalance);
+        balanceResult.setDebits(incomeBalance);
+        balanceResult.setBalance(incomeBalance.subtract(expenseBalance));
+        result.add(balanceResult);
 
-		return result;
+        return result;
 
-	}
+    }
 
-	private void sumToAccount(Account acc, BigDecimal credit, BigDecimal debit, BigDecimal balance,
-			Map<Account, BalanceTO> balanceMap) {
-		if (!balanceMap.containsKey(acc)) {
-			balanceMap.put(acc, new BalanceTO(mapper.map(acc, AccountTO.class)));
-		}
-		BalanceTO balanceTO = balanceMap.get(acc);
-		balanceTO.setCredits(balanceTO.getCredits().add(credit));
-		balanceTO.setDebits(balanceTO.getDebits().add(debit));
-		balanceTO.setBalance(balanceTO.getBalance().add(balance));
+    private void sumToAccount(Account acc, BigDecimal credit, BigDecimal debit, BigDecimal balance,
+                              Map<Account, BalanceTO> balanceMap) {
+        if (!balanceMap.containsKey(acc)) {
+            balanceMap.put(acc, new BalanceTO(mapper.map(acc, AccountTO.class)));
+        }
+        BalanceTO balanceTO = balanceMap.get(acc);
+        balanceTO.setCredits(balanceTO.getCredits().add(credit));
+        balanceTO.setDebits(balanceTO.getDebits().add(debit));
+        balanceTO.setBalance(balanceTO.getBalance().add(balance));
 
-		if (acc.getParent() != null) {
-			sumToAccount(acc.getParent(), credit, debit, balance, balanceMap);
-		}
-	}
+        if (acc.getParent() != null) {
+            sumToAccount(acc.getParent(), credit, debit, balance, balanceMap);
+        }
+    }
 
-	private void roundPeriod(PeriodTO period) {
-		cleanHours(period.getStart());
-		cleanHours(period.getEnd());
-		period.getEnd().add(Calendar.DAY_OF_MONTH, 1);
-		period.getEnd().add(Calendar.SECOND, -1);
-	}
+    private void roundPeriod(PeriodTO period) {
+        cleanHours(period.getStart());
+        cleanHours(period.getEnd());
+        period.getEnd().add(Calendar.DAY_OF_MONTH, 1);
+        period.getEnd().add(Calendar.SECOND, -1);
+    }
 
-	private void cleanHours(Calendar calendar) {
-		calendar.set(Calendar.HOUR_OF_DAY, 0);
-		calendar.set(Calendar.MINUTE, 0);
-		calendar.set(Calendar.SECOND, 0);
-		calendar.set(Calendar.MILLISECOND, 0);
-	}
+    private void cleanHours(Calendar calendar) {
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+    }
 }

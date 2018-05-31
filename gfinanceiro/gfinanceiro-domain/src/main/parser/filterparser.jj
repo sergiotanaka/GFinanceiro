@@ -9,14 +9,17 @@ options {
 
 PARSER_BEGIN(FilterParser)
 
-package org.pinguin.gf.domain.journalentry;
+package org.pinguin.gf.domain.common.impl;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
-import org.pinguin.gf.domain.journalentry.FilterParserHelper;
+import org.pinguin.gf.domain.common.impl.FilterParserHelper;
 
-public class FilterParser<T> {
+public class FilterParser {
 	
 	private FilterParserHelper helper;
+	
+	public FilterParser() {
+	}
 
 	public void setHelper(FilterParserHelper helper) {
 		this.helper = helper;
@@ -25,7 +28,7 @@ public class FilterParser<T> {
 
 PARSER_END(FilterParser)
 
-< * > SKIP: {
+< DEFAULT > SKIP: {
 	" " | "\t"
 }
 
@@ -40,7 +43,7 @@ TOKEN: {
 }
 
 < VAL_STATE > TOKEN: {
-	< VALUE:		(["A"-"Z","a"-"z","0"-"9","."])+ > : DEFAULT
+	< VALUE:		("\\,"|"\\;"|"\\("|"\\)"|(~[",",";","(",")"]))+ > : DEFAULT
 }
 
 BooleanExpression expr():

@@ -50,22 +50,6 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>com.mysema.maven</groupId>
-				<artifactId>apt-maven-plugin</artifactId>
-				<version>1.1.3</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>process</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>target/generated-sources/qdsl</outputDirectory>
-							<processor>com.querydsl.apt.jpa.JPAAnnotationProcessor</processor>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
 				<groupId>com.helger.maven</groupId>
 				<artifactId>ph-javacc-maven-plugin</artifactId>
 				<version>4.0.1</version>
@@ -79,7 +63,7 @@
 						<configuration>
 							<jdkVersion>1.8</jdkVersion>
 							<javadocFriendlyComments>true</javadocFriendlyComments>
-							<packageName>org.pinguin.gf.domain.journalentry</packageName>
+							<packageName>org.pinguin.gf.domain.common.impl</packageName>
 							<sourceDirectory>src/main/parser</sourceDirectory>
 							<outputDirectory>${project.build.directory}/generated-sources/javacc1</outputDirectory>
 						</configuration>
@@ -99,6 +83,22 @@
 							<sources>
 								<source>${project.build.directory}/generated-sources/javacc1</source>
 							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>com.mysema.maven</groupId>
+				<artifactId>apt-maven-plugin</artifactId>
+				<version>1.1.3</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>process</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>target/generated-sources/qdsl</outputDirectory>
+							<processor>com.querydsl.apt.jpa.JPAAnnotationProcessor</processor>
 						</configuration>
 					</execution>
 				</executions>
