@@ -1,0 +1,43 @@
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+	version="2.0">
+	<persistence-unit name="prod">
+
+		<class>org.pinguin.pomodoro.domain.task.Task</class>
+		<class>org.pinguin.pomodoro.domain.transition.Transition</class>
+		<!-- <exclude-unlisted-classes>true</exclude-unlisted-classes> -->
+
+		<properties>
+			<!-- SQL stuff -->
+			<property name="hibernate.connection.driver_class"
+				value="org.h2.Driver" />
+			<property name="hibernate.dialect"
+				value="org.hibernate.dialect.H2Dialect" />
+			<property name="hibernate.connection.url"
+				value="jdbc:h2:file:./testdb" />
+			<property name="hibernate.connection.username" value="sa" />
+			<property name="hibernate.connection.password"
+				value="secret" />
+			<property name="hibernate.hbm2ddl.auto" value="update" />
+			<property name="hibernate.listeners.envers.autoRegister"
+				value="false" />
+			<property name="hibernate.show_sql" value="true" />
+
+			<!-- Performance tuning -->
+			<property name="hibernate.default_batch_fetch_size"
+				value="8" />
+			<property name="hibernate.max_fetch_depth" value="3" />
+
+			<!-- Disable the second-level cache -->
+			<property name="hibernate.cache.provider_class"
+				value="org.hibernate.cache.NoCacheProvider" />
+
+			<!-- Default is false for backwards compatibility. Should be used on all 
+				new projects -->
+			<property name="hibernate.id.new_generator_mappings"
+				value="true" />
+		</properties>
+	</persistence-unit>
+
+</persistence>
