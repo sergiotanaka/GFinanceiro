@@ -10,7 +10,9 @@ public class Task {
 	@Id
 	@GeneratedValue
 	private Long id;
+	private Long index;
 	private String name;
+	private TaskState state = TaskState.STOPPED;
 	private boolean done = false;
 
 	public Task(String name, boolean done) {
@@ -34,12 +36,28 @@ public class Task {
 		this.id = id;
 	}
 
+	public Long getIndex() {
+		return index;
+	}
+
+	public void setIndex(Long index) {
+		this.index = index;
+	}
+
 	public String getName() {
 		return name;
 	}
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public TaskState getState() {
+		return state;
+	}
+
+	public void setState(TaskState state) {
+		this.state = state;
 	}
 
 	public boolean isDone() {
@@ -52,15 +70,6 @@ public class Task {
 
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("Task [id=");
-		builder.append(id);
-		builder.append(", name=");
-		builder.append(name);
-		builder.append(", done=");
-		builder.append(done);
-		builder.append("]");
-		return builder.toString();
+		return "Task [id=" + id + ", index=" + index + ", name=" + name + ", state=" + state + ", done=" + done + "]";
 	}
-
 }

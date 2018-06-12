@@ -6,6 +6,7 @@
 
 		<class>org.pinguin.pomodoro.domain.task.Task</class>
 		<class>org.pinguin.pomodoro.domain.transition.Transition</class>
+		<class>org.pinguin.pomodoro.domain.taskstatetransition.TaskStateTransition</class>
 		<!-- <exclude-unlisted-classes>true</exclude-unlisted-classes> -->
 
 		<properties>

@@ -1,33 +1,45 @@
 package org.pinguin.pomodoro.gui.main;
 
 import org.pinguin.pomodoro.domain.task.Task;
+import org.pinguin.pomodoro.domain.task.TaskState;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 public class TaskRow {
 
 	private final SimpleStringProperty nameProp = new SimpleStringProperty();
 	private final SimpleBooleanProperty doneProp = new SimpleBooleanProperty();
+	private final SimpleObjectProperty<TaskState> stateProp = new SimpleObjectProperty<>();
 	private final Task task;
 
 	public TaskRow(final Task task) {
 
 		nameProp.set(task.getName());
 		doneProp.set(task.isDone());
+		stateProp.set(task.getState());
 
 		nameProp.addListener((obs, oldV, newV) -> task.setName(newV));
 		doneProp.addListener((obs, oldV, newV) -> task.setDone(newV));
+		stateProp.addListener((obs, oldV, newV) -> task.setState(newV));
 
 		this.task = task;
 	}
 
-	public SimpleStringProperty nameProperty() {
+	public StringProperty nameProperty() {
 		return nameProp;
 	}
 
-	public SimpleBooleanProperty doneProperty() {
+	public BooleanProperty doneProperty() {
 		return doneProp;
+	}
+
+	public ObjectProperty<TaskState> stateProperty() {
+		return stateProp;
 	}
 
 	public Task getTask() {

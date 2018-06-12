@@ -15,6 +15,9 @@ import javax.persistence.criteria.CriteriaQuery;
 
 import org.pinguin.pomodoro.domain.pomodoro.Pomodoro;
 import org.pinguin.pomodoro.domain.task.Task;
+import org.pinguin.pomodoro.domain.task.TaskRepository;
+import org.pinguin.pomodoro.domain.task.TaskState;
+import org.pinguin.pomodoro.domain.taskstatetransition.TaskStateTransition;
 import org.pinguin.pomodoro.domain.transition.Transition;
 
 import javafx.application.Platform;
@@ -25,6 +28,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.KeyCode;
@@ -43,6 +47,8 @@ public class MainPane extends BorderPane {
 
 	@Inject
 	private EntityManager em;
+	@Inject
+	private TaskRepository taskRepo;
 
 	private final TableView<TaskRow> taskTableView;
 	private final Label remainingLbl = new Label("25:00");
@@ -50,11 +56,6 @@ public class MainPane extends BorderPane {
 	private final Button stopBtn = new Button("Parar");
 
 	private Pomodoro actual = new Pomodoro();
-
-	private boolean executing = false;
-
-	private long duration = 25 * 60 * 1000;
-	private long start = 0;
 
 	public MainPane() {
 		// Margem
@@ -143,11 +144,17 @@ public class MainPane extends BorderPane {
 		nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
 		nameColumn.setCellFactory(tc -> new TextFieldTableCell<>(new DefaultStringConverter()));
 
+		final TableColumn<TaskRow, TaskState> stateColumn = new TableColumn<>("Estado");
+		stateColumn.setPrefWidth(100.0);
+		stateColumn.setCellValueFactory(new PropertyValueFactory<>("state"));
+		stateColumn.setCellFactory(ComboBoxTableCell.forTableColumn(TaskState.values()));
+
 		final TableColumn<TaskRow, Boolean> doneColumn = new TableColumn<>("Pronto");
 		doneColumn.setCellValueFactory(new PropertyValueFactory<>("done"));
 		doneColumn.setCellFactory(CheckBoxTableCell.forTableColumn(doneColumn));
 
 		tableView.getColumns().add(nameColumn);
+		tableView.getColumns().add(stateColumn);
 		tableView.getColumns().add(doneColumn);
 
 		final KeyCodeCombination ctrlUp = new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN);
@@ -163,12 +170,14 @@ public class MainPane extends BorderPane {
 					if (indexOfSel == 0) {
 						return;
 					}
+					switchIdx(sel, tableView.getItems().get(indexOfSel - 1));
 					tableView.getItems().remove(sel);
 					tableView.getItems().add(indexOfSel - 1, sel);
 				} else if (ctrlDown.match(e)) {
 					if (indexOfSel == tableView.getItems().size() - 1) {
 						return;
 					}
+					switchIdx(sel, tableView.getItems().get(indexOfSel + 1));
 					tableView.getItems().remove(sel);
 					tableView.getItems().add(indexOfSel + 1, sel);
 				}
@@ -178,7 +187,8 @@ public class MainPane extends BorderPane {
 		tableView.onKeyPressedProperty().set(e -> {
 			if (e.getCode().equals(KeyCode.INSERT)) {
 				final Task newTask = new Task();
-				tableView.getItems().add(new TaskRow(newTask));
+				newTask.setIndex(taskRepo.getNextIndex());
+				tableView.getItems().add(buildTaskRow(newTask));
 				em.persist(newTask);
 			} else if (e.getCode().equals(KeyCode.DELETE)) {
 				final TaskRow sel = tableView.getSelectionModel().getSelectedItem();
@@ -190,6 +200,18 @@ public class MainPane extends BorderPane {
 		});
 
 		return tableView;
+	}
+
+	private TaskRow buildTaskRow(final Task task) {
+		final TaskRow taskRow = new TaskRow(task);
+		taskRow.stateProperty().addListener((r, o, n) -> em.persist(new TaskStateTransition(task, o, n)));
+		return taskRow;
+	}
+
+	private void switchIdx(final TaskRow one, final TaskRow another) {
+		final Long aux = one.getTask().getIndex();
+		one.getTask().setIndex(another.getTask().getIndex());
+		another.getTask().setIndex(aux);
 	}
 
 	public List<Transition> getAllTransitions() {
