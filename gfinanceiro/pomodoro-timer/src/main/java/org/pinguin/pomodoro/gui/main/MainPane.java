@@ -6,12 +6,18 @@ import static org.pinguin.pomodoro.domain.pomodoro.PomodoroEvent.START;
 import static org.pinguin.pomodoro.domain.pomodoro.PomodoroState.EXECUTING;
 import static org.pinguin.pomodoro.domain.pomodoro.PomodoroState.RESTING;
 
+import java.io.IOException;
 import java.time.LocalTime;
 import java.util.List;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.pinguin.pomodoro.domain.pomodoro.Pomodoro;
 import org.pinguin.pomodoro.domain.task.Task;
@@ -27,7 +33,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
@@ -78,7 +83,7 @@ public class MainPane extends BorderPane {
 			new Thread(() -> {
 				while (actual.getState().equals(EXECUTING) || actual.getState().equals(RESTING)) {
 					actual.updateRemaining();
-					LocalTime remainTime = LocalTime.ofSecondOfDay(actual.getRemaining() / 1000);
+					final LocalTime remainTime = LocalTime.ofSecondOfDay(actual.getRemaining() / 1000);
 					Platform.runLater(() -> remainingLbl.textProperty().set(remainTime.toString()));
 					try {
 						Thread.sleep(500);
@@ -104,7 +109,7 @@ public class MainPane extends BorderPane {
 		});
 
 		final Button testBtn = new Button("Teste");
-		testBtn.setOnAction(e -> System.out.println(getAllTransitions()));
+		testBtn.setOnAction(e -> playAlarm());
 
 		grid.add(testBtn, 0, 3, 2, 1);
 
@@ -123,6 +128,19 @@ public class MainPane extends BorderPane {
 		this.centerProperty().set(grid);
 
 		this.actual.addListener((b, a) -> em.persist(new Transition(b, a)));
+		this.actual.setOnTimeout(this::playAlarm);
+	}
+
+	private void playAlarm() {
+		AudioInputStream ais;
+		try {
+			ais = AudioSystem.getAudioInputStream(getClass().getResourceAsStream("/META-INF/alarm.wav"));
+			Clip clip = AudioSystem.getClip();
+			clip.open(ais);
+			clip.start();
+		} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void setItems(final ObservableList<TaskRow> items) {
@@ -149,13 +167,8 @@ public class MainPane extends BorderPane {
 		stateColumn.setCellValueFactory(new PropertyValueFactory<>("state"));
 		stateColumn.setCellFactory(ComboBoxTableCell.forTableColumn(TaskState.values()));
 
-		final TableColumn<TaskRow, Boolean> doneColumn = new TableColumn<>("Pronto");
-		doneColumn.setCellValueFactory(new PropertyValueFactory<>("done"));
-		doneColumn.setCellFactory(CheckBoxTableCell.forTableColumn(doneColumn));
-
 		tableView.getColumns().add(nameColumn);
 		tableView.getColumns().add(stateColumn);
-		tableView.getColumns().add(doneColumn);
 
 		final KeyCodeCombination ctrlUp = new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN);
 		final KeyCodeCombination ctrlDown = new KeyCodeCombination(KeyCode.DOWN, KeyCombination.CONTROL_DOWN);
@@ -204,7 +217,7 @@ public class MainPane extends BorderPane {
 
 	private TaskRow buildTaskRow(final Task task) {
 		final TaskRow taskRow = new TaskRow(task);
-		taskRow.stateProperty().addListener((r, o, n) -> em.persist(new TaskStateTransition(task, o, n)));
+		taskRow.stateProperty().addListener((r, o, n) -> em.persist(new TaskStateTransition(task.getId(), o, n)));
 		return taskRow;
 	}
 

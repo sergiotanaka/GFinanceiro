@@ -1,10 +1,9 @@
 package org.pinguin.pomodoro.application;
 
-import javax.persistence.EntityManager;
-
 import org.pinguin.pomodoro.domain.task.Task;
 import org.pinguin.pomodoro.domain.task.TaskRepository;
 import org.pinguin.pomodoro.domain.taskstatetransition.TaskStateTransition;
+import org.pinguin.pomodoro.domain.taskstatetransition.TaskStateTransitionRepository;
 import org.pinguin.pomodoro.gui.main.MainPane;
 import org.pinguin.pomodoro.gui.main.TaskRow;
 
@@ -30,14 +29,8 @@ public class PomodoroApp extends Application {
 		injector = Guice.createInjector(new JpaPersistModule("prod"));
 		injector.getInstance(PersistService.class).start();
 
-		final EntityManager em = injector.getInstance(EntityManager.class);
-		em.getTransaction().begin();
-
 		// FIXME: encontrar uma maneira mais elegante de fechar
-		primaryStage.setOnCloseRequest(e -> {
-			em.getTransaction().commit();
-			System.exit(0);
-		});
+		primaryStage.setOnCloseRequest(e -> System.exit(0));
 
 		final MainPane mainPane = injector.getInstance(MainPane.class);
 		final TaskRepository taskRepo = injector.getInstance(TaskRepository.class);
@@ -45,7 +38,6 @@ public class PomodoroApp extends Application {
 		taskRepo.getAllUndone().forEach(t -> items.add(buildTaskRow(t)));
 		mainPane.setItems(items);
 
-		primaryStage.setTitle("Pomodoro Timer");
 		primaryStage.setScene(new Scene(mainPane));
 		primaryStage.sizeToScene();
 		Platform.runLater(primaryStage::centerOnScreen);
@@ -54,8 +46,8 @@ public class PomodoroApp extends Application {
 
 	private TaskRow buildTaskRow(final Task task) {
 		final TaskRow taskRow = new TaskRow(task);
-		taskRow.stateProperty().addListener(
-				(r, o, n) -> injector.getInstance(EntityManager.class).persist(new TaskStateTransition(task, o, n)));
+		taskRow.stateProperty().addListener((r, o, n) -> injector.getInstance(TaskStateTransitionRepository.class)
+				.add(new TaskStateTransition(task.getId(), o, n)));
 		return taskRow;
 	}
 

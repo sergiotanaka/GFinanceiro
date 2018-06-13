@@ -3,12 +3,9 @@ package org.pinguin.pomodoro.domain.taskstatetransition;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToOne;
 
-import org.pinguin.pomodoro.domain.task.Task;
 import org.pinguin.pomodoro.domain.task.TaskState;
 
 @Entity
@@ -16,8 +13,7 @@ public class TaskStateTransition {
 	@Id
 	@GeneratedValue
 	private Long id;
-	@OneToOne(fetch = FetchType.EAGER)
-	private Task task;
+	private Long taskId;
 	@Enumerated(EnumType.STRING)
 	private TaskState before;
 	@Enumerated(EnumType.STRING)
@@ -26,8 +22,8 @@ public class TaskStateTransition {
 	public TaskStateTransition() {
 	}
 
-	public TaskStateTransition(Task task, TaskState before, TaskState after) {
-		this.task = task;
+	public TaskStateTransition(Long taskId, TaskState before, TaskState after) {
+		this.taskId = taskId;
 		this.before = before;
 		this.after = after;
 	}
@@ -40,12 +36,12 @@ public class TaskStateTransition {
 		this.id = id;
 	}
 
-	public Task getTask() {
-		return task;
+	public Long getTask() {
+		return taskId;
 	}
 
-	public void setTask(Task task) {
-		this.task = task;
+	public void setTask(Long taskId) {
+		this.taskId = taskId;
 	}
 
 	public TaskState getBefore() {
@@ -66,7 +62,7 @@ public class TaskStateTransition {
 
 	@Override
 	public String toString() {
-		return "TaskStateTransition [id=" + id + ", task=" + task + ", before=" + before + ", after=" + after + "]";
+		return "TaskStateTransition [id=" + id + ", taskId=" + taskId + ", before=" + before + ", after=" + after + "]";
 	}
 
 }

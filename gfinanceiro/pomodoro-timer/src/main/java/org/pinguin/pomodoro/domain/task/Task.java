@@ -13,19 +13,18 @@ public class Task {
 	private Long index;
 	private String name;
 	private TaskState state = TaskState.STOPPED;
-	private boolean done = false;
 
-	public Task(String name, boolean done) {
+	public Task(String name, TaskState state) {
 		this.name = name;
-		this.done = done;
+		this.state = state;
 	}
 
 	public Task(String name) {
-		this(name, false);
+		this(name, TaskState.STOPPED);
 	}
 
 	public Task() {
-		this(null, false);
+		this(null);
 	}
 
 	public Long getId() {
@@ -60,16 +59,9 @@ public class Task {
 		this.state = state;
 	}
 
-	public boolean isDone() {
-		return done;
-	}
-
-	public void setDone(boolean done) {
-		this.done = done;
-	}
-
 	@Override
 	public String toString() {
-		return "Task [id=" + id + ", index=" + index + ", name=" + name + ", state=" + state + ", done=" + done + "]";
+		return "Task [id=" + id + ", index=" + index + ", name=" + name + ", state=" + state + "]";
 	}
+
 }

@@ -23,6 +23,11 @@ public class Pomodoro {
 	private long lastUpdate;
 
 	private final List<BiConsumer<PomodoroState, PomodoroState>> changeListeners = new ArrayList<>();
+	private Runnable onTimeout;
+
+	public void setOnTimeout(final Runnable onTimeout) {
+		this.onTimeout = onTimeout;
+	}
 
 	public void onEvent(final PomodoroEvent evt) {
 		final PomodoroState oldState = this.state;
@@ -64,6 +69,9 @@ public class Pomodoro {
 		if (remaining <= 0) {
 			remaining = 0L;
 			onEvent(FINISH);
+			if (onTimeout != null) {
+				onTimeout.run();
+			}
 		}
 	}
 
@@ -74,7 +82,7 @@ public class Pomodoro {
 	public PomodoroState getState() {
 		return state;
 	}
-	
+
 	public void addListener(final BiConsumer<PomodoroState, PomodoroState> listener) {
 		this.changeListeners.add(listener);
 	}

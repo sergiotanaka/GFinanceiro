@@ -30,7 +30,7 @@ public class TaskRepository {
 		final CriteriaBuilder cb = em.getCriteriaBuilder();
 		final CriteriaQuery<Task> cq = cb.createQuery(Task.class);
 		Root<Task> t = cq.from(Task.class);
-		cq.select(t).where(cb.equal(t.get("done"), false)).orderBy(cb.asc(t.get("index")));
+		cq.select(t).where(cb.notEqual(t.get("state"), TaskState.DONE)).orderBy(cb.asc(t.get("index")));
 		return em.createQuery(cq).getResultList();
 	}
 
