@@ -28,17 +28,31 @@ public class PomodoroApp extends Application {
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 
+		primaryStage.setTitle("PT");
+
 		injector = Guice.createInjector(new JpaPersistModule("prod"));
 		injector.getInstance(PersistService.class).start();
-		
+
+		injector.getInstance(EntityManager.class).getTransaction().begin();
+
 		// FIXME: encontrar uma maneira mais elegante de fechar
-		primaryStage.setOnCloseRequest(e -> System.exit(0));
+		primaryStage.setOnCloseRequest(e -> {
+			injector.getInstance(EntityManager.class).getTransaction().commit();
+			System.exit(0);
+		});
 
 		final MainPane mainPane = injector.getInstance(MainPane.class);
+		mainPane.setCallFocus(() -> {
+			Platform.runLater(() -> {
+				primaryStage.setIconified(false);
+				primaryStage.requestFocus();
+			});
+		});
+		mainPane.setUpdateRemaining(r -> Platform.runLater(() -> primaryStage.setTitle("PT " + r)));
 		final TaskRepository taskRepo = injector.getInstance(TaskRepository.class);
 		final ObservableList<TaskRow> items = FXCollections.observableArrayList();
 		taskRepo.getAllUndone().forEach(t -> items.add(buildTaskRow(t)));
-		
+
 		mainPane.setItems(items);
 
 		primaryStage.setScene(new Scene(mainPane));

@@ -9,6 +9,8 @@ import static org.pinguin.pomodoro.domain.pomodoro.PomodoroState.RESTING;
 import java.io.IOException;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -50,6 +52,9 @@ import javafx.util.converter.DefaultStringConverter;
 
 public class MainPane extends BorderPane {
 
+	private Runnable callFocus;
+	private Consumer<String> updateRemaining;
+
 	@Inject
 	private EntityManager em;
 	@Inject
@@ -85,6 +90,9 @@ public class MainPane extends BorderPane {
 					actual.updateRemaining();
 					final LocalTime remainTime = LocalTime.ofSecondOfDay(actual.getRemaining() / 1000);
 					Platform.runLater(() -> remainingLbl.textProperty().set(remainTime.toString()));
+					if (updateRemaining != null) {
+						updateRemaining.accept(remainTime.toString());
+					}
 					try {
 						Thread.sleep(500);
 					} catch (InterruptedException e1) {
@@ -100,6 +108,9 @@ public class MainPane extends BorderPane {
 					actual.updateRemaining();
 					LocalTime remainTime = LocalTime.ofSecondOfDay(actual.getRemaining() / 1000);
 					Platform.runLater(() -> remainingLbl.textProperty().set(remainTime.toString()));
+					if (updateRemaining != null) {
+						updateRemaining.accept(remainTime.toString());
+					}
 					try {
 						Thread.sleep(500);
 					} catch (InterruptedException e1) {
@@ -108,8 +119,11 @@ public class MainPane extends BorderPane {
 			}).start();
 		});
 
-		final Button testBtn = new Button("Teste");
-		testBtn.setOnAction(e -> playAlarm());
+		final Button testBtn = new Button("Salvar");
+		testBtn.setOnAction(e -> {
+			em.getTransaction().commit();
+			em.getTransaction().begin();
+		});
 
 		grid.add(testBtn, 0, 3, 2, 1);
 
@@ -128,7 +142,12 @@ public class MainPane extends BorderPane {
 		this.centerProperty().set(grid);
 
 		this.actual.addListener((b, a) -> em.persist(new Transition(b, a)));
-		this.actual.setOnTimeout(this::playAlarm);
+		this.actual.setOnTimeout(() -> {
+			if (callFocus != null) {
+				callFocus.run();
+			}
+			playAlarm();
+		});
 	}
 
 	private void playAlarm() {
@@ -141,6 +160,14 @@ public class MainPane extends BorderPane {
 		} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void setCallFocus(Runnable callFocus) {
+		this.callFocus = callFocus;
+	}
+
+	public void setUpdateRemaining(Consumer<String> updateRemaining) {
+		this.updateRemaining = updateRemaining;
 	}
 
 	public void setItems(final ObservableList<TaskRow> items) {
@@ -169,7 +196,7 @@ public class MainPane extends BorderPane {
 
 		tableView.getColumns().add(nameColumn);
 		tableView.getColumns().add(stateColumn);
-		
+
 		final KeyCodeCombination ctrlUp = new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN);
 		final KeyCodeCombination ctrlDown = new KeyCodeCombination(KeyCode.DOWN, KeyCombination.CONTROL_DOWN);
 		tableView.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
@@ -178,7 +205,6 @@ public class MainPane extends BorderPane {
 				if (sel == null) {
 					return;
 				}
-				em.getTransaction().begin();
 				int indexOfSel = tableView.getItems().indexOf(sel);
 				if (ctrlUp.match(e)) {
 					if (indexOfSel == 0) {
@@ -195,7 +221,6 @@ public class MainPane extends BorderPane {
 					tableView.getItems().remove(sel);
 					tableView.getItems().add(indexOfSel + 1, sel);
 				}
-				em.getTransaction().commit();
 			}
 		});
 
@@ -204,12 +229,12 @@ public class MainPane extends BorderPane {
 				final Task newTask = new Task();
 				newTask.setIndex(taskRepo.getNextIndex());
 				tableView.getItems().add(buildTaskRow(newTask));
-				taskRepo.createTask(newTask);
+				em.persist(newTask);
 			} else if (e.getCode().equals(KeyCode.DELETE)) {
 				final TaskRow sel = tableView.getSelectionModel().getSelectedItem();
 				if (sel != null) {
 					tableView.getItems().remove(sel);
-					taskRepo.deleteTask(sel.getTask());
+					em.remove(sel.getTask());
 				}
 			}
 		});
