@@ -9,13 +9,26 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
+import com.google.inject.persist.Transactional;
+
 public class TaskRepository {
 
 	@Inject
 	private EntityManager em;
-
-	public void updIndex() {
-		getAllTasks().forEach(t -> t.setIndex(t.getId()));
+	
+	@Transactional
+	public void createTask(final Task task) {
+		em.persist(task);
+	}
+	
+	@Transactional
+	public void updateTask(final Task task) {
+		em.merge(task);
+	}
+	
+	@Transactional
+	public void deleteTask(final Task task) {
+		em.remove(task);
 	}
 
 	public List<Task> getAllTasks() {

@@ -1,5 +1,7 @@
 package org.pinguin.pomodoro.application;
 
+import javax.persistence.EntityManager;
+
 import org.pinguin.pomodoro.domain.task.Task;
 import org.pinguin.pomodoro.domain.task.TaskRepository;
 import org.pinguin.pomodoro.domain.taskstatetransition.TaskStateTransition;
@@ -28,7 +30,7 @@ public class PomodoroApp extends Application {
 
 		injector = Guice.createInjector(new JpaPersistModule("prod"));
 		injector.getInstance(PersistService.class).start();
-
+		
 		// FIXME: encontrar uma maneira mais elegante de fechar
 		primaryStage.setOnCloseRequest(e -> System.exit(0));
 
@@ -36,6 +38,7 @@ public class PomodoroApp extends Application {
 		final TaskRepository taskRepo = injector.getInstance(TaskRepository.class);
 		final ObservableList<TaskRow> items = FXCollections.observableArrayList();
 		taskRepo.getAllUndone().forEach(t -> items.add(buildTaskRow(t)));
+		
 		mainPane.setItems(items);
 
 		primaryStage.setScene(new Scene(mainPane));

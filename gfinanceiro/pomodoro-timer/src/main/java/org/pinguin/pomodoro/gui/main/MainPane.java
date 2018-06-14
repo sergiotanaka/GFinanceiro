@@ -169,7 +169,7 @@ public class MainPane extends BorderPane {
 
 		tableView.getColumns().add(nameColumn);
 		tableView.getColumns().add(stateColumn);
-
+		
 		final KeyCodeCombination ctrlUp = new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN);
 		final KeyCodeCombination ctrlDown = new KeyCodeCombination(KeyCode.DOWN, KeyCombination.CONTROL_DOWN);
 		tableView.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
@@ -178,6 +178,7 @@ public class MainPane extends BorderPane {
 				if (sel == null) {
 					return;
 				}
+				em.getTransaction().begin();
 				int indexOfSel = tableView.getItems().indexOf(sel);
 				if (ctrlUp.match(e)) {
 					if (indexOfSel == 0) {
@@ -194,6 +195,7 @@ public class MainPane extends BorderPane {
 					tableView.getItems().remove(sel);
 					tableView.getItems().add(indexOfSel + 1, sel);
 				}
+				em.getTransaction().commit();
 			}
 		});
 
@@ -202,12 +204,12 @@ public class MainPane extends BorderPane {
 				final Task newTask = new Task();
 				newTask.setIndex(taskRepo.getNextIndex());
 				tableView.getItems().add(buildTaskRow(newTask));
-				em.persist(newTask);
+				taskRepo.createTask(newTask);
 			} else if (e.getCode().equals(KeyCode.DELETE)) {
 				final TaskRow sel = tableView.getSelectionModel().getSelectedItem();
 				if (sel != null) {
 					tableView.getItems().remove(sel);
-					em.remove(sel.getTask());
+					taskRepo.deleteTask(sel.getTask());
 				}
 			}
 		});
