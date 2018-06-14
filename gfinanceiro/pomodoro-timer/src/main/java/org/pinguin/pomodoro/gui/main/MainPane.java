@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -146,15 +145,20 @@ public class MainPane extends BorderPane {
 			if (callFocus != null) {
 				callFocus.run();
 			}
+			stopAllTasks();
 			playAlarm();
 		});
 	}
 
+	private void stopAllTasks() {
+		Platform.runLater(() -> taskTableView.getItems().forEach(r -> r.stateProperty().set(TaskState.STOPPED)));
+	}
+
 	private void playAlarm() {
-		AudioInputStream ais;
 		try {
-			ais = AudioSystem.getAudioInputStream(getClass().getResourceAsStream("/META-INF/alarm.wav"));
-			Clip clip = AudioSystem.getClip();
+			final AudioInputStream ais = AudioSystem
+					.getAudioInputStream(getClass().getResourceAsStream("/META-INF/alarm.wav"));
+			final Clip clip = AudioSystem.getClip();
 			clip.open(ais);
 			clip.start();
 		} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
