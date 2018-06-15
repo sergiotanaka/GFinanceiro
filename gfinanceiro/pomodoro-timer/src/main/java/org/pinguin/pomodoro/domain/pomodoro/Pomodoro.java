@@ -15,7 +15,7 @@ import java.util.function.BiConsumer;
 public class Pomodoro {
 
 	private Long id;
-	private Long execDuration = 1L * 60L * 1000L;
+	private Long execDuration = 25L * 60L * 1000L;
 	private Long restDuration = 5L * 60L * 1000L;
 	private Long remaining = 0L;
 	private PomodoroState state = STOPPED;

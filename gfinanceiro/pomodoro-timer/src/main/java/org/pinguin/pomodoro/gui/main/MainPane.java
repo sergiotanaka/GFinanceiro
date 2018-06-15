@@ -29,11 +29,15 @@ import org.pinguin.pomodoro.domain.task.TaskRepository;
 import org.pinguin.pomodoro.domain.task.TaskState;
 import org.pinguin.pomodoro.domain.taskstatetransition.TaskStateTransition;
 import org.pinguin.pomodoro.domain.transition.Transition;
+import org.pinguin.pomodoro.gui.mini.MiniPane;
 
 import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TreeItem;
@@ -52,11 +56,15 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.RowConstraints;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 public class MainPane extends BorderPane {
 
 	private Runnable callFocus;
 	private Consumer<String> updateRemaining;
+
+	private final DoubleProperty remainingProp = new SimpleDoubleProperty(0);
 
 	@Inject
 	private EntityManager em;
@@ -89,10 +97,11 @@ public class MainPane extends BorderPane {
 		startBtn.setOnAction(e -> {
 			actual.onEvent(START);
 			new Thread(() -> {
-				while (actual.getState().equals(EXECUTING) || actual.getState().equals(RESTING)) {
+				while (actual.getState().equals(EXECUTING)) {
 					actual.updateRemaining();
 					final LocalTime remainTime = LocalTime.ofSecondOfDay(actual.getRemaining() / 1000);
 					Platform.runLater(() -> remainingLbl.textProperty().set(remainTime.toString()));
+					Platform.runLater(() -> remainingProp.set((actual.getRemaining() * 1.0) / (25.0 * 60.0 * 1000.0)));
 					if (updateRemaining != null) {
 						updateRemaining.accept(remainTime.toString());
 					}
@@ -111,6 +120,7 @@ public class MainPane extends BorderPane {
 					actual.updateRemaining();
 					LocalTime remainTime = LocalTime.ofSecondOfDay(actual.getRemaining() / 1000);
 					Platform.runLater(() -> remainingLbl.textProperty().set(remainTime.toString()));
+					Platform.runLater(() -> remainingProp.set((actual.getRemaining() * 1.0) / (5.0 * 60.0 * 1000.0)));
 					if (updateRemaining != null) {
 						updateRemaining.accept(remainTime.toString());
 					}
@@ -128,7 +138,23 @@ public class MainPane extends BorderPane {
 			em.getTransaction().begin();
 		});
 
-		grid.add(testBtn, 0, 3, 2, 1);
+		final Button clockBtn = new Button("Relógio");
+		clockBtn.setOnAction(e -> {
+			final Stage clock = new Stage();
+			final MiniPane miniPane = new MiniPane();
+			clock.setScene(new Scene(miniPane));
+			clock.sizeToScene();
+			clock.initOwner(MainPane.this.getScene().getWindow());
+			clock.toFront();
+			Platform.runLater(clock::centerOnScreen);
+
+			miniPane.progressProperty().bind(remainingProp);
+
+			clock.show();
+
+		});
+
+		grid.add(new HBox(testBtn, clockBtn), 0, 3, 2, 1);
 
 		final ColumnConstraints cc1 = new ColumnConstraints();
 		cc1.setHgrow(Priority.ALWAYS);
