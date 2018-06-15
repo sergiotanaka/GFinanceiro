@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -32,6 +31,7 @@ import org.pinguin.pomodoro.domain.taskstatetransition.TaskStateTransition;
 import org.pinguin.pomodoro.domain.transition.Transition;
 
 import javafx.application.Platform;
+import javafx.beans.property.ObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -155,9 +155,17 @@ public class MainPane extends BorderPane {
 	}
 
 	private void stopAllTasks() {
-		// TODO implementar
-		// Platform.runLater(() -> taskTableView.getItems().forEach(r ->
-		// r.stateProperty().set(TaskState.STOPPED)));
+		Platform.runLater(() -> stopChildTasks(taskTableView.getRoot()));
+	}
+
+	private void stopChildTasks(TreeItem<TaskRow> treeItem) {
+		treeItem.getChildren().forEach(ti -> {
+			final ObjectProperty<TaskState> stateProperty = ti.getValue().stateProperty();
+			if (stateProperty.get().equals(TaskState.EXECUTING)) {
+				stateProperty.set(TaskState.STOPPED);
+			}
+			stopChildTasks(ti);
+		});
 	}
 
 	private void playAlarm() {
@@ -193,12 +201,16 @@ public class MainPane extends BorderPane {
 			final TreeItem<TaskRow> treeItem = entry.getValue();
 			final Long parentId = treeItem.getValue().getTask().getParentId();
 			if (parentId != null) {
-				map.get(parentId).getChildren().add(treeItem);
+				if (map.containsKey(parentId)) {
+					map.get(parentId).getChildren().add(treeItem);
+				} else {
+					treeItem.getValue().getTask().setParentId(null);
+					root.getChildren().add(treeItem);
+				}
 			} else {
 				root.getChildren().add(treeItem);
 			}
 		}
-		// taskTableView.setItems(items);
 	}
 
 	private TreeTableView<TaskRow> buildTaskTableView() {
@@ -228,40 +240,57 @@ public class MainPane extends BorderPane {
 
 		final KeyCodeCombination ctrlUp = new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN);
 		final KeyCodeCombination ctrlDown = new KeyCodeCombination(KeyCode.DOWN, KeyCombination.CONTROL_DOWN);
+		final KeyCodeCombination ctrlIns = new KeyCodeCombination(KeyCode.INSERT, KeyCombination.CONTROL_DOWN);
+		final KeyCodeCombination ins = new KeyCodeCombination(KeyCode.INSERT);
+		final KeyCodeCombination del = new KeyCodeCombination(KeyCode.DELETE);
 
-		// tableView.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-		// if (ctrlUp.match(e) || ctrlDown.match(e)) {
-		// final TaskRow sel = tableView.getSelectionModel().getSelectedItem();
-		// if (sel == null) {
-		// return;
-		// }
-		// int indexOfSel = tableView.getItems().indexOf(sel);
-		// if (ctrlUp.match(e)) {
-		// if (indexOfSel == 0) {
-		// return;
-		// }
-		// switchIdx(sel, tableView.getItems().get(indexOfSel - 1));
-		// tableView.getItems().remove(sel);
-		// tableView.getItems().add(indexOfSel - 1, sel);
-		// } else if (ctrlDown.match(e)) {
-		// if (indexOfSel == tableView.getItems().size() - 1) {
-		// return;
-		// }
-		// switchIdx(sel, tableView.getItems().get(indexOfSel + 1));
-		// tableView.getItems().remove(sel);
-		// tableView.getItems().add(indexOfSel + 1, sel);
-		// }
-		// }
-		// });
-		/*
-		 * tableView.onKeyPressedProperty().set(e -> { if
-		 * (e.getCode().equals(KeyCode.INSERT)) { final Task newTask = new Task();
-		 * newTask.setIndex(taskRepo.getNextIndex());
-		 * tableView.getItems().add(buildTaskRow(newTask)); em.persist(newTask); } else
-		 * if (e.getCode().equals(KeyCode.DELETE)) { final TaskRow sel =
-		 * tableView.getSelectionModel().getSelectedItem(); if (sel != null) {
-		 * tableView.getItems().remove(sel); em.remove(sel.getTask()); } } });
-		 */
+		tableView.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
+			if (ctrlUp.match(e) || ctrlDown.match(e) || ins.match(e) || del.match(e) || ctrlIns.match(e)) {
+				final TreeItem<TaskRow> sel = tableView.getSelectionModel().getSelectedItem();
+				if (sel == null) {
+					return;
+				}
+				final ObservableList<TreeItem<TaskRow>> items = sel.getParent().getChildren();
+				int indexOfSel = items.indexOf(sel);
+				if (ctrlUp.match(e)) {
+					if (indexOfSel == 0) {
+						return;
+					}
+					switchIdx(sel.getValue(), items.get(indexOfSel - 1).getValue());
+					items.remove(sel);
+					items.add(indexOfSel - 1, sel);
+					tableView.getSelectionModel().select(sel);
+				} else if (ctrlDown.match(e)) {
+					if (indexOfSel == items.size() - 1) {
+						return;
+					}
+					switchIdx(sel.getValue(), items.get(indexOfSel + 1).getValue());
+					items.remove(sel);
+					items.add(indexOfSel + 1, sel);
+					tableView.getSelectionModel().select(sel);
+				} else if (ctrlIns.match(e)) {
+					final Task newTask = new Task();
+					newTask.setIndex(taskRepo.getNextIndex());
+					newTask.setParentId(sel.getValue().getTask().getId());
+					final TreeItem<TaskRow> newItem = new TreeItem<TaskRow>(buildTaskRow(newTask));
+					sel.setExpanded(true);
+					sel.getChildren().add(newItem);
+					em.persist(newTask);
+					tableView.getSelectionModel().select(newItem);
+				} else if (ins.match(e)) {
+					final Task newTask = new Task();
+					newTask.setIndex(taskRepo.getNextIndex());
+					final TreeItem<TaskRow> newItem = new TreeItem<TaskRow>(buildTaskRow(newTask));
+					sel.getParent().getChildren().add(indexOfSel + 1, newItem);
+					em.persist(newTask);
+					tableView.getSelectionModel().select(newItem);
+				} else if (del.match(e)) {
+					// TODO fazer cascata?
+					sel.getParent().getChildren().remove(sel);
+					em.remove(sel.getValue().getTask());
+				}
+			}
+		});
 
 		return tableView;
 	}
