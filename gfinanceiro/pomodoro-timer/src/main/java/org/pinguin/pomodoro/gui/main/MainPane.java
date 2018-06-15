@@ -9,7 +9,11 @@ import static org.pinguin.pomodoro.domain.pomodoro.PomodoroState.RESTING;
 import java.io.IOException;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -32,11 +36,12 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.cell.ComboBoxTableCell;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeTableColumn;
+import javafx.scene.control.TreeTableView;
+import javafx.scene.control.cell.ComboBoxTreeTableCell;
+import javafx.scene.control.cell.TextFieldTreeTableCell;
+import javafx.scene.control.cell.TreeItemPropertyValueFactory;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -47,7 +52,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.RowConstraints;
-import javafx.util.converter.DefaultStringConverter;
 
 public class MainPane extends BorderPane {
 
@@ -59,7 +63,7 @@ public class MainPane extends BorderPane {
 	@Inject
 	private TaskRepository taskRepo;
 
-	private final TableView<TaskRow> taskTableView;
+	private final TreeTableView<TaskRow> taskTableView;
 	private final Label remainingLbl = new Label("25:00");
 	private final Button pauseBtn = new Button("Pausar");
 	private final Button stopBtn = new Button("Parar");
@@ -151,7 +155,9 @@ public class MainPane extends BorderPane {
 	}
 
 	private void stopAllTasks() {
-		Platform.runLater(() -> taskTableView.getItems().forEach(r -> r.stateProperty().set(TaskState.STOPPED)));
+		// TODO implementar
+		// Platform.runLater(() -> taskTableView.getItems().forEach(r ->
+		// r.stateProperty().set(TaskState.STOPPED)));
 	}
 
 	private void playAlarm() {
@@ -175,11 +181,30 @@ public class MainPane extends BorderPane {
 	}
 
 	public void setItems(final ObservableList<TaskRow> items) {
-		taskTableView.setItems(items);
+		final TreeItem<TaskRow> root = new TreeItem<TaskRow>(new TaskRow(new Task()));
+		taskTableView.setRoot(root);
+
+		// Transformando em Map
+		final Map<Long, TreeItem<TaskRow>> map = items.stream()
+				.collect(Collectors.toMap(r -> r.getTask().getId(), r -> new TreeItem<TaskRow>(r)));
+
+		// Montando a arvore
+		for (final Entry<Long, TreeItem<TaskRow>> entry : map.entrySet()) {
+			final TreeItem<TaskRow> treeItem = entry.getValue();
+			final Long parentId = treeItem.getValue().getTask().getParentId();
+			if (parentId != null) {
+				map.get(parentId).getChildren().add(treeItem);
+			} else {
+				root.getChildren().add(treeItem);
+			}
+		}
+		// taskTableView.setItems(items);
 	}
 
-	private TableView<TaskRow> buildTaskTableView() {
-		final TableView<TaskRow> tableView = new TableView<>();
+	private TreeTableView<TaskRow> buildTaskTableView() {
+		final TreeTableView<TaskRow> tableView = new TreeTableView<>();
+		tableView.setShowRoot(false);
+
 		// tableView.setPrefHeight(200.0);
 		// tableView.setMaxHeight(400.0);
 
@@ -188,60 +213,55 @@ public class MainPane extends BorderPane {
 		// Tornar celula selecionavel
 		tableView.getSelectionModel().setCellSelectionEnabled(true);
 
-		final TableColumn<TaskRow, String> nameColumn = new TableColumn<>("Tarefa");
+		final TreeTableColumn<TaskRow, String> nameColumn = new TreeTableColumn<>("Tarefa");
 		nameColumn.setPrefWidth(200.0);
-		nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
-		nameColumn.setCellFactory(tc -> new TextFieldTableCell<>(new DefaultStringConverter()));
+		nameColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("name"));
+		nameColumn.setCellFactory(TextFieldTreeTableCell.forTreeTableColumn());
 
-		final TableColumn<TaskRow, TaskState> stateColumn = new TableColumn<>("Estado");
+		final TreeTableColumn<TaskRow, TaskState> stateColumn = new TreeTableColumn<>("Estado");
 		stateColumn.setPrefWidth(100.0);
-		stateColumn.setCellValueFactory(new PropertyValueFactory<>("state"));
-		stateColumn.setCellFactory(ComboBoxTableCell.forTableColumn(TaskState.values()));
+		stateColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("state"));
+		stateColumn.setCellFactory(ComboBoxTreeTableCell.forTreeTableColumn(TaskState.values()));
 
 		tableView.getColumns().add(nameColumn);
 		tableView.getColumns().add(stateColumn);
 
 		final KeyCodeCombination ctrlUp = new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN);
 		final KeyCodeCombination ctrlDown = new KeyCodeCombination(KeyCode.DOWN, KeyCombination.CONTROL_DOWN);
-		tableView.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-			if (ctrlUp.match(e) || ctrlDown.match(e)) {
-				final TaskRow sel = tableView.getSelectionModel().getSelectedItem();
-				if (sel == null) {
-					return;
-				}
-				int indexOfSel = tableView.getItems().indexOf(sel);
-				if (ctrlUp.match(e)) {
-					if (indexOfSel == 0) {
-						return;
-					}
-					switchIdx(sel, tableView.getItems().get(indexOfSel - 1));
-					tableView.getItems().remove(sel);
-					tableView.getItems().add(indexOfSel - 1, sel);
-				} else if (ctrlDown.match(e)) {
-					if (indexOfSel == tableView.getItems().size() - 1) {
-						return;
-					}
-					switchIdx(sel, tableView.getItems().get(indexOfSel + 1));
-					tableView.getItems().remove(sel);
-					tableView.getItems().add(indexOfSel + 1, sel);
-				}
-			}
-		});
 
-		tableView.onKeyPressedProperty().set(e -> {
-			if (e.getCode().equals(KeyCode.INSERT)) {
-				final Task newTask = new Task();
-				newTask.setIndex(taskRepo.getNextIndex());
-				tableView.getItems().add(buildTaskRow(newTask));
-				em.persist(newTask);
-			} else if (e.getCode().equals(KeyCode.DELETE)) {
-				final TaskRow sel = tableView.getSelectionModel().getSelectedItem();
-				if (sel != null) {
-					tableView.getItems().remove(sel);
-					em.remove(sel.getTask());
-				}
-			}
-		});
+		// tableView.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
+		// if (ctrlUp.match(e) || ctrlDown.match(e)) {
+		// final TaskRow sel = tableView.getSelectionModel().getSelectedItem();
+		// if (sel == null) {
+		// return;
+		// }
+		// int indexOfSel = tableView.getItems().indexOf(sel);
+		// if (ctrlUp.match(e)) {
+		// if (indexOfSel == 0) {
+		// return;
+		// }
+		// switchIdx(sel, tableView.getItems().get(indexOfSel - 1));
+		// tableView.getItems().remove(sel);
+		// tableView.getItems().add(indexOfSel - 1, sel);
+		// } else if (ctrlDown.match(e)) {
+		// if (indexOfSel == tableView.getItems().size() - 1) {
+		// return;
+		// }
+		// switchIdx(sel, tableView.getItems().get(indexOfSel + 1));
+		// tableView.getItems().remove(sel);
+		// tableView.getItems().add(indexOfSel + 1, sel);
+		// }
+		// }
+		// });
+		/*
+		 * tableView.onKeyPressedProperty().set(e -> { if
+		 * (e.getCode().equals(KeyCode.INSERT)) { final Task newTask = new Task();
+		 * newTask.setIndex(taskRepo.getNextIndex());
+		 * tableView.getItems().add(buildTaskRow(newTask)); em.persist(newTask); } else
+		 * if (e.getCode().equals(KeyCode.DELETE)) { final TaskRow sel =
+		 * tableView.getSelectionModel().getSelectedItem(); if (sel != null) {
+		 * tableView.getItems().remove(sel); em.remove(sel.getTask()); } } });
+		 */
 
 		return tableView;
 	}

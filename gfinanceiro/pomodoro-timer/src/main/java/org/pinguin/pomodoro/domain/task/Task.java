@@ -13,6 +13,7 @@ public class Task {
 	private Long index;
 	private String name;
 	private TaskState state = TaskState.STOPPED;
+	private Long parentId;
 
 	public Task(String name, TaskState state) {
 		this.name = name;
@@ -57,6 +58,14 @@ public class Task {
 
 	public void setState(TaskState state) {
 		this.state = state;
+	}
+
+	public Long getParentId() {
+		return parentId;
+	}
+
+	public void setParentId(Long parentId) {
+		this.parentId = parentId;
 	}
 
 	@Override
