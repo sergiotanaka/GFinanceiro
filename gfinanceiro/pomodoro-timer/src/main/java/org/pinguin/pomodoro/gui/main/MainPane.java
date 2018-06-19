@@ -16,7 +16,9 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -56,7 +58,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.RowConstraints;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class MainPane extends BorderPane {
@@ -144,7 +145,6 @@ public class MainPane extends BorderPane {
 			final MiniPane miniPane = new MiniPane();
 			clock.setScene(new Scene(miniPane));
 			clock.sizeToScene();
-			clock.initOwner(MainPane.this.getScene().getWindow());
 			clock.toFront();
 			Platform.runLater(clock::centerOnScreen);
 
@@ -154,7 +154,16 @@ public class MainPane extends BorderPane {
 
 		});
 
-		grid.add(new HBox(testBtn, clockBtn), 0, 3, 2, 1);
+		final Button reportBtn = new Button("Relatório");
+		reportBtn.setOnAction(e -> {
+			getHistory().forEach(st -> {
+				final Task task = st.getTaskId() == null ? null : em.find(Task.class, st.getTaskId());
+				System.out.println(String.format("%s - %s [%s > %s]", st.getTimeStamp(),
+						task != null ? task.getName() : st.getTaskId(), st.getBefore(), st.getAfter()));
+			});
+		});
+
+		grid.add(new HBox(testBtn, clockBtn, reportBtn), 0, 3, 2, 1);
 
 		final ColumnConstraints cc1 = new ColumnConstraints();
 		cc1.setHgrow(Priority.ALWAYS);
@@ -333,9 +342,11 @@ public class MainPane extends BorderPane {
 		another.getTask().setIndex(aux);
 	}
 
-	public List<Transition> getAllTransitions() {
-		CriteriaQuery<Transition> cq = em.getCriteriaBuilder().createQuery(Transition.class);
-		cq.select(cq.from(Transition.class));
+	public List<TaskStateTransition> getHistory() {
+		final CriteriaBuilder cb = em.getCriteriaBuilder();
+		final CriteriaQuery<TaskStateTransition> cq = cb.createQuery(TaskStateTransition.class);
+		final Root<TaskStateTransition> taskTransition = cq.from(TaskStateTransition.class);
+		cq.select(taskTransition).orderBy(cb.asc(taskTransition.get("timeStamp")));
 		return em.createQuery(cq).getResultList();
 	}
 

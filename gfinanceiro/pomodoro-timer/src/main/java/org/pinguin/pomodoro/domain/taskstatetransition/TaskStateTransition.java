@@ -1,5 +1,7 @@
 package org.pinguin.pomodoro.domain.taskstatetransition;
 
+import java.time.LocalDateTime;
+
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -14,6 +16,7 @@ public class TaskStateTransition {
 	@GeneratedValue
 	private Long id;
 	private Long taskId;
+	private LocalDateTime timeStamp;
 	@Enumerated(EnumType.STRING)
 	private TaskState before;
 	@Enumerated(EnumType.STRING)
@@ -26,6 +29,7 @@ public class TaskStateTransition {
 		this.taskId = taskId;
 		this.before = before;
 		this.after = after;
+		this.timeStamp = LocalDateTime.now();
 	}
 
 	public Long getId() {
@@ -36,12 +40,20 @@ public class TaskStateTransition {
 		this.id = id;
 	}
 
-	public Long getTask() {
+	public Long getTaskId() {
 		return taskId;
 	}
 
-	public void setTask(Long taskId) {
+	public void setTaskId(Long taskId) {
 		this.taskId = taskId;
+	}
+
+	public LocalDateTime getTimeStamp() {
+		return timeStamp;
+	}
+
+	public void setTimeStamp(LocalDateTime timeStamp) {
+		this.timeStamp = timeStamp;
 	}
 
 	public TaskState getBefore() {
@@ -62,7 +74,7 @@ public class TaskStateTransition {
 
 	@Override
 	public String toString() {
-		return "TaskStateTransition [id=" + id + ", taskId=" + taskId + ", before=" + before + ", after=" + after + "]";
+		return "TaskStateTransition [id=" + id + ", taskId=" + taskId + ", timeStamp=" + timeStamp + ", before="
+				+ before + ", after=" + after + "]";
 	}
-
 }
