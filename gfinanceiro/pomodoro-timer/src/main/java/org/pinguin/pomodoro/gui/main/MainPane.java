@@ -138,7 +138,7 @@ public class MainPane extends BorderPane {
 			em.getTransaction().begin();
 		});
 
-		final Button clockBtn = new Button("RelÃ³gio");
+		final Button clockBtn = new Button("Relógio");
 		clockBtn.setOnAction(e -> {
 			final Stage clock = new Stage();
 			final MiniPane miniPane = new MiniPane();
@@ -148,7 +148,7 @@ public class MainPane extends BorderPane {
 			clock.toFront();
 			Platform.runLater(clock::centerOnScreen);
 
-			miniPane.progressProperty().bind(remainingProp);
+//			miniPane.progressProperty().bind(remainingProp);
 
 			clock.show();
 
