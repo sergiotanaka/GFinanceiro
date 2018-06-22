@@ -3,32 +3,41 @@ package org.pinguin.pomodoro.gui.mini;
 import org.pinguin.pomodoro.gui.timer.Timer;
 import org.pinguin.pomodoro.gui.timer.TimerBuilder;
 
-import javafx.beans.property.ObjectProperty;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
-import javafx.util.Duration;
 
 public class MiniPane extends BorderPane {
 
 	private Timer timer;
+	private Label remainingLabel = new Label();
 
 	/**
 	 * Construtor.
 	 */
 	public MiniPane() {
 		init();
-		this.setPadding(new Insets(30.0));
+		this.setPadding(new Insets(10.0));
 		this.setCenter(timer);
-		timer.waiting();
-		final Label remaining = new Label();
-		this.setBottom(remaining);
-		timer.progressProperty().addListener((r, o, n) -> remaining.setText(Double.toString((double) n)));
+		timer.stop();
+
+		final BorderPane bottom = new BorderPane();
+		bottom.setPadding(new Insets(5.0));
+		bottom.setCenter(remainingLabel);
+		this.setBottom(bottom);
 	}
 
-	public void init() {
-		timer = TimerBuilder.create().playButtonVisible(false).waitingColor(Color.GRAY).prefSize(38, 38).build();
+	public Timer getTimer() {
+		return timer;
+	}
+
+	public Label getRemainingLabel() {
+		return remainingLabel;
+	}
+
+	private void init() {
+		timer = TimerBuilder.create().playButtonVisible(false).waitingColor(Color.GRAY).prefSize(70.0, 70.0).build();
 		timer.setOnTimerEvent(event -> {
 			switch (event.getType()) {
 			case STARTED:
@@ -43,12 +52,6 @@ public class MiniPane extends BorderPane {
 			case WAITING:
 				break;
 			}
-			System.out.println(event.getType());
 		});
 	}
-
-	public ObjectProperty<Duration> durationProperty() {
-		return timer.durationProperty();
-	}
-
 }

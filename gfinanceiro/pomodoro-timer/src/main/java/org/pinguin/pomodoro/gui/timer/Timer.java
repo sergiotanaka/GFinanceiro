@@ -17,7 +17,9 @@
 package org.pinguin.pomodoro.gui.timer;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 import org.pinguin.pomodoro.gui.timer.TimerEvent.Type;
 
@@ -33,6 +35,7 @@ import javafx.beans.property.DoublePropertyBase;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ObjectPropertyBase;
 import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -58,438 +61,642 @@ import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.shape.StrokeType;
 import javafx.util.Duration;
 
-
 /**
- * User: hansolo
- * Date: 11.10.17
- * Time: 17:48
+ * User: hansolo Date: 11.10.17 Time: 17:48
  */
 @DefaultProperty("children")
 public class Timer extends Region {
-    public  enum         State { RUNNING, WAITING, STOPPED }
-    public  static final Color                    DEFAULT_COLOR    = Color.web("0x407DBD");
-    private static final double                   PREFERRED_WIDTH  = 19;
-    private static final double                   PREFERRED_HEIGHT = 19;
-    private static final double                   MINIMUM_WIDTH    = 19;
-    private static final double                   MINIMUM_HEIGHT   = 19;
-    private static final double                   MAXIMUM_WIDTH    = 1024;
-    private static final double                   MAXIMUM_HEIGHT   = 1024;
-    private        final TimerEvent               STARTED          = new TimerEvent(Timer.this, Type.STARTED);
-    private        final TimerEvent               STOPPED          = new TimerEvent(Timer.this, Type.STOPPED);
-    private        final TimerEvent               CONTINUED        = new TimerEvent(Timer.this, Type.CONTINUED);
-    private        final TimerEvent               FINISHED         = new TimerEvent(Timer.this, Type.FINISHED);
-    private        final TimerEvent               RESET            = new TimerEvent(Timer.this, Type.RESET);
-    private        final TimerEvent               WAITING          = new TimerEvent(Timer.this, Type.WAITING);
-    private              double                   size;
-    private              double                   width;
-    private              double                   height;
-    private              double                   centerX;
-    private              double                   centerY;
-    private              Pane                     pane;
-    private              Paint                    backgroundPaint;
-    private              Paint                    borderPaint;
-    private              double                   borderWidth;
-    private              Arc                      ring;
-    private              Arc                      progressBar;
-    private              Rectangle                stopButton;
-    private              Path                     playButton;
-    private              MoveTo                   playButtonP1;
-    private              LineTo                   playButtonP2;
-    private              LineTo                   playButtonP3;
-    private              Color                    _backgroundColor;
-    private              ObjectProperty<Color>    backgroundColor;
-    private              Color                    _color;
-    private              ObjectProperty<Color>    color;
-    private              Color                    _waitingColor;
-    private              ObjectProperty<Color>    waitingColor;
-    private              boolean                  _playButtonVisible;
-    private              BooleanProperty          playButtonVisible;
-    private              DoubleProperty           progress;
-    private              State                    state;
-    private              Duration                 _duration;
-    private              ObjectProperty<Duration> duration;
-    private              Duration                 currentDuration;
-    private              Timeline                 timeline;
-    private              List<TimerEventListener> listenerList = new CopyOnWriteArrayList<>();
+	public enum State {
+		RUNNING, WAITING, STOPPED
+	}
 
+	public static final Color DEFAULT_COLOR = Color.web("0x407DBD");
+	private static final double PREFERRED_WIDTH = 19;
+	private static final double PREFERRED_HEIGHT = 19;
+	private static final double MINIMUM_WIDTH = 19;
+	private static final double MINIMUM_HEIGHT = 19;
+	private static final double MAXIMUM_WIDTH = 1024;
+	private static final double MAXIMUM_HEIGHT = 1024;
+	private final TimerEvent STARTED = new TimerEvent(Timer.this, Type.STARTED);
+	private final TimerEvent STOPPED = new TimerEvent(Timer.this, Type.STOPPED);
+	private final TimerEvent CONTINUED = new TimerEvent(Timer.this, Type.CONTINUED);
+	private final TimerEvent FINISHED = new TimerEvent(Timer.this, Type.FINISHED);
+	private final TimerEvent RESET = new TimerEvent(Timer.this, Type.RESET);
+	private final TimerEvent WAITING = new TimerEvent(Timer.this, Type.WAITING);
+	private double size;
+	private double width;
+	private double height;
+	private double centerX;
+	private double centerY;
+	private Pane pane;
+	private Paint backgroundPaint;
+	private Paint borderPaint;
+	private double borderWidth;
+	private Arc ring;
+	private Arc progressBar;
+	private Rectangle stopButton;
+	private Path playButton;
+	private MoveTo playButtonP1;
+	private LineTo playButtonP2;
+	private LineTo playButtonP3;
+	private Color _backgroundColor;
+	private ObjectProperty<Color> backgroundColor;
+	private Color _color;
+	private ObjectProperty<Color> color;
+	private Color _waitingColor;
+	private ObjectProperty<Color> waitingColor;
+	private boolean _playButtonVisible;
+	private BooleanProperty playButtonVisible;
+	private DoubleProperty progress;
+	private final ObjectProperty<State> stateProperty = new SimpleObjectProperty<>();
+	private Duration _duration;
+	private ObjectProperty<Duration> duration;
+	private Duration currentDuration;
+	private Optional<Timeline> timeline;
+	private List<TimerEventListener> listenerList = new CopyOnWriteArrayList<>();
 
-    // ******************** Constructors **************************************
-    public Timer() {
-        getStylesheets().add(Timer.class.getResource("timer.css").toExternalForm());
-        backgroundPaint    = Color.TRANSPARENT;
-        borderPaint        = Color.TRANSPARENT;
-        borderWidth        = 0d;
-        _backgroundColor   = Color.TRANSPARENT;
-        _color             = DEFAULT_COLOR;
-        _waitingColor      = DEFAULT_COLOR;
-        _playButtonVisible = true;
-        state              = State.STOPPED;
-        _duration          = Duration.seconds(10);
-        currentDuration    = Duration.ZERO;
-        progress           = new DoublePropertyBase(0) {
-            @Override protected void invalidated() { progressBar.setLength(-360.0 * get()); }
-            @Override public Object getBean() { return Timer.this; }
-            @Override public String getName() { return "progress"; }
-        };
-        timeline           = new Timeline();
-        initGraphics();
-        registerListeners();
-    }
+	// ******************** Constructors **************************************
+	public Timer() {
+		getStylesheets().add(Timer.class.getResource("timer.css").toExternalForm());
+		backgroundPaint = Color.TRANSPARENT;
+		borderPaint = Color.TRANSPARENT;
+		borderWidth = 0d;
+		_backgroundColor = Color.TRANSPARENT;
+		_color = DEFAULT_COLOR;
+		_waitingColor = DEFAULT_COLOR;
+		_playButtonVisible = true;
+		stateProperty.set(State.STOPPED);
+		_duration = Duration.seconds(10);
+		currentDuration = Duration.ZERO;
+		progress = new DoublePropertyBase(0) {
+			@Override
+			protected void invalidated() {
+				progressBar.setLength(-360.0 * get());
+			}
 
+			@Override
+			public Object getBean() {
+				return Timer.this;
+			}
 
-    // ******************** Initialization ************************************
-    private void initGraphics() {
-        if (Double.compare(getPrefWidth(), 0.0) <= 0 || Double.compare(getPrefHeight(), 0.0) <= 0 || Double.compare(getWidth(), 0.0) <= 0 ||
-            Double.compare(getHeight(), 0.0) <= 0) {
-            if (getPrefWidth() > 0 && getPrefHeight() > 0) {
-                setPrefSize(getPrefWidth(), getPrefHeight());
-            } else {
-                setPrefSize(PREFERRED_WIDTH, PREFERRED_HEIGHT);
-            }
-        }
+			@Override
+			public String getName() {
+				return "progress";
+			}
+		};
+		// timeline = Optional.of(new Timeline());
+		timeline = Optional.empty();
+		initGraphics();
+		registerListeners();
+	}
 
-        getStyleClass().add("timer");
+	// ******************** Initialization ************************************
+	private void initGraphics() {
+		if (Double.compare(getPrefWidth(), 0.0) <= 0 || Double.compare(getPrefHeight(), 0.0) <= 0
+				|| Double.compare(getWidth(), 0.0) <= 0 || Double.compare(getHeight(), 0.0) <= 0) {
+			if (getPrefWidth() > 0 && getPrefHeight() > 0) {
+				setPrefSize(getPrefWidth(), getPrefHeight());
+			} else {
+				setPrefSize(PREFERRED_WIDTH, PREFERRED_HEIGHT);
+			}
+		}
 
-        ring = new Arc();
-        ring.setStartAngle(0);
-        ring.setLength(360);
-        ring.setStroke(_color);
-        ring.setStrokeType(StrokeType.INSIDE);
+		getStyleClass().add("timer");
 
-        progressBar = new Arc();
-        progressBar.setType(ArcType.OPEN);
-        progressBar.setFill(_backgroundColor);
-        progressBar.setStroke(_color);
-        progressBar.setStrokeLineCap(StrokeLineCap.BUTT);
-        progressBar.setStartAngle(90);
-        progressBar.setLength(0);
-        progressBar.setMouseTransparent(true);
+		ring = new Arc();
+		ring.setStartAngle(0);
+		ring.setLength(360);
+		ring.setStroke(_color);
+		ring.setStrokeType(StrokeType.INSIDE);
 
-        stopButton = new Rectangle();
-        stopButton.setVisible(false);
-        stopButton.setManaged(false);
-        stopButton.setStroke(null);
-        stopButton.setMouseTransparent(true);
+		progressBar = new Arc();
+		progressBar.setType(ArcType.OPEN);
+		progressBar.setFill(_backgroundColor);
+		progressBar.setStroke(_color);
+		progressBar.setStrokeLineCap(StrokeLineCap.BUTT);
+		progressBar.setStartAngle(90);
+		progressBar.setLength(0);
+		progressBar.setMouseTransparent(true);
 
-        playButtonP1 = new MoveTo();
-        playButtonP2 = new LineTo();
-        playButtonP3 = new LineTo();
-        playButton = new Path(playButtonP1, playButtonP2, playButtonP3, new ClosePath());
-        playButton.setStroke(null);
-        playButton.setMouseTransparent(true);
+		stopButton = new Rectangle();
+		stopButton.setVisible(false);
+		stopButton.setManaged(false);
+		stopButton.setStroke(null);
+		stopButton.setMouseTransparent(true);
 
-        pane = new Pane(ring, progressBar, stopButton, playButton);
-        pane.setBackground(new Background(new BackgroundFill(backgroundPaint, CornerRadii.EMPTY, Insets.EMPTY)));
-        pane.setBorder(new Border(new BorderStroke(borderPaint, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(borderWidth))));
+		playButtonP1 = new MoveTo();
+		playButtonP2 = new LineTo();
+		playButtonP3 = new LineTo();
+		playButton = new Path(playButtonP1, playButtonP2, playButtonP3, new ClosePath());
+		playButton.setStroke(null);
+		playButton.setMouseTransparent(true);
 
-        getChildren().setAll(pane);
-    }
+		pane = new Pane(ring, progressBar, stopButton, playButton);
+		pane.setBackground(new Background(new BackgroundFill(backgroundPaint, CornerRadii.EMPTY, Insets.EMPTY)));
+		pane.setBorder(new Border(new BorderStroke(borderPaint, BorderStrokeStyle.SOLID, CornerRadii.EMPTY,
+				new BorderWidths(borderWidth))));
 
-    private void registerListeners() {
-        widthProperty().addListener(o -> resize());
-        heightProperty().addListener(o -> resize());
-        timeline.setOnFinished(event -> {
-            finished();
-            fireTimerEvent(FINISHED);
-        });
-        ring.setOnMousePressed(event -> {
-            switch(state) {
-                case RUNNING: stop();break;
-                case STOPPED: if (currentDuration.greaterThan(Duration.ZERO)) { startFromCurrent(); } else { start(); } break;
-                case WAITING: stop();break;
-            }
-        });
-    }
+		getChildren().setAll(pane);
+	}
 
+	private Consumer<TimerEvent.Type> timerEvent;
 
-    // ******************** Methods *******************************************
-    @Override protected double computeMinWidth(final double HEIGHT) { return MINIMUM_WIDTH; }
-    @Override protected double computeMinHeight(final double WIDTH) { return MINIMUM_HEIGHT; }
-    @Override protected double computePrefWidth(final double HEIGHT) { return super.computePrefWidth(HEIGHT); }
-    @Override protected double computePrefHeight(final double WIDTH) { return super.computePrefHeight(WIDTH); }
-    @Override protected double computeMaxWidth(final double HEIGHT) { return MAXIMUM_WIDTH; }
-    @Override protected double computeMaxHeight(final double WIDTH) { return MAXIMUM_HEIGHT; }
+	public void setOnEvent(Consumer<TimerEvent.Type> timerEvent) {
+		this.timerEvent = timerEvent;
+	}
 
-    @Override public ObservableList<Node> getChildren() { return super.getChildren(); }
+	private void registerListeners() {
+		widthProperty().addListener(o -> resize());
+		heightProperty().addListener(o -> resize());
+		timeline.ifPresent(tl -> tl.setOnFinished(event -> {
+			finished();
+			fireTimerEvent(FINISHED);
+		}));
+		ring.setOnMousePressed(event -> {
+			switch (stateProperty.get()) {
+			case RUNNING:
+				if (timerEvent != null) {
+					timerEvent.accept(TimerEvent.Type.STOPPED);
+				}
+				break;
+			case STOPPED:
+				if (timerEvent != null) {
+					timerEvent.accept(TimerEvent.Type.STARTED);
+				}
+				break;
+			case WAITING:
+				stop();
+				break;
+			}
+		});
+		stateProperty.addListener((r, o, n) -> {
+			switch (n) {
+			case RUNNING:
+				ring.setLength(360);
+				if (isPlayButtonVisible()) {
+					disableNode(playButton);
+				}
+				enableNode(stopButton);
+				break;
+			case STOPPED:
+				ring.setLength(360);
+				ring.setStroke(getColor());
+				disableNode(stopButton);
+				stopButton.setFill(getColor());
+				if (isPlayButtonVisible()) {
+					enableNode(playButton);
+				}
+				break;
+			case WAITING:
+				ring.setLength(300);
+				ring.setStroke(getWaitingColor());
+				if (isPlayButtonVisible()) {
+					disableNode(playButton);
+				}
+				stopButton.setFill(getWaitingColor());
+				enableNode(stopButton);
+				break;
+			default:
+				break;
+			}
+		});
+	}
 
-    public Color getBackgroundColor() { return null == backgroundColor ? _backgroundColor : backgroundColor.get(); }
-    public void setBackgroundColor(final Color COLOR) {
-        if (null == backgroundColor) {
-            _backgroundColor = COLOR;
-            redraw();
-        } else {
-            backgroundColor.set(COLOR);
-        }
-    }
-    public ObjectProperty<Color> backgroundColorProperty() {
-        if (null == backgroundColor) {
-            backgroundColor = new ObjectPropertyBase<Color>(_backgroundColor) {
-                @Override protected void invalidated() { redraw(); }
-                @Override public Object getBean() { return Timer.this; }
-                @Override public String getName() { return "backgroundColor"; }
-            };
-            _backgroundColor = null;
-        }
-        return backgroundColor;
-    }
+	// ******************** Methods *******************************************
+	@Override
+	protected double computeMinWidth(final double HEIGHT) {
+		return MINIMUM_WIDTH;
+	}
 
-    public Color getColor() { return null == color ? _color : color.get(); }
-    public void setColor(final Color COLOR) {
-        if (null == color) {
-            _color = COLOR;
-            redraw();
-        } else {
-            color.set(COLOR);
-        }
-    }
-    public ObjectProperty<Color> colorProperty() {
-        if (null == color) {
-            color = new ObjectPropertyBase<Color>(_color) {
-                @Override protected void invalidated() { redraw(); }
-                @Override public Object getBean() { return Timer.this; }
-                @Override public String getName() { return "color"; }
-            };
-            _color = null;
-        }
-        return color;
-    }
+	@Override
+	protected double computeMinHeight(final double WIDTH) {
+		return MINIMUM_HEIGHT;
+	}
 
-    public Color getWaitingColor() { return null == waitingColor ? _waitingColor : waitingColor.get(); }
-    public void setWaitingColor(final Color COLOR) {
-        if (null == waitingColor) {
-            _waitingColor = COLOR;
-            redraw();
-        } else {
-            waitingColor.set(COLOR);
-            redraw();
-        }
-    }
-    public ObjectProperty<Color> waitingColorProperty() {
-        if (null == waitingColor) {
-            waitingColor = new ObjectPropertyBase<Color>(_waitingColor) {
-                @Override protected void invalidated() { redraw(); }
-                @Override public Object getBean() { return Timer.this; }
-                @Override public String getName() { return "waitingColor"; }
-            };
-            _waitingColor = null;
-        }
-        return waitingColor;
-    }
+	@Override
+	protected double computePrefWidth(final double HEIGHT) {
+		return super.computePrefWidth(HEIGHT);
+	}
 
-    public boolean isPlayButtonVisible() { return null == playButtonVisible ? _playButtonVisible : playButtonVisible.get(); }
-    public void setPlayButtonVisible(final boolean VISIBLE) {
-        if (null == playButtonVisible) {
-            _playButtonVisible = VISIBLE;
-            if (VISIBLE) { enableNode(playButton); } else { disableNode(playButton); }
-        } else {
-            playButtonVisible.set(VISIBLE);
-        }
-    }
-    public BooleanProperty playButtonVisibleProperty() {
-        if (null == playButtonVisible) {
-            playButtonVisible = new BooleanPropertyBase(_playButtonVisible) {
-                @Override protected void invalidated() { if (get()) { enableNode(playButton); } else { disableNode(playButton); }}
-                @Override public Object getBean() { return Timer.this; }
-                @Override public String getName() { return "playButtonVisible"; }
-            };
-        }
-        return playButtonVisible;
-    }
+	@Override
+	protected double computePrefHeight(final double WIDTH) {
+		return super.computePrefHeight(WIDTH);
+	}
 
-    public double getProgress() { return progress.get(); }
-    public void setProgress(final double PROGRESS) { progress.set(clamp(0.0, 1.0, PROGRESS)); }
-    public ReadOnlyDoubleProperty progressProperty() { return progress; }
+	@Override
+	protected double computeMaxWidth(final double HEIGHT) {
+		return MAXIMUM_WIDTH;
+	}
 
-    public Duration getDuration() { return null == duration ? _duration : duration.get(); }
-    public void setDuration(final Duration DURATION) {
-        if (null == duration) {
-            _duration = DURATION;
-        } else {
-            duration.set(DURATION);
-        }
-    }
-    public ObjectProperty<Duration> durationProperty() {
-        if (null == duration) {
-            duration = new ObjectPropertyBase<Duration>(_duration) {
-                @Override public Object getBean() { return Timer.this; }
-                @Override public String getName() { return "duration"; }
-            };
-            _duration = null;
-        }
-        return duration;
-    }
+	@Override
+	protected double computeMaxHeight(final double WIDTH) {
+		return MAXIMUM_HEIGHT;
+	}
 
-    public void start() {
-        ring.setLength(360);
+	@Override
+	public ObservableList<Node> getChildren() {
+		return super.getChildren();
+	}
 
-        KeyValue kv0 = new KeyValue(progress, 0.0);
-        KeyValue kv1 = new KeyValue(progress, 1.0);
+	public Color getBackgroundColor() {
+		return null == backgroundColor ? _backgroundColor : backgroundColor.get();
+	}
 
-        KeyFrame kf0 = new KeyFrame(Duration.ZERO, kv0);
-        KeyFrame kf1 = new KeyFrame(getDuration(), kv1);
+	public void setBackgroundColor(final Color COLOR) {
+		if (null == backgroundColor) {
+			_backgroundColor = COLOR;
+			redraw();
+		} else {
+			backgroundColor.set(COLOR);
+		}
+	}
 
-        timeline.getKeyFrames().setAll(kf0, kf1);
+	public ObjectProperty<Color> backgroundColorProperty() {
+		if (null == backgroundColor) {
+			backgroundColor = new ObjectPropertyBase<Color>(_backgroundColor) {
+				@Override
+				protected void invalidated() {
+					redraw();
+				}
 
-        if (isPlayButtonVisible()) { disableNode(playButton); }
-        enableNode(stopButton);
+				@Override
+				public Object getBean() {
+					return Timer.this;
+				}
 
-        timeline.setCycleCount(1);
-        timeline.playFromStart();
+				@Override
+				public String getName() {
+					return "backgroundColor";
+				}
+			};
+			_backgroundColor = null;
+		}
+		return backgroundColor;
+	}
 
-        state = State.RUNNING;
-        fireTimerEvent(STARTED);
-    }
-    public void startFromCurrent() {
-        ring.setLength(360);
+	public Color getColor() {
+		return null == color ? _color : color.get();
+	}
 
-        KeyValue kv0 = new KeyValue(progress, 0.0);
-        KeyValue kv1 = new KeyValue(progress, 1.0);
+	public void setColor(final Color COLOR) {
+		if (null == color) {
+			_color = COLOR;
+			redraw();
+		} else {
+			color.set(COLOR);
+		}
+	}
 
-        KeyFrame kf0 = new KeyFrame(Duration.ZERO, kv0);
-        KeyFrame kf1 = new KeyFrame(getDuration(), kv1);
+	public ObjectProperty<Color> colorProperty() {
+		if (null == color) {
+			color = new ObjectPropertyBase<Color>(_color) {
+				@Override
+				protected void invalidated() {
+					redraw();
+				}
 
-        timeline.getKeyFrames().setAll(kf0, kf1);
-        timeline.jumpTo(currentDuration);
+				@Override
+				public Object getBean() {
+					return Timer.this;
+				}
 
-        if (isPlayButtonVisible()) { disableNode(playButton); }
-        enableNode(stopButton);
+				@Override
+				public String getName() {
+					return "color";
+				}
+			};
+			_color = null;
+		}
+		return color;
+	}
 
-        timeline.setCycleCount(1);
-        timeline.play();
+	public Color getWaitingColor() {
+		return null == waitingColor ? _waitingColor : waitingColor.get();
+	}
 
-        state = State.RUNNING;
-        fireTimerEvent(CONTINUED);
-    }
-    public void stop() {
-        currentDuration = state == State.WAITING ? Duration.ZERO : timeline.getCurrentTime();
-        timeline.stop();
-        timeline.setCycleCount(1);
+	public void setWaitingColor(final Color COLOR) {
+		if (null == waitingColor) {
+			_waitingColor = COLOR;
+			redraw();
+		} else {
+			waitingColor.set(COLOR);
+			redraw();
+		}
+	}
 
-        ring.setLength(360);
-        ring.setStroke(getColor());
+	public ObjectProperty<Color> waitingColorProperty() {
+		if (null == waitingColor) {
+			waitingColor = new ObjectPropertyBase<Color>(_waitingColor) {
+				@Override
+				protected void invalidated() {
+					redraw();
+				}
 
-        disableNode(stopButton);
-        stopButton.setFill(getColor());
-        if (isPlayButtonVisible()) { enableNode(playButton); }
+				@Override
+				public Object getBean() {
+					return Timer.this;
+				}
 
-        state = State.STOPPED;
-        fireTimerEvent(STOPPED);
-    }
-    public void reset() {
-        finished();
-        fireTimerEvent(RESET);
-    }
-    public void waiting() {
-        timeline.stop();
-        KeyValue kv0 = new KeyValue(ring.rotateProperty(), 0);
-        KeyValue kv1 = new KeyValue(ring.rotateProperty(), 360);
+				@Override
+				public String getName() {
+					return "waitingColor";
+				}
+			};
+			_waitingColor = null;
+		}
+		return waitingColor;
+	}
 
-        KeyFrame kf0 = new KeyFrame(Duration.ZERO, kv0);
-        KeyFrame kf1 = new KeyFrame(Duration.seconds(1), kv1);
+	public boolean isPlayButtonVisible() {
+		return null == playButtonVisible ? _playButtonVisible : playButtonVisible.get();
+	}
 
-        timeline.getKeyFrames().setAll(kf0, kf1);
+	public void setPlayButtonVisible(final boolean VISIBLE) {
+		if (null == playButtonVisible) {
+			_playButtonVisible = VISIBLE;
+			if (VISIBLE) {
+				enableNode(playButton);
+			} else {
+				disableNode(playButton);
+			}
+		} else {
+			playButtonVisible.set(VISIBLE);
+		}
+	}
 
-        ring.setLength(300);
-        ring.setStroke(getWaitingColor());
+	public BooleanProperty playButtonVisibleProperty() {
+		if (null == playButtonVisible) {
+			playButtonVisible = new BooleanPropertyBase(_playButtonVisible) {
+				@Override
+				protected void invalidated() {
+					if (get()) {
+						enableNode(playButton);
+					} else {
+						disableNode(playButton);
+					}
+				}
 
-        if (isPlayButtonVisible()) { disableNode(playButton); }
-        stopButton.setFill(getWaitingColor());
-        enableNode(stopButton);
+				@Override
+				public Object getBean() {
+					return Timer.this;
+				}
 
-        timeline.setCycleCount(Animation.INDEFINITE);
-        timeline.play();
+				@Override
+				public String getName() {
+					return "playButtonVisible";
+				}
+			};
+		}
+		return playButtonVisible;
+	}
 
-        state = State.WAITING;
-        fireTimerEvent(WAITING);
-    }
-    private void finished() {
-        timeline.stop();
-        timeline.setCycleCount(1);
+	public double getProgress() {
+		return progress.get();
+	}
 
-        ring.setLength(360);
-        setProgress(0);
-        currentDuration = Duration.ZERO;
+	public void setProgress(final double PROGRESS) {
+		progress.set(clamp(0.0, 1.0, PROGRESS));
+	}
 
-        disableNode(stopButton);
-        if (isPlayButtonVisible()) { enableNode(playButton); }
+	public ReadOnlyDoubleProperty progressProperty() {
+		return progress;
+	}
 
-        state = State.STOPPED;
-    }
+	public ObjectProperty<State> stateProperty() {
+		return stateProperty;
+	}
 
-    private double clamp(final double min, final double max, final double value) {
-        if (value < min) return min;
-        if (value > max) return max;
-        return value;
-    }
+	public Duration getDuration() {
+		return null == duration ? _duration : duration.get();
+	}
 
-    private void enableNode(final Node NODE) {
-        NODE.setManaged(true);
-        NODE.setVisible(true);
-    }
-    private void disableNode(final Node NODE) {
-        NODE.setVisible(false);
-        NODE.setManaged(false);
-    }
+	public void setDuration(final Duration DURATION) {
+		if (null == duration) {
+			_duration = DURATION;
+		} else {
+			duration.set(DURATION);
+		}
+	}
 
+	public ObjectProperty<Duration> durationProperty() {
+		if (null == duration) {
+			duration = new ObjectPropertyBase<Duration>(_duration) {
+				@Override
+				public Object getBean() {
+					return Timer.this;
+				}
 
-    // ******************** EventHandling *************************************
-    public void setOnTimerEvent(final TimerEventListener LISTENER) { addTimerEventListener(LISTENER); }
-    public void addTimerEventListener(final TimerEventListener LISTENER) { if (!listenerList.contains(LISTENER)) listenerList.add(LISTENER); }
-    public void removeTimerEventListener(final TimerEventListener LISTENER) { if (listenerList.contains(LISTENER)) listenerList.remove(LISTENER); }
+				@Override
+				public String getName() {
+					return "duration";
+				}
+			};
+			_duration = null;
+		}
+		return duration;
+	}
 
-    public void fireTimerEvent(final TimerEvent EVENT) {
-        for (TimerEventListener listener : listenerList) { listener.onTimerEvent(EVENT); }
-    }
+	public void start() {
+		ring.setLength(360);
 
+		KeyValue kv0 = new KeyValue(progress, 0.0);
+		KeyValue kv1 = new KeyValue(progress, 1.0);
 
-    // ******************** Resizing ******************************************
-    private void resize() {
-        width   = getWidth() - getInsets().getLeft() - getInsets().getRight();
-        height  = getHeight() - getInsets().getTop() - getInsets().getBottom();
-        size    = width < height ? width : height;
-        centerX = size * 0.5;
-        centerY = size * 0.5;
+		KeyFrame kf0 = new KeyFrame(Duration.ZERO, kv0);
+		KeyFrame kf1 = new KeyFrame(getDuration(), kv1);
 
-        if (width > 0 && height > 0) {
-            pane.setMaxSize(size, size);
-            pane.setPrefSize(size, size);
-            pane.relocate((getWidth() - size) * 0.5, (getHeight() - size) * 0.5);
+		timeline.ifPresent(tl -> tl.getKeyFrames().setAll(kf0, kf1));
 
-            ring.setCenterX(centerX);
-            ring.setCenterY(centerY);
-            ring.setRadiusX(centerX);
-            ring.setRadiusY(centerY);
-            ring.setStrokeWidth(size * 0.05263158);
+		if (isPlayButtonVisible()) {
+			disableNode(playButton);
+		}
+		enableNode(stopButton);
 
-            progressBar.setCenterX(centerX);
-            progressBar.setCenterY(centerY);
-            progressBar.setRadiusX(size * 0.44736842);
-            progressBar.setRadiusY(size * 0.44736842);
-            progressBar.setStrokeWidth(size * 0.10526316);
+		timeline.ifPresent(tl -> tl.setCycleCount(1));
+		timeline.ifPresent(tl -> tl.playFromStart());
 
-            stopButton.setWidth(size * 0.26315789);
-            stopButton.setHeight(size * 0.26315789);
-            stopButton.relocate((centerX - size * 0.13157895), (centerY - size * 0.13157895));
+		stateProperty.set(State.RUNNING);
+		fireTimerEvent(STARTED);
+	}
 
-            playButtonP1.setX(size * 0.36842105);
-            playButtonP1.setY(size * 0.26315789);
-            playButtonP2.setX(size * 0.73684211);
-            playButtonP2.setY(size * 0.5);
-            playButtonP3.setX(size * 0.36842105);
-            playButtonP3.setY(size * 0.73684211);
+	public void startFromCurrent() {
+		ring.setLength(360);
 
-            redraw();
-        }
-    }
+		KeyValue kv0 = new KeyValue(progress, 0.0);
+		KeyValue kv1 = new KeyValue(progress, 1.0);
 
-    private void redraw() {
-        ring.setFill(getBackgroundColor());
-        ring.setStroke(state == State.WAITING ? getWaitingColor() : getColor());
-        progressBar.setFill(getBackgroundColor());
-        progressBar.setStroke(getColor());
-        stopButton.setFill(state == State.WAITING ? getWaitingColor() : getColor());
-        playButton.setFill(getColor());
-        pane.setBackground(new Background(new BackgroundFill(backgroundPaint, CornerRadii.EMPTY, Insets.EMPTY)));
-        pane.setBorder(new Border(new BorderStroke(borderPaint, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(borderWidth / PREFERRED_WIDTH * size))));
-    }
+		KeyFrame kf0 = new KeyFrame(Duration.ZERO, kv0);
+		KeyFrame kf1 = new KeyFrame(getDuration(), kv1);
+
+		timeline.ifPresent(tl -> tl.getKeyFrames().setAll(kf0, kf1));
+		timeline.ifPresent(tl -> tl.jumpTo(currentDuration));
+
+		if (isPlayButtonVisible()) {
+			disableNode(playButton);
+		}
+		enableNode(stopButton);
+
+		timeline.ifPresent(tl -> tl.setCycleCount(1));
+		timeline.ifPresent(tl -> tl.play());
+
+		stateProperty.set(State.RUNNING);
+		fireTimerEvent(CONTINUED);
+	}
+
+	public void stop() {
+		currentDuration = (stateProperty.get().equals(State.WAITING) || !timeline.isPresent()) ? Duration.ZERO
+				: timeline.get().getCurrentTime();
+		timeline.ifPresent(tl -> tl.stop());
+		timeline.ifPresent(tl -> tl.setCycleCount(1));
+
+		ring.setLength(360);
+		ring.setStroke(getColor());
+
+		disableNode(stopButton);
+		stopButton.setFill(getColor());
+		if (isPlayButtonVisible()) {
+			enableNode(playButton);
+		}
+
+		stateProperty.set(State.STOPPED);
+		fireTimerEvent(STOPPED);
+	}
+
+	public void reset() {
+		finished();
+		fireTimerEvent(RESET);
+	}
+
+	public void waiting() {
+		timeline.ifPresent(tl -> tl.stop());
+		KeyValue kv0 = new KeyValue(ring.rotateProperty(), 0);
+		KeyValue kv1 = new KeyValue(ring.rotateProperty(), 360);
+
+		KeyFrame kf0 = new KeyFrame(Duration.ZERO, kv0);
+		KeyFrame kf1 = new KeyFrame(Duration.seconds(1), kv1);
+
+		timeline.ifPresent(tl -> tl.getKeyFrames().setAll(kf0, kf1));
+
+		ring.setLength(300);
+		ring.setStroke(getWaitingColor());
+
+		if (isPlayButtonVisible()) {
+			disableNode(playButton);
+		}
+		stopButton.setFill(getWaitingColor());
+		enableNode(stopButton);
+
+		timeline.ifPresent(tl -> tl.setCycleCount(Animation.INDEFINITE));
+		timeline.ifPresent(tl -> tl.play());
+
+		stateProperty.set(State.WAITING);
+		fireTimerEvent(WAITING);
+	}
+
+	private void finished() {
+		timeline.ifPresent(tl -> tl.stop());
+		timeline.ifPresent(tl -> tl.setCycleCount(1));
+
+		ring.setLength(360);
+		setProgress(0);
+		currentDuration = Duration.ZERO;
+
+		disableNode(stopButton);
+		if (isPlayButtonVisible()) {
+			enableNode(playButton);
+		}
+
+		stateProperty.set(State.STOPPED);
+	}
+
+	private double clamp(final double min, final double max, final double value) {
+		if (value < min)
+			return min;
+		if (value > max)
+			return max;
+		return value;
+	}
+
+	private void enableNode(final Node NODE) {
+		NODE.setManaged(true);
+		NODE.setVisible(true);
+	}
+
+	private void disableNode(final Node NODE) {
+		NODE.setVisible(false);
+		NODE.setManaged(false);
+	}
+
+	// ******************** EventHandling *************************************
+	public void setOnTimerEvent(final TimerEventListener LISTENER) {
+		addTimerEventListener(LISTENER);
+	}
+
+	public void addTimerEventListener(final TimerEventListener LISTENER) {
+		if (!listenerList.contains(LISTENER))
+			listenerList.add(LISTENER);
+	}
+
+	public void removeTimerEventListener(final TimerEventListener LISTENER) {
+		if (listenerList.contains(LISTENER))
+			listenerList.remove(LISTENER);
+	}
+
+	public void fireTimerEvent(final TimerEvent EVENT) {
+		for (TimerEventListener listener : listenerList) {
+			listener.onTimerEvent(EVENT);
+		}
+	}
+
+	// ******************** Resizing ******************************************
+	private void resize() {
+		width = getWidth() - getInsets().getLeft() - getInsets().getRight();
+		height = getHeight() - getInsets().getTop() - getInsets().getBottom();
+		size = width < height ? width : height;
+		centerX = size * 0.5;
+		centerY = size * 0.5;
+
+		if (width > 0 && height > 0) {
+			pane.setMaxSize(size, size);
+			pane.setPrefSize(size, size);
+			pane.relocate((getWidth() - size) * 0.5, (getHeight() - size) * 0.5);
+
+			ring.setCenterX(centerX);
+			ring.setCenterY(centerY);
+			ring.setRadiusX(centerX);
+			ring.setRadiusY(centerY);
+			ring.setStrokeWidth(size * 0.05263158);
+
+			progressBar.setCenterX(centerX);
+			progressBar.setCenterY(centerY);
+			progressBar.setRadiusX(size * 0.44736842);
+			progressBar.setRadiusY(size * 0.44736842);
+			progressBar.setStrokeWidth(size * 0.10526316);
+
+			stopButton.setWidth(size * 0.26315789);
+			stopButton.setHeight(size * 0.26315789);
+			stopButton.relocate((centerX - size * 0.13157895), (centerY - size * 0.13157895));
+
+			playButtonP1.setX(size * 0.36842105);
+			playButtonP1.setY(size * 0.26315789);
+			playButtonP2.setX(size * 0.73684211);
+			playButtonP2.setY(size * 0.5);
+			playButtonP3.setX(size * 0.36842105);
+			playButtonP3.setY(size * 0.73684211);
+
+			redraw();
+		}
+	}
+
+	private void redraw() {
+		ring.setFill(getBackgroundColor());
+		ring.setStroke(stateProperty.get() == State.WAITING ? getWaitingColor() : getColor());
+		progressBar.setFill(getBackgroundColor());
+		progressBar.setStroke(getColor());
+		stopButton.setFill(stateProperty.get() == State.WAITING ? getWaitingColor() : getColor());
+		playButton.setFill(getColor());
+		pane.setBackground(new Background(new BackgroundFill(backgroundPaint, CornerRadii.EMPTY, Insets.EMPTY)));
+		pane.setBorder(new Border(new BorderStroke(borderPaint, BorderStrokeStyle.SOLID, CornerRadii.EMPTY,
+				new BorderWidths(borderWidth / PREFERRED_WIDTH * size))));
+	}
 }

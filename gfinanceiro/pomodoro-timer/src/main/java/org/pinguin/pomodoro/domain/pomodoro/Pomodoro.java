@@ -8,21 +8,24 @@ import static org.pinguin.pomodoro.domain.pomodoro.PomodoroState.PAUSED;
 import static org.pinguin.pomodoro.domain.pomodoro.PomodoroState.RESTING;
 import static org.pinguin.pomodoro.domain.pomodoro.PomodoroState.STOPPED;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BiConsumer;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 
 public class Pomodoro {
 
-	private Long id;
+	// private Long id;
 	private Long execDuration = 25L * 60L * 1000L;
 	private Long restDuration = 5L * 60L * 1000L;
-	private Long remaining = 0L;
-	private PomodoroState state = STOPPED;
+	private Long remaining = execDuration;
+	private final ObjectProperty<PomodoroState> stateProp = new SimpleObjectProperty<>(STOPPED);
+
+	private Timer timer;
 
 	private long lastUpdate;
 
-	private final List<BiConsumer<PomodoroState, PomodoroState>> changeListeners = new ArrayList<>();
 	private Runnable onTimeout;
 
 	public void setOnTimeout(final Runnable onTimeout) {
@@ -30,61 +33,66 @@ public class Pomodoro {
 	}
 
 	public void onEvent(final PomodoroEvent evt) {
-		final PomodoroState oldState = this.state;
-		final PomodoroState newState = this.state.after(evt);
+		final PomodoroState oldState = stateProp.get();
+		final PomodoroState newState = stateProp.get().after(evt);
 		if (newState == null) {
-			throw new IllegalArgumentException("Evento nao esparado para o estado atual: " + evt + " " + this.state);
+			throw new IllegalArgumentException(
+					"Evento nao esparado para o estado atual: " + evt + " " + this.stateProp.get());
 		}
-		this.state = newState;
-
-		notifiyTransition(oldState, newState);
+		stateProp.set(newState);
 
 		// Acoes das mudancas de estado
 		if (evt.equals(START) && (oldState.equals(STOPPED) || oldState.equals(RESTING))) {
 			// reiniciando o remaining
 			remaining = execDuration;
 			lastUpdate = System.currentTimeMillis();
-		} else if (evt.equals(PAUSE) && oldState.equals(EXECUTING)) {
-			remaining -= System.currentTimeMillis() - lastUpdate;
+			onTimeout(FINISH, execDuration);
 		} else if (evt.equals(START) && oldState.equals(PAUSED)) {
 			lastUpdate = System.currentTimeMillis();
-		} else if (evt.equals(FINISH)) {
+			onTimeout(FINISH, remaining);
+		} else if (evt.equals(PAUSE) && oldState.equals(EXECUTING)) {
+			remaining -= System.currentTimeMillis() - lastUpdate;
+			timer.cancel();
+			timer = null;
+		} else if (evt.equals(FINISH) && oldState.equals(EXECUTING)) {
 			remaining = restDuration;
+			lastUpdate = System.currentTimeMillis();
+			onTimeout(FINISH, restDuration);
+		} else if (evt.equals(FINISH) && oldState.equals(RESTING)) {
+			remaining = execDuration;
 			lastUpdate = System.currentTimeMillis();
 		} else {
 			System.out.println("Evento sem acao: " + evt);
 		}
 	}
 
-	private void notifiyTransition(final PomodoroState oldState, final PomodoroState newState) {
-		for (BiConsumer<PomodoroState, PomodoroState> listener : changeListeners) {
-			listener.accept(oldState, newState);
+	private void onTimeout(final PomodoroEvent evt, long timeout) {
+		if (timer != null) {
+			timer.cancel();
 		}
-	}
+		timer = new Timer(true);
 
-	public void updateRemaining() {
-		remaining -= System.currentTimeMillis() - lastUpdate;
-		lastUpdate = System.currentTimeMillis();
-
-		if (remaining <= 0) {
-			remaining = 0L;
-			onEvent(FINISH);
-			if (onTimeout != null) {
-				onTimeout.run();
+		final TimerTask task = new TimerTask() {
+			@Override
+			public void run() {
+				Pomodoro.this.onEvent(evt);
+				if (Pomodoro.this.onTimeout != null) {
+					Pomodoro.this.onTimeout.run();
+				}
 			}
-		}
+		};
+		timer.schedule(task, timeout);
 	}
 
 	public Long getRemaining() {
 		return remaining;
 	}
 
-	public PomodoroState getState() {
-		return state;
+	public long getLastUpdate() {
+		return lastUpdate;
 	}
 
-	public void addListener(final BiConsumer<PomodoroState, PomodoroState> listener) {
-		this.changeListeners.add(listener);
+	public ObjectProperty<PomodoroState> stateProperty() {
+		return stateProp;
 	}
-
 }

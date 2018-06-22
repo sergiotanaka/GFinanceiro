@@ -48,7 +48,7 @@ public class PomodoroApp extends Application {
 				primaryStage.requestFocus();
 			});
 		});
-		mainPane.setUpdateRemaining(r -> Platform.runLater(() -> primaryStage.setTitle("PT " + r)));
+		mainPane.remainingProperty().addListener((r, o, n) -> primaryStage.setTitle("PT " + n));
 		final TaskRepository taskRepo = injector.getInstance(TaskRepository.class);
 		final ObservableList<TaskRow> items = FXCollections.observableArrayList();
 		taskRepo.getAllUndone().forEach(t -> items.add(buildTaskRow(t)));

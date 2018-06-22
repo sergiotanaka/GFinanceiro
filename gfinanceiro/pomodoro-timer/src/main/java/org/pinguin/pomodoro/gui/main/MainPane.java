@@ -3,15 +3,13 @@ package org.pinguin.pomodoro.gui.main;
 import static org.pinguin.pomodoro.domain.pomodoro.PomodoroEvent.FINISH;
 import static org.pinguin.pomodoro.domain.pomodoro.PomodoroEvent.PAUSE;
 import static org.pinguin.pomodoro.domain.pomodoro.PomodoroEvent.START;
-import static org.pinguin.pomodoro.domain.pomodoro.PomodoroState.EXECUTING;
-import static org.pinguin.pomodoro.domain.pomodoro.PomodoroState.RESTING;
 
 import java.io.IOException;
 import java.time.LocalTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -26,17 +24,21 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.pinguin.pomodoro.domain.pomodoro.Pomodoro;
+import org.pinguin.pomodoro.domain.pomodoro.PomodoroState;
 import org.pinguin.pomodoro.domain.task.Task;
 import org.pinguin.pomodoro.domain.task.TaskRepository;
 import org.pinguin.pomodoro.domain.task.TaskState;
 import org.pinguin.pomodoro.domain.taskstatetransition.TaskStateTransition;
 import org.pinguin.pomodoro.domain.transition.Transition;
 import org.pinguin.pomodoro.gui.mini.MiniPane;
+import org.pinguin.pomodoro.gui.timer.Timer.State;
 
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -63,9 +65,8 @@ import javafx.stage.Stage;
 public class MainPane extends BorderPane {
 
 	private Runnable callFocus;
-	private Consumer<String> updateRemaining;
 
-	private final DoubleProperty remainingProp = new SimpleDoubleProperty(0);
+	private final DoubleProperty progressProp = new SimpleDoubleProperty(0);
 
 	@Inject
 	private EntityManager em;
@@ -73,9 +74,11 @@ public class MainPane extends BorderPane {
 	private TaskRepository taskRepo;
 
 	private final TreeTableView<TaskRow> taskTableView;
-	private final Label remainingLbl = new Label("25:00");
+	private final Label remainingLbl = new Label();
 	private final Button pauseBtn = new Button("Pausar");
 	private final Button stopBtn = new Button("Parar");
+
+	private final StringProperty remainingProp = new SimpleStringProperty();
 
 	private Pomodoro actual = new Pomodoro();
 
@@ -95,43 +98,9 @@ public class MainPane extends BorderPane {
 		final Button startBtn = new Button("Iniciar");
 		grid.add(new HBox(startBtn, pauseBtn, stopBtn), 0, 2, 2, 1);
 
-		startBtn.setOnAction(e -> {
-			actual.onEvent(START);
-			new Thread(() -> {
-				while (actual.getState().equals(EXECUTING)) {
-					actual.updateRemaining();
-					final LocalTime remainTime = LocalTime.ofSecondOfDay(actual.getRemaining() / 1000);
-					Platform.runLater(() -> remainingLbl.textProperty().set(remainTime.toString()));
-					Platform.runLater(() -> remainingProp.set((actual.getRemaining() * 1.0) / (25.0 * 60.0 * 1000.0)));
-					if (updateRemaining != null) {
-						updateRemaining.accept(remainTime.toString());
-					}
-					try {
-						Thread.sleep(500);
-					} catch (InterruptedException e1) {
-					}
-				}
-			}).start();
-		});
+		startBtn.setOnAction(e -> actual.onEvent(START));
 		pauseBtn.setOnAction(e -> actual.onEvent(PAUSE));
-		stopBtn.setOnAction(e -> {
-			actual.onEvent(FINISH);
-			new Thread(() -> {
-				while (actual.getState().equals(RESTING)) {
-					actual.updateRemaining();
-					LocalTime remainTime = LocalTime.ofSecondOfDay(actual.getRemaining() / 1000);
-					Platform.runLater(() -> remainingLbl.textProperty().set(remainTime.toString()));
-					Platform.runLater(() -> remainingProp.set((actual.getRemaining() * 1.0) / (5.0 * 60.0 * 1000.0)));
-					if (updateRemaining != null) {
-						updateRemaining.accept(remainTime.toString());
-					}
-					try {
-						Thread.sleep(500);
-					} catch (InterruptedException e1) {
-					}
-				}
-			}).start();
-		});
+		stopBtn.setOnAction(e -> actual.onEvent(FINISH));
 
 		final Button testBtn = new Button("Salvar");
 		testBtn.setOnAction(e -> {
@@ -139,16 +108,42 @@ public class MainPane extends BorderPane {
 			em.getTransaction().begin();
 		});
 
-		final Button clockBtn = new Button("Rel�gio");
+		final Button clockBtn = new Button("Relógio");
 		clockBtn.setOnAction(e -> {
 			final Stage clock = new Stage();
 			final MiniPane miniPane = new MiniPane();
+			progressProp.addListener((r, o, n) -> miniPane.getTimer().setProgress((double) n));
+			if (actual.stateProperty().get().equals(PomodoroState.EXECUTING)
+					|| actual.stateProperty().get().equals(PomodoroState.RESTING)) {
+				miniPane.getTimer().stateProperty().set(State.RUNNING);
+			} else if (actual.stateProperty().get().equals(PomodoroState.STOPPED)
+					|| actual.stateProperty().get().equals(PomodoroState.PAUSED)) {
+				miniPane.getTimer().stateProperty().set(State.STOPPED);
+			}
+			actual.stateProperty().addListener((r, o, n) -> {
+				if (n.equals(PomodoroState.EXECUTING) || n.equals(PomodoroState.RESTING)) {
+					miniPane.getTimer().stateProperty().set(State.RUNNING);
+				} else if (n.equals(PomodoroState.STOPPED) || n.equals(PomodoroState.PAUSED)) {
+					miniPane.getTimer().stateProperty().set(State.STOPPED);
+				}
+			});
+			miniPane.getTimer().setOnEvent(t -> {
+				switch (t) {
+				case STARTED:
+					actual.onEvent(START);
+					break;
+				case STOPPED:
+					actual.onEvent(PAUSE);
+					break;
+				default:
+					break;
+				}
+			});
+			miniPane.getRemainingLabel().textProperty().bind(remainingProp);
 			clock.setScene(new Scene(miniPane));
 			clock.sizeToScene();
 			clock.toFront();
 			Platform.runLater(clock::centerOnScreen);
-
-//			miniPane.progressProperty().bind(remainingProp);
 
 			clock.show();
 
@@ -179,7 +174,11 @@ public class MainPane extends BorderPane {
 
 		this.centerProperty().set(grid);
 
-		this.actual.addListener((b, a) -> em.persist(new Transition(b, a)));
+		this.actual.stateProperty().addListener((r, o, n) -> {
+			System.out.println(String.format("%s - Mudança de estado: %s -> %s", new Date(), o, n));
+			em.persist(new Transition(o, n));
+		});
+
 		this.actual.setOnTimeout(() -> {
 			if (callFocus != null) {
 				callFocus.run();
@@ -187,6 +186,37 @@ public class MainPane extends BorderPane {
 			stopAllTasks();
 			playAlarm();
 		});
+
+		remainingLbl.textProperty().bind(remainingProp);
+
+		new Thread(() -> {
+			while (true) {
+				long remaining = actual.getRemaining();
+				if (actual.stateProperty().get().equals(PomodoroState.EXECUTING)
+						|| actual.stateProperty().get().equals(PomodoroState.RESTING)) {
+					remaining -= (System.currentTimeMillis() - actual.getLastUpdate());
+				}
+				if (remaining <= 0) {
+					remaining = 0;
+				}
+				final long finalRemaining = remaining;
+				final LocalTime remainTime = LocalTime.ofSecondOfDay(remaining / 1000);
+				Platform.runLater(() -> remainingProp.set(remainTime.toString()));
+				Platform.runLater(() -> {
+					final double totalTime = actual.stateProperty().get().equals(PomodoroState.RESTING) ? 5.0 : 25.0;
+					progressProp.set(1.0 - ((finalRemaining * 1.0) / (totalTime * 60.0 * 1000.0)));
+				});
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e1) {
+				}
+			}
+		}).start();
+
+	}
+
+	public StringProperty remainingProperty() {
+		return remainingProp;
 	}
 
 	private void stopAllTasks() {
@@ -219,10 +249,6 @@ public class MainPane extends BorderPane {
 		this.callFocus = callFocus;
 	}
 
-	public void setUpdateRemaining(Consumer<String> updateRemaining) {
-		this.updateRemaining = updateRemaining;
-	}
-
 	public void setItems(final ObservableList<TaskRow> items) {
 		final TreeItem<TaskRow> root = new TreeItem<TaskRow>(new TaskRow(new Task()));
 		taskTableView.setRoot(root);
@@ -252,9 +278,6 @@ public class MainPane extends BorderPane {
 		final TreeTableView<TaskRow> tableView = new TreeTableView<>();
 		tableView.setShowRoot(false);
 
-		// tableView.setPrefHeight(200.0);
-		// tableView.setMaxHeight(400.0);
-
 		// Tornar editavel
 		tableView.setEditable(true);
 		// Tornar celula selecionavel
@@ -282,12 +305,10 @@ public class MainPane extends BorderPane {
 		tableView.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
 			if (ctrlUp.match(e) || ctrlDown.match(e) || ins.match(e) || del.match(e) || ctrlIns.match(e)) {
 				final TreeItem<TaskRow> sel = tableView.getSelectionModel().getSelectedItem();
-				if (sel == null) {
-					return;
-				}
-				final ObservableList<TreeItem<TaskRow>> items = sel.getParent().getChildren();
-				int indexOfSel = items.indexOf(sel);
-				if (ctrlUp.match(e)) {
+				final ObservableList<TreeItem<TaskRow>> items = sel != null ? sel.getParent().getChildren()
+						: tableView.getRoot().getChildren();
+				int indexOfSel = sel != null ? items.indexOf(sel) : -1;
+				if (ctrlUp.match(e) && sel != null) {
 					if (indexOfSel == 0) {
 						return;
 					}
@@ -295,7 +316,7 @@ public class MainPane extends BorderPane {
 					items.remove(sel);
 					items.add(indexOfSel - 1, sel);
 					tableView.getSelectionModel().select(sel);
-				} else if (ctrlDown.match(e)) {
+				} else if (ctrlDown.match(e) && sel != null) {
 					if (indexOfSel == items.size() - 1) {
 						return;
 					}
@@ -303,7 +324,7 @@ public class MainPane extends BorderPane {
 					items.remove(sel);
 					items.add(indexOfSel + 1, sel);
 					tableView.getSelectionModel().select(sel);
-				} else if (ctrlIns.match(e)) {
+				} else if (ctrlIns.match(e) && sel != null) {
 					final Task newTask = new Task();
 					newTask.setIndex(taskRepo.getNextIndex());
 					newTask.setParentId(sel.getValue().getTask().getId());
@@ -316,10 +337,17 @@ public class MainPane extends BorderPane {
 					final Task newTask = new Task();
 					newTask.setIndex(taskRepo.getNextIndex());
 					final TreeItem<TaskRow> newItem = new TreeItem<TaskRow>(buildTaskRow(newTask));
-					sel.getParent().getChildren().add(indexOfSel + 1, newItem);
+					TreeItem<TaskRow> parent = null;
+					if (sel != null) {
+						parent = sel.getParent();
+						newItem.getValue().getTask().setParentId(parent.getValue().getTask().getId());
+					} else {
+						tableView.getRoot();
+					}
+					parent.getChildren().add(indexOfSel + 1, newItem);
 					em.persist(newTask);
 					tableView.getSelectionModel().select(newItem);
-				} else if (del.match(e)) {
+				} else if (del.match(e) && sel != null) {
 					// TODO fazer cascata?
 					sel.getParent().getChildren().remove(sel);
 					em.remove(sel.getValue().getTask());
