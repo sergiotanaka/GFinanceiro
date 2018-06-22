@@ -51,9 +51,9 @@ public class PomodoroApp extends Application {
 		mainPane.remainingProperty().addListener((r, o, n) -> primaryStage.setTitle("PT " + n));
 		final TaskRepository taskRepo = injector.getInstance(TaskRepository.class);
 		final ObservableList<TaskRow> items = FXCollections.observableArrayList();
-		taskRepo.getAllUndone().forEach(t -> items.add(buildTaskRow(t)));
-
+		taskRepo.getAllUndone().forEach(t -> items.add(buildTaskRow(t, mainPane::updateExecutingTasks)));
 		mainPane.setItems(items);
+		mainPane.updateExecutingTasks();
 
 		primaryStage.setScene(new Scene(mainPane));
 		primaryStage.sizeToScene();
@@ -61,10 +61,12 @@ public class PomodoroApp extends Application {
 		primaryStage.show();
 	}
 
-	private TaskRow buildTaskRow(final Task task) {
+	private TaskRow buildTaskRow(final Task task, final Runnable notifyChangeState) {
 		final TaskRow taskRow = new TaskRow(task);
-		taskRow.stateProperty().addListener((r, o, n) -> injector.getInstance(TaskStateTransitionRepository.class)
-				.add(new TaskStateTransition(task.getId(), o, n)));
+		taskRow.stateProperty().addListener((r, o, n) -> {
+			injector.getInstance(TaskStateTransitionRepository.class).add(new TaskStateTransition(task.getId(), o, n));
+			notifyChangeState.run();
+		});
 		return taskRow;
 	}
 

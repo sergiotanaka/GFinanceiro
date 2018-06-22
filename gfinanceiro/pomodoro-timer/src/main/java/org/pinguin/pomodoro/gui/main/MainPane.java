@@ -4,8 +4,10 @@ import static org.pinguin.pomodoro.domain.pomodoro.PomodoroEvent.FINISH;
 import static org.pinguin.pomodoro.domain.pomodoro.PomodoroEvent.PAUSE;
 import static org.pinguin.pomodoro.domain.pomodoro.PomodoroEvent.START;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.time.LocalTime;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +83,7 @@ public class MainPane extends BorderPane {
 	private final Button stopBtn = new Button("Parar");
 
 	private final StringProperty remainingProp = new SimpleStringProperty();
+	private final StringProperty executingTasks = new SimpleStringProperty();
 
 	private Pomodoro actual = new Pomodoro();
 
@@ -143,6 +146,7 @@ public class MainPane extends BorderPane {
 			});
 
 			miniPane.getRemainingLabel().textProperty().bind(remainingProp);
+			miniPane.getTooltip().textProperty().bind(executingTasks);
 
 			final Delta dragDelta = new Delta();
 			final Scene scene = new Scene(miniPane);
@@ -251,28 +255,44 @@ public class MainPane extends BorderPane {
 		double x, y;
 	}
 
+	public void updateExecutingTasks() {
+		final StringBuilder sb = new StringBuilder();
+		getAllTaskTreeItems(taskTableView.getRoot()).forEach(ti -> {
+			if (ti.getValue().getTask().getState().equals(TaskState.EXECUTING)) {
+				sb.append(ti.getValue().getTask().getName()).append(System.lineSeparator());
+			}
+		});
+		Platform.runLater(() -> executingTasks.set(sb.toString()));
+	}
+
 	public StringProperty remainingProperty() {
 		return remainingProp;
 	}
 
 	private void stopAllTasks() {
-		Platform.runLater(() -> stopChildTasks(taskTableView.getRoot()));
-	}
-
-	private void stopChildTasks(TreeItem<TaskRow> treeItem) {
-		treeItem.getChildren().forEach(ti -> {
-			final ObjectProperty<TaskState> stateProperty = ti.getValue().stateProperty();
-			if (stateProperty.get().equals(TaskState.EXECUTING)) {
-				stateProperty.set(TaskState.STOPPED);
-			}
-			stopChildTasks(ti);
+		Platform.runLater(() -> {
+			getAllTaskTreeItems(taskTableView.getRoot()).forEach(ti -> {
+				final ObjectProperty<TaskState> stateProperty = ti.getValue().stateProperty();
+				if (stateProperty.get().equals(TaskState.EXECUTING)) {
+					stateProperty.set(TaskState.STOPPED);
+				}
+			});
 		});
 	}
 
+	private List<TreeItem<TaskRow>> getAllTaskTreeItems(TreeItem<TaskRow> ref) {
+		final List<TreeItem<TaskRow>> result = new ArrayList<>();
+		ref.getChildren().forEach(ti -> {
+			result.add(ti);
+			result.addAll(getAllTaskTreeItems(ti));
+		});
+		return result;
+	}
+
 	private void playAlarm() {
-		try {
-			final AudioInputStream ais = AudioSystem
-					.getAudioInputStream(getClass().getResourceAsStream("/META-INF/alarm.wav"));
+		try (InputStream is = getClass().getResourceAsStream("/META-INF/alarm.wav");
+				BufferedInputStream bis = new BufferedInputStream(is);
+				AudioInputStream ais = AudioSystem.getAudioInputStream(bis);) {
 			final Clip clip = AudioSystem.getClip();
 			clip.open(ais);
 			clip.start();
@@ -396,7 +416,10 @@ public class MainPane extends BorderPane {
 
 	private TaskRow buildTaskRow(final Task task) {
 		final TaskRow taskRow = new TaskRow(task);
-		taskRow.stateProperty().addListener((r, o, n) -> em.persist(new TaskStateTransition(task.getId(), o, n)));
+		taskRow.stateProperty().addListener((r, o, n) -> {
+			em.persist(new TaskStateTransition(task.getId(), o, n));
+			updateExecutingTasks();
+		});
 		return taskRow;
 	}
 

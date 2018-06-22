@@ -5,6 +5,7 @@ import org.pinguin.pomodoro.gui.timer.TimerBuilder;
 
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 
@@ -12,6 +13,7 @@ public class MiniPane extends BorderPane {
 
 	private Timer timer;
 	private Label remainingLabel = new Label();
+	private Tooltip tooltip = new Tooltip();
 
 	/**
 	 * Construtor.
@@ -26,6 +28,8 @@ public class MiniPane extends BorderPane {
 		bottom.setPadding(new Insets(2.0));
 		bottom.setCenter(remainingLabel);
 		this.setBottom(bottom);
+
+		Tooltip.install(this, tooltip);
 	}
 
 	public Timer getTimer() {
@@ -34,6 +38,10 @@ public class MiniPane extends BorderPane {
 
 	public Label getRemainingLabel() {
 		return remainingLabel;
+	}
+
+	public Tooltip getTooltip() {
+		return tooltip;
 	}
 
 	private void init() {
