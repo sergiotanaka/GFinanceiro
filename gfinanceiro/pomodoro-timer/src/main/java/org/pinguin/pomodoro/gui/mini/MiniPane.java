@@ -23,7 +23,7 @@ public class MiniPane extends BorderPane {
 		timer.stop();
 
 		final BorderPane bottom = new BorderPane();
-		bottom.setPadding(new Insets(5.0));
+		bottom.setPadding(new Insets(2.0));
 		bottom.setCenter(remainingLabel);
 		this.setBottom(bottom);
 	}
@@ -37,7 +37,7 @@ public class MiniPane extends BorderPane {
 	}
 
 	private void init() {
-		timer = TimerBuilder.create().playButtonVisible(false).waitingColor(Color.GRAY).prefSize(70.0, 70.0).build();
+		timer = TimerBuilder.create().playButtonVisible(false).waitingColor(Color.GRAY).prefSize(50.0, 50.0).build();
 		timer.setOnTimerEvent(event -> {
 			switch (event.getType()) {
 			case STARTED:

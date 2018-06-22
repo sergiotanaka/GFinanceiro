@@ -41,6 +41,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -61,6 +62,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.RowConstraints;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 public class MainPane extends BorderPane {
 
@@ -110,7 +112,7 @@ public class MainPane extends BorderPane {
 
 		final Button clockBtn = new Button("Relógio");
 		clockBtn.setOnAction(e -> {
-			final Stage clock = new Stage();
+			final Stage clock = new Stage(StageStyle.TRANSPARENT);
 			final MiniPane miniPane = new MiniPane();
 			progressProp.addListener((r, o, n) -> miniPane.getTimer().setProgress((double) n));
 			if (actual.stateProperty().get().equals(PomodoroState.EXECUTING)
@@ -139,8 +141,34 @@ public class MainPane extends BorderPane {
 					break;
 				}
 			});
+
 			miniPane.getRemainingLabel().textProperty().bind(remainingProp);
-			clock.setScene(new Scene(miniPane));
+
+			final Delta dragDelta = new Delta();
+			final Scene scene = new Scene(miniPane);
+			clock.setScene(scene);
+
+			miniPane.setOnMousePressed(me -> {
+				dragDelta.x = clock.getX() - me.getScreenX();
+				dragDelta.y = clock.getY() - me.getScreenY();
+				scene.setCursor(Cursor.MOVE);
+			});
+			miniPane.setOnMouseReleased(me -> scene.setCursor(Cursor.HAND));
+			miniPane.setOnMouseDragged(me -> {
+				clock.setX(me.getScreenX() + dragDelta.x);
+				clock.setY(me.getScreenY() + dragDelta.y);
+			});
+			miniPane.setOnMouseEntered(me -> {
+				if (!me.isPrimaryButtonDown()) {
+					scene.setCursor(Cursor.HAND);
+				}
+			});
+			miniPane.setOnMouseExited(me -> {
+				if (!me.isPrimaryButtonDown()) {
+					scene.setCursor(Cursor.DEFAULT);
+				}
+			});
+
 			clock.sizeToScene();
 			clock.toFront();
 			Platform.runLater(clock::centerOnScreen);
@@ -199,9 +227,12 @@ public class MainPane extends BorderPane {
 				if (remaining <= 0) {
 					remaining = 0;
 				}
+
+				long seconds = (remaining / 1000) % 60;
+				long minutes = ((remaining / 1000) - seconds) / 60;
+				Platform.runLater(() -> remainingProp.set(String.format("%02d:%02d", minutes, seconds)));
+
 				final long finalRemaining = remaining;
-				final LocalTime remainTime = LocalTime.ofSecondOfDay(remaining / 1000);
-				Platform.runLater(() -> remainingProp.set(remainTime.toString()));
 				Platform.runLater(() -> {
 					final double totalTime = actual.stateProperty().get().equals(PomodoroState.RESTING) ? 5.0 : 25.0;
 					progressProp.set(1.0 - ((finalRemaining * 1.0) / (totalTime * 60.0 * 1000.0)));
@@ -213,6 +244,11 @@ public class MainPane extends BorderPane {
 			}
 		}).start();
 
+	}
+
+	// records relative x and y co-ordinates.
+	private static class Delta {
+		double x, y;
 	}
 
 	public StringProperty remainingProperty() {
