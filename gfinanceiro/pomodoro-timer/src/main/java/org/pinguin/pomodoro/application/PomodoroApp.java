@@ -19,6 +19,7 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 public class PomodoroApp extends Application {
@@ -29,6 +30,7 @@ public class PomodoroApp extends Application {
 	public void start(Stage primaryStage) throws Exception {
 
 		primaryStage.setTitle("PT");
+		primaryStage.getIcons().add(new Image(MainPane.class.getResourceAsStream("/META-INF/256x256bb.jpg")));
 
 		injector = Guice.createInjector(new JpaPersistModule("prod"));
 		injector.getInstance(PersistService.class).start();

@@ -33,6 +33,8 @@ import org.pinguin.pomodoro.domain.task.TaskState;
 import org.pinguin.pomodoro.domain.taskstatetransition.TaskStateTransition;
 import org.pinguin.pomodoro.domain.transition.Transition;
 import org.pinguin.pomodoro.gui.mini.MiniPane;
+import org.pinguin.pomodoro.gui.report.ReportPane;
+import org.pinguin.pomodoro.gui.report.ReportRow;
 import org.pinguin.pomodoro.gui.timer.Timer.State;
 
 import javafx.application.Platform;
@@ -41,6 +43,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
@@ -48,11 +51,13 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.ComboBoxTreeTableCell;
 import javafx.scene.control.cell.TextFieldTreeTableCell;
 import javafx.scene.control.cell.TreeItemPropertyValueFactory;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -65,6 +70,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.RowConstraints;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.util.Callback;
 
 public class MainPane extends BorderPane {
 
@@ -116,6 +122,8 @@ public class MainPane extends BorderPane {
 		final Button clockBtn = new Button("Relógio");
 		clockBtn.setOnAction(e -> {
 			final Stage clock = new Stage(StageStyle.TRANSPARENT);
+			clock.getIcons().add(new Image(MainPane.class.getResourceAsStream("/META-INF/256x256bb.jpg")));
+			clock.setTitle("Timer");
 			final MiniPane miniPane = new MiniPane();
 			progressProp.addListener((r, o, n) -> miniPane.getTimer().setProgress((double) n));
 			if (actual.stateProperty().get().equals(PomodoroState.EXECUTING)
@@ -173,6 +181,8 @@ public class MainPane extends BorderPane {
 				}
 			});
 
+			miniPane.setCloseWindow(clock::close);
+
 			clock.sizeToScene();
 			clock.toFront();
 			Platform.runLater(clock::centerOnScreen);
@@ -183,11 +193,26 @@ public class MainPane extends BorderPane {
 
 		final Button reportBtn = new Button("Relatório");
 		reportBtn.setOnAction(e -> {
+			final Stage reportStage = new Stage();
+			reportStage.getIcons().add(new Image(MainPane.class.getResourceAsStream("/META-INF/256x256bb.jpg")));
+			final ReportPane pane = new ReportPane();
+			reportStage.setScene(new Scene(pane));
+			reportStage.setTitle("Relatório");
+			final ObservableList<ReportRow> items = FXCollections.observableArrayList();
 			getHistory().forEach(st -> {
 				final Task task = st.getTaskId() == null ? null : em.find(Task.class, st.getTaskId());
-				System.out.println(String.format("%s - %s [%s > %s]", st.getTimeStamp(),
-						task != null ? task.getName() : st.getTaskId(), st.getBefore(), st.getAfter()));
+				items.add(new ReportRow(st.getTimeStamp(),
+						task != null ? task.getName() : st.getTaskId() != null ? st.getTaskId().toString() : "no ref",
+						st.getBefore(), st.getAfter()));
 			});
+			pane.setItems(items);
+
+			reportStage.sizeToScene();
+			reportStage.toFront();
+			Platform.runLater(reportStage::centerOnScreen);
+
+			reportStage.show();
+
 		});
 
 		grid.add(new HBox(testBtn, clockBtn, reportBtn), 0, 3, 2, 1);
@@ -340,7 +365,7 @@ public class MainPane extends BorderPane {
 		tableView.getSelectionModel().setCellSelectionEnabled(true);
 
 		final TreeTableColumn<TaskRow, String> nameColumn = new TreeTableColumn<>("Tarefa");
-		nameColumn.setPrefWidth(200.0);
+		nameColumn.setPrefWidth(300.0);
 		nameColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("name"));
 		nameColumn.setCellFactory(TextFieldTreeTableCell.forTreeTableColumn());
 
@@ -349,8 +374,59 @@ public class MainPane extends BorderPane {
 		stateColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("state"));
 		stateColumn.setCellFactory(ComboBoxTreeTableCell.forTreeTableColumn(TaskState.values()));
 
+		final TreeTableColumn<TaskRow, TaskState> actionColumn = new TreeTableColumn<>("Estado");
+		actionColumn.setPrefWidth(160.0);
+		actionColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("state"));
+		Callback<TreeTableColumn<TaskRow, TaskState>, TreeTableCell<TaskRow, TaskState>> actionColCellFactory = new Callback<TreeTableColumn<TaskRow, TaskState>, TreeTableCell<TaskRow, TaskState>>() {
+
+			@Override
+			public TreeTableCell<TaskRow, TaskState> call(TreeTableColumn<TaskRow, TaskState> param) {
+				final TreeTableCell<TaskRow, TaskState> cell = new TreeTableCell<TaskRow, TaskState>() {
+					final HBox hBox = new HBox(5.0);
+					final Button execBtn = new Button();
+					final Button finishBtn = new Button("Concluir");
+					{
+						hBox.getChildren().addAll(execBtn, finishBtn);
+						execBtn.setOnAction(e -> {
+							if (execBtn.getText().equals("Executar")) {
+								this.getTreeTableRow().getTreeItem().getValue().stateProperty()
+										.set(TaskState.EXECUTING);
+							} else if (execBtn.getText().equals("Parar")) {
+								this.getTreeTableRow().getTreeItem().getValue().stateProperty().set(TaskState.STOPPED);
+							}
+						});
+						finishBtn.setOnAction(e -> this.getTreeTableRow().getTreeItem().getValue().stateProperty()
+								.set(TaskState.DONE));
+					}
+
+					@Override
+					public void updateItem(TaskState item, boolean empty) {
+						super.updateItem(item, empty);
+						if (empty) {
+							setGraphic(null);
+							setText(null);
+						} else {
+							if (item.equals(TaskState.STOPPED) || item.equals(TaskState.DONE)) {
+								execBtn.setText("Executar");
+							} else if (item.equals(TaskState.EXECUTING)) {
+								execBtn.setText("Parar");
+							}
+							execBtn.setDisable(item.equals(TaskState.DONE));
+							finishBtn.setDisable(item.equals(TaskState.DONE));
+
+							setGraphic(hBox);
+							setText(null);
+						}
+					}
+				};
+				return cell;
+			}
+		};
+		actionColumn.setCellFactory(actionColCellFactory);
+
 		tableView.getColumns().add(nameColumn);
-		tableView.getColumns().add(stateColumn);
+//		tableView.getColumns().add(stateColumn);
+		tableView.getColumns().add(actionColumn);
 
 		final KeyCodeCombination ctrlUp = new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN);
 		final KeyCodeCombination ctrlDown = new KeyCodeCombination(KeyCode.DOWN, KeyCombination.CONTROL_DOWN);

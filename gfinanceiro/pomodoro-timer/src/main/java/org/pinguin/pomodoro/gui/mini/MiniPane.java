@@ -4,6 +4,7 @@ import org.pinguin.pomodoro.gui.timer.Timer;
 import org.pinguin.pomodoro.gui.timer.TimerBuilder;
 
 import javafx.geometry.Insets;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
@@ -14,15 +15,29 @@ public class MiniPane extends BorderPane {
 	private Timer timer;
 	private Label remainingLabel = new Label();
 	private Tooltip tooltip = new Tooltip();
+	private Runnable closeWindow;
 
 	/**
 	 * Construtor.
 	 */
 	public MiniPane() {
 		init();
-		this.setPadding(new Insets(10.0));
-		this.setCenter(timer);
 		timer.stop();
+
+		final BorderPane center = new BorderPane();
+		center.setPadding(new Insets(0.0, 10.0, 0.0, 10.0));
+		center.setCenter(timer);
+		this.setCenter(center);
+
+		final BorderPane top = new BorderPane();
+		final Hyperlink closeLink = new Hyperlink("x");
+		closeLink.setOnAction(e -> {
+			if (closeWindow != null) {
+				closeWindow.run();
+			}
+		});
+		top.setRight(closeLink);
+		this.setTop(top);
 
 		final BorderPane bottom = new BorderPane();
 		bottom.setPadding(new Insets(2.0));
@@ -30,6 +45,10 @@ public class MiniPane extends BorderPane {
 		this.setBottom(bottom);
 
 		Tooltip.install(this, tooltip);
+	}
+
+	public void setCloseWindow(Runnable closeWindow) {
+		this.closeWindow = closeWindow;
 	}
 
 	public Timer getTimer() {
