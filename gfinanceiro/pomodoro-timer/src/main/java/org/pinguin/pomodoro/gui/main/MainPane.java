@@ -1,9 +1,5 @@
 package org.pinguin.pomodoro.gui.main;
 
-import static org.pinguin.pomodoro.domain.pomodoro.PomodoroEvent.FINISH;
-import static org.pinguin.pomodoro.domain.pomodoro.PomodoroEvent.PAUSE;
-import static org.pinguin.pomodoro.domain.pomodoro.PomodoroEvent.START;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +22,7 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 import org.pinguin.pomodoro.domain.pomodoro.Pomodoro;
+import org.pinguin.pomodoro.domain.pomodoro.PomodoroEvent;
 import org.pinguin.pomodoro.domain.pomodoro.PomodoroState;
 import org.pinguin.pomodoro.domain.task.Task;
 import org.pinguin.pomodoro.domain.task.TaskRepository;
@@ -33,9 +30,12 @@ import org.pinguin.pomodoro.domain.task.TaskState;
 import org.pinguin.pomodoro.domain.taskstatetransition.TaskStateTransition;
 import org.pinguin.pomodoro.domain.transition.Transition;
 import org.pinguin.pomodoro.gui.mini.MiniPane;
+import org.pinguin.pomodoro.gui.report.DailyReportPane;
 import org.pinguin.pomodoro.gui.report.ReportPane;
 import org.pinguin.pomodoro.gui.report.ReportRow;
 import org.pinguin.pomodoro.gui.timer.Timer.State;
+
+import com.google.inject.Injector;
 
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
@@ -79,6 +79,8 @@ public class MainPane extends BorderPane {
 	private final DoubleProperty progressProp = new SimpleDoubleProperty(0);
 
 	@Inject
+	private Injector injector;
+	@Inject
 	private EntityManager em;
 	@Inject
 	private TaskRepository taskRepo;
@@ -109,9 +111,9 @@ public class MainPane extends BorderPane {
 		final Button startBtn = new Button("Iniciar");
 		grid.add(new HBox(startBtn, pauseBtn, stopBtn), 0, 2, 2, 1);
 
-		startBtn.setOnAction(e -> actual.onEvent(START));
-		pauseBtn.setOnAction(e -> actual.onEvent(PAUSE));
-		stopBtn.setOnAction(e -> actual.onEvent(FINISH));
+		startBtn.setOnAction(e -> actual.onEvent(PomodoroEvent.START));
+		pauseBtn.setOnAction(e -> actual.onEvent(PomodoroEvent.PAUSE));
+		stopBtn.setOnAction(e -> actual.onEvent(PomodoroEvent.FINISH));
 
 		final Button testBtn = new Button("Salvar");
 		testBtn.setOnAction(e -> {
@@ -143,10 +145,10 @@ public class MainPane extends BorderPane {
 			miniPane.getTimer().setOnEvent(t -> {
 				switch (t) {
 				case STARTED:
-					actual.onEvent(START);
+					actual.onEvent(PomodoroEvent.START);
 					break;
 				case STOPPED:
-					actual.onEvent(PAUSE);
+					actual.onEvent(PomodoroEvent.PAUSE);
 					break;
 				default:
 					break;
@@ -215,7 +217,26 @@ public class MainPane extends BorderPane {
 
 		});
 
-		grid.add(new HBox(testBtn, clockBtn, reportBtn), 0, 3, 2, 1);
+		final Button dailyReportBtn = new Button("R. diário");
+		dailyReportBtn.setOnAction(e -> {
+			try {
+				final Stage reportStage = new Stage();
+				reportStage.getIcons().add(new Image(MainPane.class.getResourceAsStream("/META-INF/256x256bb.jpg")));
+				final DailyReportPane pane = injector.getInstance(DailyReportPane.class);
+				reportStage.setScene(new Scene(pane));
+				reportStage.setTitle("Relatório diário");
+
+				reportStage.sizeToScene();
+				reportStage.toFront();
+				Platform.runLater(reportStage::centerOnScreen);
+
+				reportStage.show();
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		});
+
+		grid.add(new HBox(testBtn, clockBtn, reportBtn, dailyReportBtn), 0, 3, 2, 1);
 
 		final ColumnConstraints cc1 = new ColumnConstraints();
 		cc1.setHgrow(Priority.ALWAYS);
@@ -377,7 +398,7 @@ public class MainPane extends BorderPane {
 		final TreeTableColumn<TaskRow, TaskState> actionColumn = new TreeTableColumn<>("Estado");
 		actionColumn.setPrefWidth(160.0);
 		actionColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("state"));
-		Callback<TreeTableColumn<TaskRow, TaskState>, TreeTableCell<TaskRow, TaskState>> actionColCellFactory = new Callback<TreeTableColumn<TaskRow, TaskState>, TreeTableCell<TaskRow, TaskState>>() {
+		final Callback<TreeTableColumn<TaskRow, TaskState>, TreeTableCell<TaskRow, TaskState>> actionColCellFactory = new Callback<TreeTableColumn<TaskRow, TaskState>, TreeTableCell<TaskRow, TaskState>>() {
 
 			@Override
 			public TreeTableCell<TaskRow, TaskState> call(TreeTableColumn<TaskRow, TaskState> param) {
@@ -388,11 +409,11 @@ public class MainPane extends BorderPane {
 					{
 						hBox.getChildren().addAll(execBtn, finishBtn);
 						execBtn.setOnAction(e -> {
-							if (execBtn.getText().equals("Executar")) {
-								this.getTreeTableRow().getTreeItem().getValue().stateProperty()
-										.set(TaskState.EXECUTING);
-							} else if (execBtn.getText().equals("Parar")) {
-								this.getTreeTableRow().getTreeItem().getValue().stateProperty().set(TaskState.STOPPED);
+							final TaskRow taskRow = this.getTreeTableRow().getTreeItem().getValue();
+							if (taskRow.stateProperty().get().equals(TaskState.STOPPED)) {
+								taskRow.stateProperty().set(TaskState.EXECUTING);
+							} else if (taskRow.stateProperty().get().equals(TaskState.EXECUTING)) {
+								taskRow.stateProperty().set(TaskState.STOPPED);
 							}
 						});
 						finishBtn.setOnAction(e -> this.getTreeTableRow().getTreeItem().getValue().stateProperty()
@@ -425,7 +446,7 @@ public class MainPane extends BorderPane {
 		actionColumn.setCellFactory(actionColCellFactory);
 
 		tableView.getColumns().add(nameColumn);
-//		tableView.getColumns().add(stateColumn);
+		// tableView.getColumns().add(stateColumn);
 		tableView.getColumns().add(actionColumn);
 
 		final KeyCodeCombination ctrlUp = new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN);
