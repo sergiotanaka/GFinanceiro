@@ -2,7 +2,7 @@ package org.pinguin.pomodoro.service.report;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -71,13 +71,23 @@ public class ReportService {
 		for (Entry<LocalDate, Map<Long, List<Period>>> entry : map.entrySet()) {
 			final DailyReportItem dateItem = new DailyReportItem(entry.getKey());
 			items.add(dateItem);
+			long dayEffort = 0L;
 			for (Entry<Long, List<Period>> subEntry : entry.getValue().entrySet()) {
 				final DailyReportItem taskItem = new DailyReportItem(subEntry.getKey());
 				dateItem.getSubItems().add(taskItem);
+
+				long taskEffort = 0L;
 				for (Period period : subEntry.getValue()) {
-					taskItem.getSubItems().add(new DailyReportItem(period));
+					final DailyReportItem item = new DailyReportItem(period);
+					taskItem.getSubItems().add(item);
+					if (item.getDuration() != null) {
+						taskEffort += item.getDuration();
+					}
 				}
+				taskItem.setDuration(taskEffort);
+				dayEffort += taskEffort;
 			}
+			dateItem.setDuration(dayEffort);
 		}
 
 		return items;
@@ -94,8 +104,9 @@ public class ReportService {
 	public static class DailyReportItem {
 		private LocalDate date;
 		private Long taskId;
-		private LocalTime start;
-		private LocalTime end;
+		private LocalDateTime start;
+		private LocalDateTime end;
+		private Long duration;
 		private List<DailyReportItem> subItems = new ArrayList<>();
 
 		public DailyReportItem(Long taskId) {
@@ -107,8 +118,11 @@ public class ReportService {
 		}
 
 		public DailyReportItem(Period period) {
-			this.start = period.getStart() != null ? LocalTime.from(period.getStart()) : null;
-			this.end = period.getEnd() != null ? LocalTime.from(period.getEnd()) : null;
+			this.start = period.getStart();
+			this.end = period.getEnd();
+			if (this.start != null && this.end != null) {
+				this.duration = this.start.until(this.end, ChronoUnit.MINUTES);
+			}
 		}
 
 		public LocalDate getDate() {
@@ -127,20 +141,28 @@ public class ReportService {
 			this.taskId = taskId;
 		}
 
-		public LocalTime getStart() {
+		public LocalDateTime getStart() {
 			return start;
 		}
 
-		public void setStart(LocalTime start) {
+		public void setStart(LocalDateTime start) {
 			this.start = start;
 		}
 
-		public LocalTime getEnd() {
+		public LocalDateTime getEnd() {
 			return end;
 		}
 
-		public void setEnd(LocalTime end) {
+		public void setEnd(LocalDateTime end) {
 			this.end = end;
+		}
+
+		public Long getDuration() {
+			return duration;
+		}
+
+		public void setDuration(Long duration) {
+			this.duration = duration;
 		}
 
 		public List<DailyReportItem> getSubItems() {

@@ -115,8 +115,8 @@ public class MainPane extends BorderPane {
 		pauseBtn.setOnAction(e -> actual.onEvent(PomodoroEvent.PAUSE));
 		stopBtn.setOnAction(e -> actual.onEvent(PomodoroEvent.FINISH));
 
-		final Button testBtn = new Button("Salvar");
-		testBtn.setOnAction(e -> {
+		final Button saveBtn = new Button("Salvar");
+		saveBtn.setOnAction(e -> {
 			em.getTransaction().commit();
 			em.getTransaction().begin();
 		});
@@ -236,7 +236,16 @@ public class MainPane extends BorderPane {
 			}
 		});
 
-		grid.add(new HBox(testBtn, clockBtn, reportBtn, dailyReportBtn), 0, 3, 2, 1);
+		final Button refreshBtn = new Button("Atualizar");
+		refreshBtn.setOnAction(e -> {
+			final ObservableList<TaskRow> items = FXCollections.observableArrayList();
+			taskRepo.getAllUndone().forEach(t -> items.add(buildTaskRow(t)));
+			this.setItems(items);
+		});
+
+		final HBox auxButtons = new HBox(3.0);
+		auxButtons.getChildren().addAll(saveBtn, refreshBtn, clockBtn, reportBtn, dailyReportBtn);
+		grid.add(auxButtons, 0, 3, 2, 1);
 
 		final ColumnConstraints cc1 = new ColumnConstraints();
 		cc1.setHgrow(Priority.ALWAYS);

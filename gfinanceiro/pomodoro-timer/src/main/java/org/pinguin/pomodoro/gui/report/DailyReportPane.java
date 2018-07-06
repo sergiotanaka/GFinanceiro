@@ -1,7 +1,7 @@
 package org.pinguin.pomodoro.gui.report;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import javax.inject.Inject;
@@ -28,34 +28,42 @@ public class DailyReportPane extends BorderPane {
 	private final TreeTableView<DailyReportRow> tableView;
 
 	public DailyReportPane() {
-		this.setPadding(new Insets(10.0));
-		tableView = buildTTableView();
-		tableView.setShowRoot(false);
-		final TreeItem<DailyReportRow> root = new TreeItem<DailyReportRow>(new DailyReportRow());
-		tableView.setRoot(root);
+		try {
+			this.setPadding(new Insets(10.0));
+			tableView = buildTTableView();
+			tableView.setShowRoot(false);
+			final TreeItem<DailyReportRow> root = new TreeItem<DailyReportRow>(new DailyReportRow());
+			tableView.setRoot(root);
 
-		this.setCenter(tableView);
+			this.setCenter(tableView);
+		} catch (Exception e) {
+			throw e;
+		}
 	}
 
 	@Inject
 	private void init() {
+		try {
+			for (DailyReportItem item : reportService.retrieveDailyReport()) {
+				final TreeItem<DailyReportRow> dayTreeItem = new TreeItem<DailyReportRow>(
+						new DailyReportRow(item.getDate(), "", null, null, item.getDuration()));
+				for (DailyReportItem taskItem : item.getSubItems()) {
+					final Task task = em.find(Task.class, taskItem.getTaskId());
+					final TreeItem<DailyReportRow> taskTreeItem = new TreeItem<DailyReportRow>(new DailyReportRow(null,
+							task != null ? task.getName() : "Tarefa excluída [" + taskItem.getTaskId() + "]", null,
+							null, taskItem.getDuration()));
+					for (DailyReportItem periodItem : taskItem.getSubItems()) {
+						taskTreeItem.getChildren().add(new TreeItem<DailyReportRow>(new DailyReportRow(null, null,
+								periodItem.getStart(), periodItem.getEnd(), periodItem.getDuration())));
+					}
 
-		for (DailyReportItem item : reportService.retrieveDailyReport()) {
-			final TreeItem<DailyReportRow> dayTreeItem = new TreeItem<DailyReportRow>(
-					new DailyReportRow(item.getDate(), "", null, null));
-			for (DailyReportItem taskItem : item.getSubItems()) {
-				final Task task = em.find(Task.class, taskItem.getTaskId());
-				final TreeItem<DailyReportRow> taskTreeItem = new TreeItem<DailyReportRow>(
-						new DailyReportRow(null, task.getName(), null, null));
-				for (DailyReportItem periodItem : taskItem.getSubItems()) {
-					taskTreeItem.getChildren().add(new TreeItem<DailyReportRow>(
-							new DailyReportRow(null, null, periodItem.getStart(), periodItem.getEnd())));
+					dayTreeItem.getChildren().add(taskTreeItem);
 				}
 
-				dayTreeItem.getChildren().add(taskTreeItem);
+				tableView.getRoot().getChildren().add(dayTreeItem);
 			}
-
-			tableView.getRoot().getChildren().add(dayTreeItem);
+		} catch (Exception e) {
+			throw e;
 		}
 	}
 
@@ -87,14 +95,14 @@ public class DailyReportPane extends BorderPane {
 		taskNameColumn.setPrefWidth(300.0);
 		taskNameColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("taskName"));
 
-		final TreeTableColumn<DailyReportRow, LocalTime> startColumn = new TreeTableColumn<>("Início");
+		final TreeTableColumn<DailyReportRow, LocalDateTime> startColumn = new TreeTableColumn<>("Início");
 		startColumn.setPrefWidth(50.0);
 		startColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("start"));
 		startColumn.setCellFactory(e -> {
 			final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-			return new TreeTableCell<DailyReportRow, LocalTime>() {
+			return new TreeTableCell<DailyReportRow, LocalDateTime>() {
 				@Override
-				protected void updateItem(LocalTime item, boolean empty) {
+				protected void updateItem(LocalDateTime item, boolean empty) {
 					super.updateItem(item, empty);
 					if (item == null) {
 						super.setText(null);
@@ -107,14 +115,14 @@ public class DailyReportPane extends BorderPane {
 			};
 		});
 
-		final TreeTableColumn<DailyReportRow, LocalTime> endColumn = new TreeTableColumn<>("Fim");
+		final TreeTableColumn<DailyReportRow, LocalDateTime> endColumn = new TreeTableColumn<>("Fim");
 		endColumn.setPrefWidth(50.0);
 		endColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("end"));
 		endColumn.setCellFactory(e -> {
 			final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-			return new TreeTableCell<DailyReportRow, LocalTime>() {
+			return new TreeTableCell<DailyReportRow, LocalDateTime>() {
 				@Override
-				protected void updateItem(LocalTime item, boolean empty) {
+				protected void updateItem(LocalDateTime item, boolean empty) {
 					super.updateItem(item, empty);
 					if (item == null) {
 						super.setText(null);
@@ -127,7 +135,28 @@ public class DailyReportPane extends BorderPane {
 			};
 		});
 
-		tTableView.getColumns().addAll(dateColumn, taskNameColumn, startColumn, endColumn);
+		final TreeTableColumn<DailyReportRow, Long> durationColumn = new TreeTableColumn<>("Duração");
+		durationColumn.setPrefWidth(50.0);
+		durationColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("duration"));
+		durationColumn.setCellFactory(e -> {
+			return new TreeTableCell<DailyReportRow, Long>() {
+				@Override
+				protected void updateItem(Long item, boolean empty) {
+					super.updateItem(item, empty);
+					if (item == null) {
+						super.setText(null);
+						super.setGraphic(null);
+					} else {
+						long hours = item / 60;
+						long minutes = item % 60;
+						super.setText(String.format("%02d:%02d", hours, minutes));
+						super.setGraphic(null);
+					}
+				}
+			};
+		});
+
+		tTableView.getColumns().addAll(dateColumn, taskNameColumn, startColumn, endColumn, durationColumn);
 
 		return tTableView;
 	}
