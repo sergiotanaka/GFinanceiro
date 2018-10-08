@@ -37,6 +37,8 @@ import org.pinguin.pomodoro.gui.timer.Timer.State;
 
 import com.google.inject.Injector;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -46,22 +48,17 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeTableCell;
-import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
-import javafx.scene.control.cell.ComboBoxTreeTableCell;
-import javafx.scene.control.cell.TextFieldTreeTableCell;
-import javafx.scene.control.cell.TreeItemPropertyValueFactory;
 import javafx.scene.image.Image;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
-import javafx.scene.input.KeyEvent;
+import javafx.scene.input.DataFormat;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -70,9 +67,11 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.RowConstraints;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javafx.util.Callback;
+import javafx.util.Duration;
 
 public class MainPane extends BorderPane {
+
+	private static final DataFormat SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
 
 	private Runnable callFocus;
 
@@ -85,21 +84,29 @@ public class MainPane extends BorderPane {
 	@Inject
 	private TaskRepository taskRepo;
 
-	private final TreeTableView<TaskRow> taskTableView;
+	private TreeTableView<TaskRow> taskTableView;
 	private final Label remainingLbl = new Label();
 	private final Button pauseBtn = new Button("Pausar");
 	private final Button stopBtn = new Button("Parar");
+	private final Timeline scrolltimeline = new Timeline();
 
 	private final StringProperty remainingProp = new SimpleStringProperty();
 	private final StringProperty executingTasks = new SimpleStringProperty();
 
+	private double scrollDirection = 0;
+
 	private Pomodoro actual = new Pomodoro();
 
 	public MainPane() {
+	}
+	
+	@Inject
+	public void init() {
 		// Margem
 		this.setPadding(new Insets(10.0));
 
-		taskTableView = buildTaskTableView();
+		taskTableView = injector.getInstance(TaskTreeTableView.class);
+		setupScrolling();
 
 		final GridPane grid = new GridPane();
 		grid.setGridLinesVisible(false);
@@ -302,7 +309,6 @@ public class MainPane extends BorderPane {
 				}
 			}
 		}).start();
-
 	}
 
 	// records relative x and y co-ordinates.
@@ -383,141 +389,62 @@ public class MainPane extends BorderPane {
 				root.getChildren().add(treeItem);
 			}
 		}
+
+		// Reordenar pelo indice
+		sortTree(root);
 	}
 
-	private TreeTableView<TaskRow> buildTaskTableView() {
-		final TreeTableView<TaskRow> tableView = new TreeTableView<>();
-		tableView.setShowRoot(false);
+	private void sortTree(final TreeItem<TaskRow> parent) {
+		parent.getChildren()
+				.sort((o1, o2) -> o1.getValue().getTask().getIndex().compareTo(o2.getValue().getTask().getIndex()));
+		for (final TreeItem<TaskRow> treeItem : parent.getChildren()) {
+			sortTree(treeItem);
+		}
+	}
 
-		// Tornar editavel
-		tableView.setEditable(true);
-		// Tornar celula selecionavel
-		tableView.getSelectionModel().setCellSelectionEnabled(true);
-
-		final TreeTableColumn<TaskRow, String> nameColumn = new TreeTableColumn<>("Tarefa");
-		nameColumn.setPrefWidth(300.0);
-		nameColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("name"));
-		nameColumn.setCellFactory(TextFieldTreeTableCell.forTreeTableColumn());
-
-		final TreeTableColumn<TaskRow, TaskState> stateColumn = new TreeTableColumn<>("Estado");
-		stateColumn.setPrefWidth(100.0);
-		stateColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("state"));
-		stateColumn.setCellFactory(ComboBoxTreeTableCell.forTreeTableColumn(TaskState.values()));
-
-		final TreeTableColumn<TaskRow, TaskState> actionColumn = new TreeTableColumn<>("Estado");
-		actionColumn.setPrefWidth(160.0);
-		actionColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("state"));
-		final Callback<TreeTableColumn<TaskRow, TaskState>, TreeTableCell<TaskRow, TaskState>> actionColCellFactory = new Callback<TreeTableColumn<TaskRow, TaskState>, TreeTableCell<TaskRow, TaskState>>() {
-
-			@Override
-			public TreeTableCell<TaskRow, TaskState> call(TreeTableColumn<TaskRow, TaskState> param) {
-				final TreeTableCell<TaskRow, TaskState> cell = new TreeTableCell<TaskRow, TaskState>() {
-					final HBox hBox = new HBox(5.0);
-					final Button execBtn = new Button();
-					final Button finishBtn = new Button("Concluir");
-					{
-						hBox.getChildren().addAll(execBtn, finishBtn);
-						execBtn.setOnAction(e -> {
-							final TaskRow taskRow = this.getTreeTableRow().getTreeItem().getValue();
-							if (taskRow.stateProperty().get().equals(TaskState.STOPPED)) {
-								taskRow.stateProperty().set(TaskState.EXECUTING);
-							} else if (taskRow.stateProperty().get().equals(TaskState.EXECUTING)) {
-								taskRow.stateProperty().set(TaskState.STOPPED);
-							}
-						});
-						finishBtn.setOnAction(e -> this.getTreeTableRow().getTreeItem().getValue().stateProperty()
-								.set(TaskState.DONE));
-					}
-
-					@Override
-					public void updateItem(TaskState item, boolean empty) {
-						super.updateItem(item, empty);
-						if (empty) {
-							setGraphic(null);
-							setText(null);
-						} else {
-							if (item.equals(TaskState.STOPPED) || item.equals(TaskState.DONE)) {
-								execBtn.setText("Executar");
-							} else if (item.equals(TaskState.EXECUTING)) {
-								execBtn.setText("Parar");
-							}
-							execBtn.setDisable(item.equals(TaskState.DONE));
-							finishBtn.setDisable(item.equals(TaskState.DONE));
-
-							setGraphic(hBox);
-							setText(null);
-						}
-					}
-				};
-				return cell;
+	private void setupScrolling() {
+		scrolltimeline.setCycleCount(Timeline.INDEFINITE);
+		scrolltimeline.getKeyFrames().add(new KeyFrame(Duration.millis(20), "Scoll", (ActionEvent) -> {
+			dragScroll();
+		}));
+		taskTableView.setOnDragExited(event -> {
+			if (event.getY() > 0) {
+				scrollDirection = 1.0 / taskTableView.getExpandedItemCount();
+			} else {
+				scrollDirection = -1.0 / taskTableView.getExpandedItemCount();
 			}
-		};
-		actionColumn.setCellFactory(actionColCellFactory);
-
-		tableView.getColumns().add(nameColumn);
-		// tableView.getColumns().add(stateColumn);
-		tableView.getColumns().add(actionColumn);
-
-		final KeyCodeCombination ctrlUp = new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN);
-		final KeyCodeCombination ctrlDown = new KeyCodeCombination(KeyCode.DOWN, KeyCombination.CONTROL_DOWN);
-		final KeyCodeCombination ctrlIns = new KeyCodeCombination(KeyCode.INSERT, KeyCombination.CONTROL_DOWN);
-		final KeyCodeCombination ins = new KeyCodeCombination(KeyCode.INSERT);
-		final KeyCodeCombination del = new KeyCodeCombination(KeyCode.DELETE);
-
-		tableView.addEventHandler(KeyEvent.KEY_RELEASED, e -> {
-			if (ctrlUp.match(e) || ctrlDown.match(e) || ins.match(e) || del.match(e) || ctrlIns.match(e)) {
-				final TreeItem<TaskRow> sel = tableView.getSelectionModel().getSelectedItem();
-				final ObservableList<TreeItem<TaskRow>> items = sel != null ? sel.getParent().getChildren()
-						: tableView.getRoot().getChildren();
-				int indexOfSel = sel != null ? items.indexOf(sel) : -1;
-				if (ctrlUp.match(e) && sel != null) {
-					if (indexOfSel == 0) {
-						return;
-					}
-					switchIdx(sel.getValue(), items.get(indexOfSel - 1).getValue());
-					items.remove(sel);
-					items.add(indexOfSel - 1, sel);
-					tableView.getSelectionModel().select(sel);
-				} else if (ctrlDown.match(e) && sel != null) {
-					if (indexOfSel == items.size() - 1) {
-						return;
-					}
-					switchIdx(sel.getValue(), items.get(indexOfSel + 1).getValue());
-					items.remove(sel);
-					items.add(indexOfSel + 1, sel);
-					tableView.getSelectionModel().select(sel);
-				} else if (ctrlIns.match(e) && sel != null) {
-					final Task newTask = new Task();
-					newTask.setIndex(taskRepo.getNextIndex());
-					newTask.setParentId(sel.getValue().getTask().getId());
-					final TreeItem<TaskRow> newItem = new TreeItem<TaskRow>(buildTaskRow(newTask));
-					sel.setExpanded(true);
-					sel.getChildren().add(newItem);
-					em.persist(newTask);
-					tableView.getSelectionModel().select(newItem);
-				} else if (ins.match(e)) {
-					final Task newTask = new Task();
-					newTask.setIndex(taskRepo.getNextIndex());
-					final TreeItem<TaskRow> newItem = new TreeItem<TaskRow>(buildTaskRow(newTask));
-					TreeItem<TaskRow> parent = null;
-					if (sel != null) {
-						parent = sel.getParent();
-						newItem.getValue().getTask().setParentId(parent.getValue().getTask().getId());
-					} else {
-						tableView.getRoot();
-					}
-					parent.getChildren().add(indexOfSel + 1, newItem);
-					em.persist(newTask);
-					tableView.getSelectionModel().select(newItem);
-				} else if (del.match(e) && sel != null) {
-					// TODO fazer cascata?
-					sel.getParent().getChildren().remove(sel);
-					em.remove(sel.getValue().getTask());
-				}
-			}
+			scrolltimeline.play();
+		});
+		taskTableView.setOnDragEntered(event -> {
+			scrolltimeline.stop();
+		});
+		taskTableView.setOnDragDone(event -> {
+			scrolltimeline.stop();
 		});
 
-		return tableView;
+	}
+
+	private void dragScroll() {
+		ScrollBar sb = getVerticalScrollbar();
+		if (sb != null) {
+			double newValue = sb.getValue() + scrollDirection;
+			newValue = Math.min(newValue, 1.0);
+			newValue = Math.max(newValue, 0.0);
+			sb.setValue(newValue);
+		}
+	}
+
+	private ScrollBar getVerticalScrollbar() {
+		ScrollBar result = null;
+		for (Node n : taskTableView.lookupAll(".scroll-bar")) {
+			if (n instanceof ScrollBar) {
+				ScrollBar bar = (ScrollBar) n;
+				if (bar.getOrientation().equals(Orientation.VERTICAL)) {
+					result = bar;
+				}
+			}
+		}
+		return result;
 	}
 
 	private TaskRow buildTaskRow(final Task task) {
@@ -527,12 +454,6 @@ public class MainPane extends BorderPane {
 			updateExecutingTasks();
 		});
 		return taskRow;
-	}
-
-	private void switchIdx(final TaskRow one, final TaskRow another) {
-		final Long aux = one.getTask().getIndex();
-		one.getTask().setIndex(another.getTask().getIndex());
-		another.getTask().setIndex(aux);
 	}
 
 	public List<TaskStateTransition> getHistory() {

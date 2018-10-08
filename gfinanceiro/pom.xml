@@ -8,7 +8,7 @@
 	<packaging>pom</packaging>
 	<modules>
 		<module>gfinanceiro-domain</module>
-		<!-- <module>gfinanceiro-gui</module> -->
+		<module>gfinanceiro-gui</module>
 		<!-- <module>gfinanceiro-app</module> -->
 		<!-- <module>gfinanceiro-facade</module> -->
 		<!-- <module>domain-core</module> -->

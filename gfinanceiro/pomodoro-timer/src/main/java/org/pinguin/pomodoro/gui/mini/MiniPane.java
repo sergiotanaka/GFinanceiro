@@ -78,6 +78,8 @@ public class MiniPane extends BorderPane {
 				break;
 			case WAITING:
 				break;
+			default:
+				break;
 			}
 		});
 	}

@@ -32,7 +32,7 @@ public class Pomodoro {
 		this.onTimeout = onTimeout;
 	}
 
-	public void onEvent(final PomodoroEvent evt) {
+	public synchronized void onEvent(final PomodoroEvent evt) {
 		final PomodoroState oldState = stateProp.get();
 		final PomodoroState newState = stateProp.get().after(evt);
 		if (newState == null) {
@@ -54,7 +54,7 @@ public class Pomodoro {
 			remaining -= System.currentTimeMillis() - lastUpdate;
 			timer.cancel();
 			timer = null;
-		} else if (evt.equals(FINISH) && oldState.equals(EXECUTING)) {
+		} else if (evt.equals(FINISH) && (oldState.equals(EXECUTING) || oldState.equals(PAUSED))) {
 			remaining = restDuration;
 			lastUpdate = System.currentTimeMillis();
 			onTimeout(FINISH, restDuration);
