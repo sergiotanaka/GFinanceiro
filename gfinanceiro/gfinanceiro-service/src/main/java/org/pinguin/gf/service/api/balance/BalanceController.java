@@ -25,7 +25,7 @@ import fr.xebia.extras.selma.Selma;
 
 @RestController
 @RequestMapping("/gf/balance")
-public class BalanceController {
+public class BalanceController implements BalanceService {
 
     @Autowired
     private JournalEntryRepository repo;
@@ -33,7 +33,11 @@ public class BalanceController {
     private BasicAccountsRepository basicAccRepo;
     private AccountMapper accMapper = Selma.mapper(AccountMapper.class);
 
-    @GetMapping(produces = MediaTypes.HAL_JSON_VALUE)
+    /* (non-Javadoc)
+	 * @see org.pinguin.gf.service.api.balance.BalanceService#retrieveBalance()
+	 */
+    @Override
+	@GetMapping(produces = MediaTypes.HAL_JSON_VALUE)
     public List<BalanceTO> retrieveBalance() {
 
         List<JournalEntry> retrieved = repo.findAll();

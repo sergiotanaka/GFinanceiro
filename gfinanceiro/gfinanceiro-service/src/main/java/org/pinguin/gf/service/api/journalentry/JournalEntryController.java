@@ -31,7 +31,7 @@ import fr.xebia.extras.selma.Selma;
  */
 @RestController
 @RequestMapping("/gf/journalentries")
-public class JournalEntryController {
+public class JournalEntryController implements JournalEntryService {
 
 	@Autowired
 	private JournalEntryRepository repo;
@@ -41,6 +41,10 @@ public class JournalEntryController {
 		mapper = Selma.mapper(JournalEntryMapper.class);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.pinguin.gf.service.api.journalentry.JournalEntryService#createEntry(org.pinguin.gf.service.api.journalentry.JournalEntryTO)
+	 */
+	@Override
 	@PostMapping(produces = MediaTypes.HAL_JSON_VALUE)
 	@ResponseStatus(HttpStatus.CREATED)
 	public JournalEntryTO createEntry(@Valid @RequestBody JournalEntryTO entry) {
@@ -53,6 +57,10 @@ public class JournalEntryController {
 		return response;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.pinguin.gf.service.api.journalentry.JournalEntryService#updateEntry(java.lang.Long, org.pinguin.gf.service.api.journalentry.JournalEntryTO)
+	 */
+	@Override
 	@PutMapping(value = "/{id}", produces = MediaTypes.HAL_JSON_VALUE)
 	public JournalEntryTO updateEntry(@PathVariable("id") Long id, @Valid @RequestBody JournalEntryTO account) {
 
@@ -65,6 +73,10 @@ public class JournalEntryController {
 		return response;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.pinguin.gf.service.api.journalentry.JournalEntryService#deleteEntry(java.lang.Long)
+	 */
+	@Override
 	@DeleteMapping(value = "/{id}", produces = MediaTypes.HAL_JSON_VALUE)
 	public JournalEntryTO deleteEntry(@PathVariable("id") Long id) {
 
@@ -79,6 +91,10 @@ public class JournalEntryController {
 		return response;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.pinguin.gf.service.api.journalentry.JournalEntryService#retrieveById(java.lang.Long)
+	 */
+	@Override
 	@GetMapping(value = "/{id}", produces = MediaTypes.HAL_JSON_VALUE)
 	public JournalEntryTO retrieveById(@PathVariable("id") Long id) {
 		Optional<JournalEntry> found = repo.findById(id);
@@ -90,6 +106,10 @@ public class JournalEntryController {
 		return response;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.pinguin.gf.service.api.journalentry.JournalEntryService#retrieveAll()
+	 */
+	@Override
 	@GetMapping(produces = MediaTypes.HAL_JSON_VALUE)
 	public List<JournalEntryTO> retrieveAll() {
 		List<JournalEntryTO> list = new ArrayList<>();

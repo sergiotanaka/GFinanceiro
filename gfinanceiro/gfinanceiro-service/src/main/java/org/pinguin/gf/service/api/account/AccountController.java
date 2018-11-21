@@ -42,7 +42,7 @@ import fr.xebia.extras.selma.Selma;
  */
 @RestController
 @RequestMapping("/gf/accounts")
-public class AccountController {
+public class AccountController implements AccountService {
 
     @Autowired
     private AccountRepository repo;
@@ -55,7 +55,11 @@ public class AccountController {
         mapper = Selma.mapper(AccountMapper.class);
     }
 
-    @PostMapping(produces = MediaTypes.HAL_JSON_VALUE)
+    /* (non-Javadoc)
+	 * @see org.pinguin.gf.service.api.account.AccountService#createAccount(org.pinguin.gf.service.api.account.AccountTO)
+	 */
+    @Override
+	@PostMapping(produces = MediaTypes.HAL_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public AccountTO createAccount(@Valid @RequestBody AccountTO account) {
 
@@ -67,7 +71,11 @@ public class AccountController {
         return response;
     }
 
-    @PutMapping(value = "/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+    /* (non-Javadoc)
+	 * @see org.pinguin.gf.service.api.account.AccountService#updateAccount(java.lang.Long, org.pinguin.gf.service.api.account.AccountTO)
+	 */
+    @Override
+	@PutMapping(value = "/{id}", produces = MediaTypes.HAL_JSON_VALUE)
     public AccountTO updateAccount(@PathVariable("id") Long id, @Valid @RequestBody AccountTO account) {
 
         account.setAccountId(id);
@@ -79,7 +87,11 @@ public class AccountController {
         return response;
     }
 
-    @DeleteMapping(value = "/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+    /* (non-Javadoc)
+	 * @see org.pinguin.gf.service.api.account.AccountService#deleteAccount(java.lang.Long)
+	 */
+    @Override
+	@DeleteMapping(value = "/{id}", produces = MediaTypes.HAL_JSON_VALUE)
     public AccountTO deleteAccount(@PathVariable("id") Long id) {
 
         Optional<Account> found = repo.findById(id);
@@ -93,7 +105,11 @@ public class AccountController {
         return response;
     }
 
-    @GetMapping(value = "/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+    /* (non-Javadoc)
+	 * @see org.pinguin.gf.service.api.account.AccountService#retrieveById(java.lang.Long)
+	 */
+    @Override
+	@GetMapping(value = "/{id}", produces = MediaTypes.HAL_JSON_VALUE)
     public AccountTO retrieveById(@PathVariable("id") Long id) {
         Optional<Account> found = repo.findById(id);
         if (!found.isPresent()) {
@@ -104,7 +120,11 @@ public class AccountController {
         return response;
     }
 
-    @GetMapping(value = "/{id}/statements", produces = MediaTypes.HAL_JSON_VALUE)
+    /* (non-Javadoc)
+	 * @see org.pinguin.gf.service.api.account.AccountService#retrieveStatements(java.lang.Long)
+	 */
+    @Override
+	@GetMapping(value = "/{id}/statements", produces = MediaTypes.HAL_JSON_VALUE)
     public List<AccStatementEntryTO> retrieveStatements(@PathVariable("id") Long id) {
         final Account root = repo.getOne(id);
         final List<Account> accs = retrieveAnalyticalAccounts(root);
@@ -160,16 +180,11 @@ public class AccountController {
     }
 
 
-    /**
-     * TODO: parametros.
-     * 
-     * @param sort
-     * @param page
-     * @param pageSize
-     * @param fields
-     * @return
-     */
-    @GetMapping(produces = MediaTypes.HAL_JSON_VALUE)
+    /* (non-Javadoc)
+	 * @see org.pinguin.gf.service.api.account.AccountService#retrieveAll(java.util.Optional, java.util.Optional, java.util.Optional, java.util.Optional, java.util.Optional)
+	 */
+    @Override
+	@GetMapping(produces = MediaTypes.HAL_JSON_VALUE)
     public List<AccountTO> retrieveAll(@RequestParam(value = "filters", required = false) Optional<String> filters,
                                        @RequestParam(value = "sort", required = false) Optional<String> sort,
                                        @RequestParam(value = "page", required = false) Optional<String> page,
@@ -191,12 +206,11 @@ public class AccountController {
         return list;
     }
 
-    /**
-     * Retorna as contas analiticas.
-     * 
-     * @return
-     */
-    @GetMapping(value = "/analytical", produces = MediaTypes.HAL_JSON_VALUE)
+    /* (non-Javadoc)
+	 * @see org.pinguin.gf.service.api.account.AccountService#retrieveAnalSytical()
+	 */
+    @Override
+	@GetMapping(value = "/analytical", produces = MediaTypes.HAL_JSON_VALUE)
     public List<AccountTO> retrieveAnalSytical() {
         final List<AccountTO> list = new ArrayList<>();
         for (final Account entity : repo.findAll(account.accountId
