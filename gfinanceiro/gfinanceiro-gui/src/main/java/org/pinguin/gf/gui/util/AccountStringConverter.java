@@ -1,7 +1,7 @@
 package org.pinguin.gf.gui.util;
 
-import org.pinguin.gf.facade.account.AccountNatureTO;
-import org.pinguin.gf.facade.account.AccountTO;
+import org.pinguin.gf.service.api.account.AccountNatureTO;
+import org.pinguin.gf.service.api.account.AccountTO;
 
 import javafx.util.StringConverter;
 

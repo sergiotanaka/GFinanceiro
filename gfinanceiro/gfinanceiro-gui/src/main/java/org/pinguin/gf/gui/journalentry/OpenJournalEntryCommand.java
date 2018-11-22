@@ -7,8 +7,8 @@ import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import org.pinguin.gf.facade.account.AccountService;
-import org.pinguin.gf.facade.account.AccountTO;
+import org.pinguin.gf.service.api.account.AccountService;
+import org.pinguin.gf.service.api.account.AccountTO;
 
 import com.google.inject.Injector;
 
@@ -27,7 +27,7 @@ public class OpenJournalEntryCommand implements Function<OpenJournalEntryParam, 
 		formStage.setTitle("Lancamento");
 		JournalEntryForm form = injector.getInstance(JournalEntryForm.class);
 		AccountService accService = injector.getInstance(AccountService.class);
-		List<AccountTO> accs = accService.retrieveAnalyticalAccounts();
+		List<AccountTO> accs = accService.retrieveAnalytical();
 		Collections.sort(accs, new Comparator<AccountTO>() {
 			@Override
 			public int compare(AccountTO o1, AccountTO o2) {

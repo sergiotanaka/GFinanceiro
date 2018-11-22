@@ -1,17 +1,17 @@
 package org.pinguin.gf.gui.accstatement;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
 import javax.inject.Inject;
 
-import org.pinguin.gf.facade.account.AccountTO;
-import org.pinguin.gf.facade.common.PeriodTO;
-import org.pinguin.gf.facade.journalentry.AccStatementEntryTO;
-import org.pinguin.gf.facade.journalentry.JournalEntryService;
-import org.pinguin.gf.facade.journalentry.JournalEntryTO;
 import org.pinguin.gf.gui.journalentry.OpenJournalEntryCommand;
 import org.pinguin.gf.gui.journalentry.OpenJournalEntryParam;
+import org.pinguin.gf.service.api.account.AccStatementEntryTO;
+import org.pinguin.gf.service.api.account.AccountTO;
+import org.pinguin.gf.service.api.journalentry.JournalEntryService;
+import org.pinguin.gf.service.api.journalentry.JournalEntryTO;
 import org.pinguin.gui.util.EditMode;
 
 import com.google.inject.Injector;
@@ -72,21 +72,21 @@ public class AccStatementPresenter {
 	}
 
 	public void retrieve() {
-		List<AccStatementEntryTO> result = service.retrieveAccountStatement(accountProperty.getValue(),
-				new PeriodTO(startDateProperty.getValue(), endDateProperty.getValue()),
-				periodBalanceProperty.getValue());
+		// List<AccStatementEntryTO> result =
+		// service.retrieveAccountStatement(accountProperty.getValue(),
+		// new PeriodTO(startDateProperty.getValue(), endDateProperty.getValue()),
+		// periodBalanceProperty.getValue());
+		List<AccStatementEntryTO> result = new ArrayList<>();
 		accStatementEntries.clear();
 		accStatementEntries.addAll(result);
 	}
 
 	public void deleteJournalEntry(AccStatementEntryTO selectedItem) {
-		JournalEntryTO entry = new JournalEntryTO();
-		entry.setId(selectedItem.getId());
-		service.deleteJournalEntry(entry);
+		service.deleteEntry(selectedItem.getId());
 	}
 
 	public void editJournalEntry(AccStatementEntryTO selectedItem) {
-		JournalEntryTO entry = service.retrieveJournalEntryById(selectedItem.getId());
+		JournalEntryTO entry = service.retrieveById(selectedItem.getId());
 		injector.getInstance(OpenJournalEntryCommand.class)
 				.apply(new OpenJournalEntryParam(entry, null, EditMode.UPDATE));
 	}

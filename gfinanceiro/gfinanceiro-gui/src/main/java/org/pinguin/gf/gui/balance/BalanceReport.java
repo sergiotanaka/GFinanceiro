@@ -7,11 +7,11 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.pinguin.gf.facade.account.AccountTO;
-import org.pinguin.gf.facade.journalentry.BalanceTO;
 import org.pinguin.gf.gui.accstatement.OpenAccStatementCommand;
 import org.pinguin.gf.gui.accstatement.OpenAccStatementParam;
 import org.pinguin.gf.gui.util.AccountStringConverter;
+import org.pinguin.gf.service.api.account.AccountTO;
+import org.pinguin.gf.service.api.balance.BalanceTO;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ObservableValue;
@@ -73,11 +73,12 @@ public class BalanceReport extends AnchorPane {
 				Map<Long, TreeItem<BalanceTO>> map = new HashMap<>();
 				for (BalanceTO item : list) {
 					TreeItem<BalanceTO> treeItem = new TreeItem<BalanceTO>(item);
-					map.put(item.getAccount().getId(), treeItem);
+					map.put(item.getAccount().getAccountId(), treeItem);
 				}
 				// 2. Montar a hierarquia e guardar os roots
 				for (TreeItem<BalanceTO> item : map.values()) {
 					if (item.getValue().getAccount().getParent() != null) {
+						@SuppressWarnings("unlikely-arg-type")
 						TreeItem<BalanceTO> parent = map.get(item.getValue().getAccount().getParent().getId());
 						parent.getChildren().add(item);
 					} else {

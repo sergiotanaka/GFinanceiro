@@ -4,10 +4,10 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 
-import org.pinguin.gf.facade.account.AccountNatureTO;
-import org.pinguin.gf.facade.account.AccountTO;
 import org.pinguin.gf.gui.control.AutoCompleteComboBox;
 import org.pinguin.gf.gui.util.AccountStringConverter;
+import org.pinguin.gf.service.api.account.AccountNatureTO;
+import org.pinguin.gf.service.api.account.AccountTO;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;

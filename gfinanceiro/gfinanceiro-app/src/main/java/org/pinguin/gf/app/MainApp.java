@@ -1,26 +1,14 @@
 package org.pinguin.gf.app;
 
+import static java.util.Optional.empty;
+
 import java.math.BigDecimal;
-import java.math.BigInteger;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.function.Function;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Query;
-
-import org.pinguin.gf.facade.account.AccountNatureTO;
-import org.pinguin.gf.facade.account.AccountService;
-import org.pinguin.gf.facade.account.AccountTO;
-import org.pinguin.gf.facade.journalentry.JournalEntryTO;
-import org.pinguin.gf.facade.planning.AccountPlanningTO;
-import org.pinguin.gf.facade.planning.MonthTO;
-import org.pinguin.gf.facade.planning.MonthYearTO;
-import org.pinguin.gf.facade.planning.PlanningService;
-import org.pinguin.gf.facade.planning.PlanningTO;
 import org.pinguin.gf.gui.account.AccountList;
 import org.pinguin.gf.gui.accstatement.OpenAccStatementCommand;
 import org.pinguin.gf.gui.accstatement.OpenAccStatementParam;
@@ -31,12 +19,18 @@ import org.pinguin.gf.gui.main.MainPane;
 import org.pinguin.gf.gui.planning.AccPlanningForm;
 import org.pinguin.gf.gui.planning.AddPlanningForm;
 import org.pinguin.gf.gui.planning.PlanningForm;
+import org.pinguin.gf.service.api.account.AccountNatureTO;
+import org.pinguin.gf.service.api.account.AccountService;
+import org.pinguin.gf.service.api.account.AccountTO;
+import org.pinguin.gf.service.api.journalentry.JournalEntryTO;
+import org.pinguin.gf.service.api.planning.AccountPlanningTO;
+import org.pinguin.gf.service.api.planning.MonthTO;
+import org.pinguin.gf.service.api.planning.PlanningService;
+import org.pinguin.gf.service.api.planning.PlanningTO;
 import org.pinguin.gui.util.EditMode;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.persist.PersistService;
-import com.google.inject.persist.jpa.JpaPersistModule;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -59,12 +53,8 @@ public class MainApp extends Application {
 
 		mainPane.setOnJournalEntryHandler((evt) -> {
 			JournalEntryTO newTo = new JournalEntryTO();
-			Calendar calendar = GregorianCalendar.getInstance();
-			calendar.set(Calendar.HOUR_OF_DAY, 0);
-			calendar.set(Calendar.MINUTE, 0);
-			calendar.set(Calendar.SECOND, 0);
-			calendar.set(Calendar.MILLISECOND, 0);
-			newTo.setDate(calendar);
+			final LocalDateTime today = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+			newTo.setDate(today);
 			newTo.setValue(BigDecimal.valueOf(0.0).setScale(2));
 			injector.getInstance(OpenJournalEntryCommand.class)
 					.apply(new OpenJournalEntryParam(newTo, stage, EditMode.CREATE));
@@ -101,7 +91,7 @@ public class MainApp extends Application {
 				AddPlanningForm addForm = injector.getInstance(AddPlanningForm.class);
 				addForm.getPresenter().getMonths().addAll(MonthTO.values());
 				PlanningTO newTO = new PlanningTO();
-				newTO.setMonthYear(new MonthYearTO(null, calendar.get(Calendar.YEAR)));
+				// newTO.setMonthYear(new MonthYearTO(null, calendar.get(Calendar.YEAR)));
 				addForm.getPresenter().setTo(newTO);
 				addFormStage.setScene(new Scene(addForm));
 				addFormStage.sizeToScene();
@@ -121,17 +111,17 @@ public class MainApp extends Application {
 				accPlanForm.getPresenter().getAccounts().addAll(accService.retrieveIncomeAccounts());
 				accPlanForm.getPresenter().getAccounts().addAll(accService.retrieveExpenseAccounts());
 				if (to == null) {
-					accPlanForm.getPresenter().setTo(new AccountPlanningTO());
+					// accPlanForm.getPresenter().setTo(new AccountPlanningTO());
 					accPlanForm.getPresenter().setEditMode(EditMode.CREATE);
 				} else {
-					accPlanForm.getPresenter().setTo(to);
+					// accPlanForm.getPresenter().setTo(to);
 					accPlanForm.getPresenter().setEditMode(EditMode.UPDATE);
 				}
 				accPlanForm.getPresenter().setOnSaveCommand((param) -> {
 					List<AccountPlanningTO> aux = new ArrayList<>();
-					aux.addAll(form.getPresenter().getAccPlannings());
+					// aux.addAll(form.getPresenter().getAccPlannings());
 					form.getPresenter().getAccPlannings().clear();
-					form.getPresenter().getAccPlannings().addAll(aux);
+					// form.getPresenter().getAccPlannings().addAll(aux);
 					if (accPlanForm.getPresenter().getEditMode().equals(EditMode.CREATE)) {
 						form.getPresenter().getAccPlannings().add(accPlanForm.getPresenter().getTo());
 					}
@@ -146,9 +136,9 @@ public class MainApp extends Application {
 
 				return null;
 			};
-			form.getPresenter().setAddAccPlanCommand(editAccPlanCommand);
-			form.getPresenter().setEditAccPlanCommand(editAccPlanCommand);
-			form.getPresenter().getPlannings().addAll(service.retrievePlannings());
+			// form.getPresenter().setAddAccPlanCommand(editAccPlanCommand);
+			// form.getPresenter().setEditAccPlanCommand(editAccPlanCommand);
+			// form.getPresenter().getPlannings().addAll(service.retrievePlannings());
 
 			formStage.setScene(new Scene(form));
 			formStage.sizeToScene();
@@ -177,18 +167,16 @@ public class MainApp extends Application {
 
 	@Override
 	public void stop() throws Exception {
-		EntityManager em = injector.getInstance(EntityManager.class);
-		EntityManagerFactory factory = em.getEntityManagerFactory();
-		factory.close();
 	}
 
 	private void initResources() {
+
+		injector = Guice.createInjector(new MainModule());
+
 		// Ativo e despesa tem natureza devedora
-		injector = Guice.createInjector(new JpaPersistModule("main"));
-		injector.getInstance(PersistService.class).start();
 		AccountService accService = injector.getInstance(AccountService.class);
 
-		if (accService.retrieveAccounts().isEmpty()) {
+		if (accService.retrieveAll(empty(), empty(), empty(), empty(), empty()).isEmpty()) {
 			accService.createAccount(new AccountTO("Caixa", AccountNatureTO.DEBIT));
 			accService.createAccount(new AccountTO("C/C Santander", AccountNatureTO.DEBIT));
 			accService.createAccount(new AccountTO("Poupança Santander", AccountNatureTO.DEBIT));
@@ -217,58 +205,60 @@ public class MainApp extends Application {
 
 	private void updateDB() {
 
-		EntityManager em = injector.getInstance(EntityManager.class);
-		em.getTransaction().begin();
-
-		Query query = em.createNativeQuery("select max(j.id) from JournalEntry j");
-		BigInteger result = (BigInteger) query.getSingleResult();
-		if (result == null) {
-			result = BigInteger.ZERO;
-		}
-		System.out.println(result);
-
-		Query query2 = em.createNativeQuery("select HIBERNATE_SEQUENCE.currval from dual");
-		Object result2 = query2.getSingleResult();
-		System.out.println(result2);
-
-		Query query3 = em
-				.createNativeQuery("alter sequence HIBERNATE_SEQUENCE restart with " + (result.intValue() + 2));
-		query3.executeUpdate();
-
-		// Query query = em.createNativeQuery("update Appointment set status =
-		// 'TODO' where status is null");
-		// query.executeUpdate();
-
-		em.getTransaction().commit();
-
 		// EntityManager em = injector.getInstance(EntityManager.class);
 		// em.getTransaction().begin();
 		//
-		// Query query = em.createNativeQuery("alter table Appointment add
-		// column if not exists aux varchar(255)");
-		// query.executeUpdate();
+		// Query query = em.createNativeQuery("select max(j.id) from JournalEntry j");
+		// BigInteger result = (BigInteger) query.getSingleResult();
+		// if (result == null) {
+		// result = BigInteger.ZERO;
+		// }
+		// System.out.println(result);
 		//
-		// query = em.createNativeQuery("update Appointment set aux =
-		// description");
-		// query.executeUpdate();
+		// Query query2 = em.createNativeQuery("select HIBERNATE_SEQUENCE.currval from
+		// dual");
+		// Object result2 = query2.getSingleResult();
+		// System.out.println(result2);
 		//
-		// query = em.createNativeQuery("alter table Appointment drop column
-		// description");
-		// query.executeUpdate();
+		// Query query3 = em
+		// .createNativeQuery("alter sequence HIBERNATE_SEQUENCE restart with " +
+		// (result.intValue() + 2));
+		// query3.executeUpdate();
 		//
-		// query = em.createNativeQuery("alter table Appointment add column
-		// description clob");
-		// query.executeUpdate();
-		//
-		// query = em.createNativeQuery("update Appointment set description =
-		// aux");
-		// query.executeUpdate();
-		//
-		// query = em.createNativeQuery("alter table Appointment drop column
-		// aux");
-		// query.executeUpdate();
+		// // Query query = em.createNativeQuery("update Appointment set status =
+		// // 'TODO' where status is null");
+		// // query.executeUpdate();
 		//
 		// em.getTransaction().commit();
+		//
+		// // EntityManager em = injector.getInstance(EntityManager.class);
+		// // em.getTransaction().begin();
+		// //
+		// // Query query = em.createNativeQuery("alter table Appointment add
+		// // column if not exists aux varchar(255)");
+		// // query.executeUpdate();
+		// //
+		// // query = em.createNativeQuery("update Appointment set aux =
+		// // description");
+		// // query.executeUpdate();
+		// //
+		// // query = em.createNativeQuery("alter table Appointment drop column
+		// // description");
+		// // query.executeUpdate();
+		// //
+		// // query = em.createNativeQuery("alter table Appointment add column
+		// // description clob");
+		// // query.executeUpdate();
+		// //
+		// // query = em.createNativeQuery("update Appointment set description =
+		// // aux");
+		// // query.executeUpdate();
+		// //
+		// // query = em.createNativeQuery("alter table Appointment drop column
+		// // aux");
+		// // query.executeUpdate();
+		// //
+		// // em.getTransaction().commit();
 	}
 
 	public static void main(String[] args) {

@@ -4,10 +4,10 @@ import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import org.pinguin.gf.facade.planning.MonthTO;
-import org.pinguin.gf.facade.planning.MonthYearTO;
-import org.pinguin.gf.facade.planning.PlanningService;
-import org.pinguin.gf.facade.planning.PlanningTO;
+import org.pinguin.gf.service.api.planning.MonthTO;
+import org.pinguin.gf.service.api.planning.MonthYearTO;
+import org.pinguin.gf.service.api.planning.PlanningService;
+import org.pinguin.gf.service.api.planning.PlanningTO;
 import org.pinguin.gui.util.BindHelper;
 import org.pinguin.gui.util.EditMode;
 import org.pinguin.gui.util.PropertyAdapter;
@@ -103,7 +103,7 @@ public class AddPlanningFormPresenter {
 		if (editMode.equals(EditMode.CREATE)) {
 			service.createPlanning(to);
 		} else if (editMode.equals(EditMode.UPDATE)) {
-			service.updatePlanning(to);
+			service.updatePlanning(to.getPlanningId(), to);
 		}
 	}
 

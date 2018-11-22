@@ -6,11 +6,10 @@ import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import org.pinguin.gf.facade.account.AccountService;
-import org.pinguin.gf.facade.account.AccountTO;
-import org.pinguin.gf.facade.planning.AccountPlanningTO;
-import org.pinguin.gf.facade.planning.PlanningService;
-import org.pinguin.gf.facade.planning.PlanningTO;
+import org.pinguin.gf.service.api.account.AccountService;
+import org.pinguin.gf.service.api.account.AccountTO;
+import org.pinguin.gf.service.api.planning.PlanningService;
+import org.pinguin.gf.service.api.planning.PlanningTO;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
@@ -27,12 +26,12 @@ public class PlanningFormPresenter {
 	private AccountService accService;
 
 	private Function<Void, Void> addPlanningCommand;
-	private Function<AccountPlanningTO, Void> addAccPlanCommand;
-	private Function<AccountPlanningTO, Void> editAccPlanCommand;
+	private Function<PlanningTO, Void> addAccPlanCommand;
+	private Function<PlanningTO, Void> editAccPlanCommand;
 
 	private final ObservableList<PlanningTO> plannings = FXCollections.observableArrayList();
 	private final Property<PlanningTO> selectedPlanningProp = new SimpleObjectProperty<>();
-	private ObservableList<AccountPlanningTO> accPlannings = FXCollections.observableArrayList();
+	private ObservableList<PlanningTO> accPlannings = FXCollections.observableArrayList();
 
 	private final Map<Long, AccountTO> accCache = new HashMap<>();
 
@@ -62,11 +61,11 @@ public class PlanningFormPresenter {
 		this.addPlanningCommand = addPlanningCommand;
 	}
 
-	public Function<AccountPlanningTO, Void> getAddAccPlanCommand() {
+	public Function<PlanningTO, Void> getAddAccPlanCommand() {
 		return addAccPlanCommand;
 	}
 
-	public void setAddAccPlanCommand(Function<AccountPlanningTO, Void> addAccPlanCommand) {
+	public void setAddAccPlanCommand(Function<PlanningTO, Void> addAccPlanCommand) {
 		this.addAccPlanCommand = addAccPlanCommand;
 	}
 
@@ -78,15 +77,15 @@ public class PlanningFormPresenter {
 		return selectedPlanningProp;
 	}
 
-	public ObservableList<AccountPlanningTO> getAccPlannings() {
+	public ObservableList<PlanningTO> getAccPlannings() {
 		return accPlannings;
 	}
 
-	public Function<AccountPlanningTO, Void> getEditAccPlanCommand() {
+	public Function<PlanningTO, Void> getEditAccPlanCommand() {
 		return editAccPlanCommand;
 	}
 
-	public void setEditAccPlanCommand(Function<AccountPlanningTO, Void> editAccPlanCommand) {
+	public void setEditAccPlanCommand(Function<PlanningTO, Void> editAccPlanCommand) {
 		this.editAccPlanCommand = editAccPlanCommand;
 	}
 
@@ -110,15 +109,15 @@ public class PlanningFormPresenter {
 		}
 
 		for (PlanningTO plan : plannings) {
-			service.updatePlanning(plan);
+			service.updatePlanning(plan.getPlanningId(), plan);
 		}
 	}
 
-	public void deleteAccPlan(AccountPlanningTO selectedItem) {
+	public void deleteAccPlan(PlanningTO selectedItem) {
 		accPlannings.remove(selectedItem);
 	}
 
-	public void editAccPlan(AccountPlanningTO selectedItem) {
+	public void editAccPlan(PlanningTO selectedItem) {
 		if (editAccPlanCommand != null) {
 			editAccPlanCommand.apply(selectedItem);
 		}
@@ -126,7 +125,7 @@ public class PlanningFormPresenter {
 
 	public AccountTO retrieveAccountById(Long id) {
 		if (!accCache.containsKey(id)) {
-			accCache.put(id, accService.retrieveAccountById(id));
+			accCache.put(id, accService.retrieveById(id));
 		}
 		return accCache.get(id);
 	}

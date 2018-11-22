@@ -4,8 +4,8 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 
-import org.pinguin.gf.facade.planning.MonthTO;
 import org.pinguin.gf.gui.control.AutoCompleteComboBox;
+import org.pinguin.gf.service.api.planning.MonthTO;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;

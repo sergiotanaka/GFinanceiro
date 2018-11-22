@@ -1,6 +1,6 @@
 package org.pinguin.gf.gui.journalentry;
 
-import org.pinguin.gf.facade.journalentry.JournalEntryTO;
+import org.pinguin.gf.service.api.journalentry.JournalEntryTO;
 import org.pinguin.gui.util.EditMode;
 
 import javafx.stage.Window;

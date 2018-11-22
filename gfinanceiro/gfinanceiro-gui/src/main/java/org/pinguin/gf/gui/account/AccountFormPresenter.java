@@ -4,9 +4,9 @@ import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import org.pinguin.gf.facade.account.AccountNatureTO;
-import org.pinguin.gf.facade.account.AccountService;
-import org.pinguin.gf.facade.account.AccountTO;
+import org.pinguin.gf.service.api.account.AccountNatureTO;
+import org.pinguin.gf.service.api.account.AccountService;
+import org.pinguin.gf.service.api.account.AccountTO;
 import org.pinguin.gui.util.BindHelper;
 import org.pinguin.gui.util.EditMode;
 
@@ -92,7 +92,7 @@ public class AccountFormPresenter {
 		if (editMode.equals(EditMode.CREATE)) {
 			service.createAccount(to);
 		} else if (editMode.equals(EditMode.UPDATE)) {
-			service.updateAccount(to);
+			service.updateAccount(to.getAccountId(), to);
 		}
 		if (closeWindowCommand != null) {
 			closeWindowCommand.apply(null);

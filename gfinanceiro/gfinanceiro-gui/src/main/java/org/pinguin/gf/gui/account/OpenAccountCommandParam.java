@@ -1,6 +1,6 @@
 package org.pinguin.gf.gui.account;
 
-import org.pinguin.gf.facade.account.AccountTO;
+import org.pinguin.gf.service.api.account.AccountTO;
 import org.pinguin.gui.util.EditMode;
 
 import javafx.stage.Window;

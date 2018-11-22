@@ -1,10 +1,12 @@
 package org.pinguin.gf.gui.accstatement;
 
+import static java.util.Optional.empty;
+
 import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import org.pinguin.gf.facade.account.AccountService;
+import org.pinguin.gf.service.api.account.AccountService;
 
 import com.google.inject.Injector;
 
@@ -21,7 +23,7 @@ public class OpenAccStatementCommand implements Function<OpenAccStatementParam, 
 		AccountService accService = injector.getInstance(AccountService.class);
 
 		AccStatementReport report = injector.getInstance(AccStatementReport.class);
-		report.getPresenter().getAccounts().addAll(accService.retrieveAccounts());
+		report.getPresenter().getAccounts().addAll(accService.retrieveAll(empty(), empty(), empty(), empty(), empty()));
 
 		if (param.getAccount() != null) {
 			report.getPresenter().accountProperty().setValue(param.getAccount());

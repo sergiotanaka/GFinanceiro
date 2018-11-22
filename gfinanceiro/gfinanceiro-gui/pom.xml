@@ -12,6 +12,11 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.pinguin</groupId>
+			<artifactId>gfinanceiro-api</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.pinguin</groupId>
 			<artifactId>gui-utils</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>

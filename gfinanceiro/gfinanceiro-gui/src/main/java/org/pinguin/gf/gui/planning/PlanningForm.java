@@ -7,12 +7,11 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.pinguin.gf.facade.account.AccountTO;
-import org.pinguin.gf.facade.planning.AccountPlanningTO;
-import org.pinguin.gf.facade.planning.PlanningTO;
 import org.pinguin.gf.gui.balance.BalanceReport.SimpleTVCellValueFactory;
 import org.pinguin.gf.gui.control.AutoCompleteComboBox;
 import org.pinguin.gf.gui.util.AccountStringConverter;
+import org.pinguin.gf.service.api.account.AccountTO;
+import org.pinguin.gf.service.api.planning.PlanningTO;
 import org.pinguin.gui.util.Dialog;
 
 import javafx.collections.ListChangeListener;
@@ -38,9 +37,9 @@ public class PlanningForm extends AnchorPane {
 	@FXML
 	private AutoCompleteComboBox<PlanningTO> monthYearCombo;
 	@FXML
-	private TreeTableView<AccountPlanningTO> accPlanTree;
+	private TreeTableView<PlanningTO> accPlanTree;
 	@FXML
-	private TreeTableColumn<AccountPlanningTO, String> accountTColumn;
+	private TreeTableColumn<PlanningTO, String> accountTColumn;
 
 	public PlanningForm() {
 		loadFxml();
@@ -84,8 +83,8 @@ public class PlanningForm extends AnchorPane {
 			}
 		});
 
-		accountTColumn.setCellValueFactory(
-				new SimpleTVCellValueFactory<AccountPlanningTO, AccountTO>("account", accStrConverter));
+		accountTColumn
+				.setCellValueFactory(new SimpleTVCellValueFactory<PlanningTO, AccountTO>("account", accStrConverter));
 	}
 
 	@Inject
@@ -93,43 +92,43 @@ public class PlanningForm extends AnchorPane {
 		monthYearCombo.setOriginalItems(presenter.getPlannings());
 		monthYearCombo.valueProperty().bindBidirectional(presenter.selectedPlanningProp());
 
-		presenter.getAccPlannings().addListener(new ListChangeListener<AccountPlanningTO>() {
+		presenter.getAccPlannings().addListener(new ListChangeListener<PlanningTO>() {
 
 			@Override
-			public void onChanged(Change<? extends AccountPlanningTO> c) {
-				ObservableList<? extends AccountPlanningTO> list = c.getList();
+			public void onChanged(Change<? extends PlanningTO> c) {
+				ObservableList<? extends PlanningTO> list = c.getList();
 				// Transformar e preencher
-				TreeItem<AccountPlanningTO> root = new TreeItem<AccountPlanningTO>(new AccountPlanningTO());
+				TreeItem<PlanningTO> root = new TreeItem<PlanningTO>(new PlanningTO());
 				transform(list, root);
 				accPlanTree.setRoot(root);
 			}
 
-			private void retrieveParents(Long id, Map<Long, TreeItem<AccountPlanningTO>> map) {
+			private void retrieveParents(Long id, Map<Long, TreeItem<PlanningTO>> map) {
 				AccountTO retrieved = presenter.retrieveAccountById(id);
-				AccountPlanningTO parentPlan = new AccountPlanningTO();
+				PlanningTO parentPlan = new PlanningTO();
 				parentPlan.setAccount(retrieved);
-				map.put(retrieved.getId(), new TreeItem<AccountPlanningTO>(parentPlan));
+				map.put(retrieved.getAccountId(), new TreeItem<PlanningTO>(parentPlan));
 				if (retrieved.getParent() != null) {
-					retrieveParents(retrieved.getParent().getId(), map);
+					retrieveParents(retrieved.getParent().getAccountId(), map);
 				}
 			}
 
-			private void transform(ObservableList<? extends AccountPlanningTO> list, TreeItem<AccountPlanningTO> root) {
+			private void transform(ObservableList<? extends PlanningTO> list, TreeItem<PlanningTO> root) {
 				// 1. Criar TreeItem e guardar no map, por ID da Conta
-				Map<Long, TreeItem<AccountPlanningTO>> map = new HashMap<>();
-				for (AccountPlanningTO item : list) {
-					TreeItem<AccountPlanningTO> treeItem = new TreeItem<>(item);
-					map.put(item.getAccount().getId(), treeItem);
+				Map<Long, TreeItem<PlanningTO>> map = new HashMap<>();
+				for (PlanningTO item : list) {
+					TreeItem<PlanningTO> treeItem = new TreeItem<>(item);
+					map.put(item.getAccount().getAccountId(), treeItem);
 					// 2. Preencher os pais
 					if (item.getAccount().getParent() != null) {
-						retrieveParents(item.getAccount().getParent().getId(), map);
+						retrieveParents(item.getAccount().getParent().getAccountId(), map);
 					}
 
 				}
 				// 2. Montar a hierarquia e guardar os roots
-				for (TreeItem<AccountPlanningTO> item : map.values()) {
+				for (TreeItem<PlanningTO> item : map.values()) {
 					if (item.getValue().getAccount().getParent() != null) {
-						TreeItem<AccountPlanningTO> parent = map.get(item.getValue().getAccount().getParent().getId());
+						TreeItem<PlanningTO> parent = map.get(item.getValue().getAccount().getParent().getId());
 						parent.getChildren().add(item);
 					} else {
 						root.getChildren().add(item);
@@ -139,14 +138,14 @@ public class PlanningForm extends AnchorPane {
 				totalize(root);
 			}
 
-			private BigDecimal totalize(TreeItem<AccountPlanningTO> root) {
+			private BigDecimal totalize(TreeItem<PlanningTO> root) {
 				if (root.getChildren().isEmpty()) {
 					// Caso analitico
 					return root.getValue().getValue();
 				} else {
 					// Caso sintetico
 					BigDecimal total = BigDecimal.ZERO;
-					for (TreeItem<AccountPlanningTO> child : root.getChildren()) {
+					for (TreeItem<PlanningTO> child : root.getChildren()) {
 						total = total.add(totalize(child));
 					}
 					root.getValue().setValue(total.setScale(2));

@@ -7,10 +7,10 @@ import java.util.Calendar;
 
 import javax.inject.Inject;
 
-import org.pinguin.gf.facade.account.AccountTO;
-import org.pinguin.gf.facade.journalentry.AccStatementEntryTO;
 import org.pinguin.gf.gui.control.AutoCompleteComboBox;
 import org.pinguin.gf.gui.util.AccountStringConverter;
+import org.pinguin.gf.service.api.account.AccStatementEntryTO;
+import org.pinguin.gf.service.api.account.AccountTO;
 import org.pinguin.gui.util.Dialog;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;

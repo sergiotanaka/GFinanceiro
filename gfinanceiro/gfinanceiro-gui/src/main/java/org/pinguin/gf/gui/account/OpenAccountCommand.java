@@ -1,11 +1,13 @@
 package org.pinguin.gf.gui.account;
 
+import static java.util.Optional.empty;
+
 import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import org.pinguin.gf.facade.account.AccountNatureTO;
-import org.pinguin.gf.facade.account.AccountService;
+import org.pinguin.gf.service.api.account.AccountNatureTO;
+import org.pinguin.gf.service.api.account.AccountService;
 
 import com.google.inject.Injector;
 
@@ -27,7 +29,8 @@ public class OpenAccountCommand implements Function<OpenAccountCommandParam, Voi
 		final AccountForm form = injector.getInstance(AccountForm.class);
 
 		form.getPresenter().getNatures().addAll(AccountNatureTO.values());
-		form.getPresenter().getParentAccounts().addAll(accService.retrieveAccounts());
+		form.getPresenter().getParentAccounts()
+				.addAll(accService.retrieveAll(empty(), empty(), empty(), empty(), empty()));
 
 		form.getPresenter().setEditMode(param.getEditMode());
 		form.getPresenter().setTo(param.getTo());

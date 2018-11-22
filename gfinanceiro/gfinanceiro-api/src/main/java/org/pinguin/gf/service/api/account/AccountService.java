@@ -32,6 +32,10 @@ public interface AccountService {
 	 * 
 	 * @return
 	 */
-	List<AccountTO> retrieveAnalSytical();
+	List<AccountTO> retrieveAnalytical();
+
+	List<AccountTO> retrieveIncomeAccounts();
+
+	List<AccountTO> retrieveExpenseAccounts();
 
 }

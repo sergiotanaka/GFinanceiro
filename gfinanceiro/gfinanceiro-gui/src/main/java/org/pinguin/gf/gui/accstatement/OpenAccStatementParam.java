@@ -2,7 +2,7 @@ package org.pinguin.gf.gui.accstatement;
 
 import java.util.Calendar;
 
-import org.pinguin.gf.facade.account.AccountTO;
+import org.pinguin.gf.service.api.account.AccountTO;
 
 import javafx.stage.Window;
 

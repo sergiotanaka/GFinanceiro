@@ -7,9 +7,9 @@ import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import org.pinguin.gf.facade.account.AccountTO;
-import org.pinguin.gf.facade.journalentry.JournalEntryService;
-import org.pinguin.gf.facade.journalentry.JournalEntryTO;
+import org.pinguin.gf.service.api.account.AccountTO;
+import org.pinguin.gf.service.api.journalentry.JournalEntryService;
+import org.pinguin.gf.service.api.journalentry.JournalEntryTO;
 import org.pinguin.gui.util.BindHelper;
 import org.pinguin.gui.util.EditMode;
 import org.pinguin.gui.util.PropertyAdapter;
@@ -129,10 +129,10 @@ public class JournalEntryPresenter {
 
 	public void save() {
 		if (editMode.equals(EditMode.CREATE)) {
-			service.createJournalEntry(to);
+			service.createEntry(to);
 			clearForm();
 		} else if (editMode.equals(EditMode.UPDATE)) {
-			service.updateJournalEntry(to);
+			service.updateEntry(to.getEntryId(), to);
 			closeWindowCommand.apply(null);
 		}
 	}
