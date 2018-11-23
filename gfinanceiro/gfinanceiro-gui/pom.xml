@@ -25,10 +25,11 @@
 			<artifactId>guice</artifactId>
 			<version>3.0</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.jfxtras/jfxtras-controls -->
 		<dependency>
 			<groupId>org.jfxtras</groupId>
 			<artifactId>jfxtras-controls</artifactId>
-			<version>8.0-r5</version>
+			<version>10.0-r1</version>
 		</dependency>
 
 	</dependencies>

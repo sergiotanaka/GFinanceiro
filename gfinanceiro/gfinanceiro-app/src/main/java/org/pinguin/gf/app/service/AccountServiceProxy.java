@@ -1,71 +1,95 @@
 package org.pinguin.gf.app.service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+
+import javax.inject.Inject;
 
 import org.pinguin.gf.service.api.account.AccStatementEntryTO;
 import org.pinguin.gf.service.api.account.AccountService;
 import org.pinguin.gf.service.api.account.AccountTO;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 public class AccountServiceProxy implements AccountService {
 
+	private final String accountResourceUrl = "http://localhost:8080/gf/accounts";
+	private final ParameterizedTypeReference<List<AccountTO>> accListTypeRef = new ParameterizedTypeReference<List<AccountTO>>() {
+	};
+	private final ParameterizedTypeReference<List<AccStatementEntryTO>> accStateListTypeRef = new ParameterizedTypeReference<List<AccStatementEntryTO>>() {
+	};
+
+	@Inject
+	private RestTemplate restTemplate;
+
 	@Override
 	public AccountTO createAccount(AccountTO account) {
-		// TODO Auto-generated method stub
-		return null;
+		return restTemplate.postForObject(accountResourceUrl, new HttpEntity<>(account), AccountTO.class);
 	}
 
 	@Override
 	public AccountTO updateAccount(Long id, AccountTO account) {
-		// TODO Auto-generated method stub
-		return null;
+		String resourceUrl = accountResourceUrl + '/' + id;
+		ResponseEntity<AccountTO> response = restTemplate.exchange(resourceUrl, HttpMethod.PUT,
+				new HttpEntity<>(account), AccountTO.class);
+		return response.getBody();
 	}
 
 	@Override
 	public AccountTO deleteAccount(Long id) {
-		// TODO Auto-generated method stub
+		String entityUrl = accountResourceUrl + "/" + id;
+		restTemplate.delete(entityUrl);
 		return null;
 	}
 
 	@Override
 	public AccountTO retrieveById(Long id) {
-		// TODO Auto-generated method stub
-		return null;
+		return restTemplate.getForObject(accountResourceUrl + "/" + id, AccountTO.class);
 	}
 
 	@Override
-	public List<AccStatementEntryTO> retrieveStatements(Long id) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<AccStatementEntryTO> retrieveStatements(Long id, LocalDate start, LocalDate end,
+			boolean periodBalance) {
+		String resourceUrl = accountResourceUrl + '/' + id + "/statements";
+		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(resourceUrl).queryParam("start", start)
+				.queryParam("end", end).queryParam("periodBalance", periodBalance);
+		final ResponseEntity<List<AccStatementEntryTO>> response = restTemplate.exchange(builder.toUriString(),
+				HttpMethod.GET, null, accStateListTypeRef);
+		return response.getBody();
 	}
 
 	@Override
 	public List<AccountTO> retrieveAll(Optional<String> filters, Optional<String> sort, Optional<String> page,
 			Optional<String> pageSize, Optional<String> fields) {
-		RestTemplate restTemplate = new RestTemplate();
-		String fooResourceUrl = "http://localhost:8080/gf/accounts";
-		List<AccountTO> foo = (List<AccountTO>) restTemplate.getForObject(fooResourceUrl + "/1", AccountTO.class);
-		return foo;
+		final ResponseEntity<List<AccountTO>> response = restTemplate.exchange(accountResourceUrl, HttpMethod.GET, null,
+				accListTypeRef);
+		return response.getBody();
 	}
 
 	@Override
 	public List<AccountTO> retrieveAnalytical() {
-		// TODO Auto-generated method stub
-		return null;
+		final ResponseEntity<List<AccountTO>> response = restTemplate.exchange(accountResourceUrl + "/analytical",
+				HttpMethod.GET, null, accListTypeRef);
+		return response.getBody();
 	}
 
 	@Override
 	public List<AccountTO> retrieveIncomeAccounts() {
-		// TODO Auto-generated method stub
-		return null;
+		final ResponseEntity<List<AccountTO>> response = restTemplate.exchange(accountResourceUrl + "/income",
+				HttpMethod.GET, null, accListTypeRef);
+		return response.getBody();
 	}
 
 	@Override
 	public List<AccountTO> retrieveExpenseAccounts() {
-		// TODO Auto-generated method stub
-		return null;
+		final ResponseEntity<List<AccountTO>> response = restTemplate.exchange(accountResourceUrl + "/expenses",
+				HttpMethod.GET, null, accListTypeRef);
+		return response.getBody();
 	}
 
 }

@@ -1,8 +1,11 @@
 package org.pinguin.gf.gui.journalentry;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.TimeZone;
 import java.util.function.Function;
 
 import javax.inject.Inject;
@@ -100,6 +103,26 @@ public class JournalEntryPresenter {
 
 	private void mapToPresenter(JournalEntryTO to) {
 
+		PropertyAdapter<LocalDateTime, Calendar> adapter = new PropertyAdapter<>(dateProperty,
+				new ValueConverter<LocalDateTime, Calendar>() {
+
+					@Override
+					public LocalDateTime convert1(Calendar value) {
+						TimeZone tz = value.getTimeZone();
+						ZoneId zid = tz == null ? ZoneId.systemDefault() : tz.toZoneId();
+						return LocalDateTime.ofInstant(value.toInstant(), zid);
+					}
+
+					@Override
+					public Calendar convert2(LocalDateTime value) {
+						Calendar calendar = Calendar.getInstance();
+						calendar.clear();
+						calendar.set(value.getYear(), value.getMonthValue() - 1, value.getDayOfMonth(), value.getHour(),
+								value.getMinute(), value.getSecond());
+						return calendar;
+					}
+				});
+
 		bindHelper.setTo(to);
 		bindHelper.bind("debitAccount", debitProperty);
 		bindHelper.bind("creditAccount", creditProperty);
@@ -123,7 +146,7 @@ public class JournalEntryPresenter {
 						return value.toString();
 					}
 				}));
-		bindHelper.bind("date", dateProperty);
+		bindHelper.bind("date", adapter);
 		bindHelper.bind("description", descriptionProperty);
 	}
 

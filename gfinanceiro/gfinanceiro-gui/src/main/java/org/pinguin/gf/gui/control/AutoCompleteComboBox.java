@@ -3,8 +3,7 @@ package org.pinguin.gf.gui.control;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.sun.javafx.binding.BidirectionalContentBinding;
-
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -47,7 +46,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
 	}
 
 	public void setOriginalItems(ObservableList<T> originalItems) {
-		BidirectionalContentBinding.bind(this.originalItems, originalItems);
+		Bindings.bindContentBidirectional(this.originalItems, originalItems);
 		getItems().setAll(originalItems);
 	}
 

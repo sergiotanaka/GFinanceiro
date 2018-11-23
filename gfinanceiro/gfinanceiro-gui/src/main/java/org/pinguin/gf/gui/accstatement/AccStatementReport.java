@@ -3,6 +3,8 @@ package org.pinguin.gf.gui.accstatement;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 
 import javax.inject.Inject;
@@ -58,8 +60,8 @@ public class AccStatementReport extends AnchorPane {
 		loadFxml();
 		final StringConverter<AccountTO> accStrConverter = new AccountStringConverter();
 		accountCombo.setConverter(accStrConverter);
-		dateColumn.setCellValueFactory(
-				new SimpleCellValueFactory<AccStatementEntryTO, Calendar>("date", new CalendarStrConverter()));
+		dateColumn.setCellValueFactory(new SimpleCellValueFactory<AccStatementEntryTO, LocalDateTime>("date",
+				new LocalDateTimeStrConverter()));
 		accountColumn.setCellValueFactory(
 				new SimpleCellValueFactory<AccStatementEntryTO, AccountTO>("account", accStrConverter));
 		originColumn.setCellValueFactory(
@@ -104,7 +106,25 @@ public class AccStatementReport extends AnchorPane {
 			}
 			return formatter.format(cal.getTime());
 		}
+	}
 
+	public static class LocalDateTimeStrConverter extends StringConverter<LocalDateTime> {
+
+		private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+		@Override
+		public LocalDateTime fromString(String string) {
+			return null;
+		}
+
+		@Override
+		public String toString(LocalDateTime cal) {
+			if (cal == null) {
+				return "";
+			}
+
+			return cal.format(formatter);
+		}
 	}
 
 	public static class SimpleCellValueFactory<T, O>

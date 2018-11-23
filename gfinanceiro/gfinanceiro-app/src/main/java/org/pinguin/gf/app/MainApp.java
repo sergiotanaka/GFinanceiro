@@ -176,6 +176,10 @@ public class MainApp extends Application {
 		// Ativo e despesa tem natureza devedora
 		AccountService accService = injector.getInstance(AccountService.class);
 
+		AccountTO created = accService.createAccount(new AccountTO("Teste2", AccountNatureTO.DEBIT));
+		accService.updateAccount(created.getAccountId(), created);
+		accService.deleteAccount(created.getAccountId());
+
 		if (accService.retrieveAll(empty(), empty(), empty(), empty(), empty()).isEmpty()) {
 			accService.createAccount(new AccountTO("Caixa", AccountNatureTO.DEBIT));
 			accService.createAccount(new AccountTO("C/C Santander", AccountNatureTO.DEBIT));

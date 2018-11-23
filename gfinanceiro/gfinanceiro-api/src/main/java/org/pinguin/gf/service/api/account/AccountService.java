@@ -1,5 +1,6 @@
 package org.pinguin.gf.service.api.account;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,7 +14,7 @@ public interface AccountService {
 
 	AccountTO retrieveById(Long id);
 
-	List<AccStatementEntryTO> retrieveStatements(Long id);
+	List<AccStatementEntryTO> retrieveStatements(Long id, LocalDate start, LocalDate end, boolean periodBalance);
 
 	/**
 	 * TODO: parametros.

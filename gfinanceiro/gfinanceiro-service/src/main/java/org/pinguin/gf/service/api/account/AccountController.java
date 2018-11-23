@@ -6,6 +6,7 @@ import static org.pinguin.gf.domain.journalentry.QJournalEntry.journalEntry;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,6 +23,9 @@ import org.pinguin.gf.domain.journalentry.JournalEntry;
 import org.pinguin.gf.domain.journalentry.JournalEntryRepository;
 import org.pinguin.gf.service.infra.AccountMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -145,13 +149,25 @@ public class AccountController implements AccountService {
 	 */
 	@Override
 	@GetMapping(value = "/{id}/statements", produces = MediaTypes.HAL_JSON_VALUE)
-	public List<AccStatementEntryTO> retrieveStatements(@PathVariable("id") Long id) {
+	public List<AccStatementEntryTO> retrieveStatements(@PathVariable("id") Long id,
+			@RequestParam("start") @DateTimeFormat(iso = ISO.DATE) LocalDate start,
+			@RequestParam("end") @DateTimeFormat(iso = ISO.DATE) LocalDate end,
+			@RequestParam("periodBalance") boolean periodBalance) {
+
 		final Account root = repo.getOne(id);
 		final List<Account> accs = retrieveAnalyticalAccounts(root);
 
-		final Iterable<JournalEntry> retrieved = jEntryRepo
-				.findAll(journalEntry.debitAccount.in(accs).or(journalEntry.creditAccount.in(accs)));
-		// final Iterable<JournalEntry> retrieved = jEntryRepo.findAll();
+		Iterable<JournalEntry> retrieved = null;
+		if (periodBalance) {
+			retrieved = jEntryRepo.findAll(
+					journalEntry.debitAccount.in(accs).or(journalEntry.creditAccount.in(accs))
+							.and(journalEntry.date.after(start.atStartOfDay())
+									.and(journalEntry.date.before(end.plusDays(1).atStartOfDay()))),
+					Sort.by("date", "entryId"));
+		} else {
+			retrieved = jEntryRepo.findAll(journalEntry.debitAccount.in(accs).or(journalEntry.creditAccount.in(accs))
+					.and(journalEntry.date.before(end.plusDays(1).atStartOfDay())), Sort.by("date", "entryId"));
+		}
 
 		BigDecimal balance = BigDecimal.ZERO;
 		List<AccStatementEntryTO> result = new ArrayList<>();
@@ -181,7 +197,10 @@ public class AccountController implements AccountService {
 			// Calculo do saldo
 			balance = balance.add(entry.getValue());
 			entry.setBalance(balance.setScale(2));
-			result.add(entry);
+
+			if (!item.getDate().isBefore(start.atStartOfDay())) {
+				result.add(entry);
+			}
 		}
 
 		return result;
@@ -265,5 +284,4 @@ public class AccountController implements AccountService {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
 }
