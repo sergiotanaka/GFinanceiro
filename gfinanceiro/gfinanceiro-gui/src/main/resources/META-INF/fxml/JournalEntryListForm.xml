@@ -63,8 +63,8 @@
 			</TableView>
 			<HBox spacing="10" alignment="CENTER_RIGHT" VBox.vgrow="ALWAYS">
 				<Button text="Processar" onAction="#process" />
-				<Button text="Salvar" />
-				<Button text="Cancelar" />
+				<Button text="Salvar" onAction="#save" />
+				<Button text="Cancelar" onAction="#cancel" />
 			</HBox>
 		</VBox>
 	</children>

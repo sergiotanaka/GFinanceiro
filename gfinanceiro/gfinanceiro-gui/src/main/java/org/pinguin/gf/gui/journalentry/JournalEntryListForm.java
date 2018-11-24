@@ -16,6 +16,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.cell.ComboBoxTableCell;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.AnchorPane;
 import javafx.util.StringConverter;
 
@@ -33,6 +34,8 @@ public class JournalEntryListForm extends AnchorPane {
 	private TableColumn<JournalEntryItem, AccountTO> originColumn;
 	@FXML
 	private TableColumn<JournalEntryItem, AccountTO> accountColumn;
+	@FXML
+	private TableColumn<JournalEntryItem, String> descriptionColumn;
 
 	@Inject
 	private JournalEntryListPresenter presenter;
@@ -58,11 +61,22 @@ public class JournalEntryListForm extends AnchorPane {
 				ComboBoxTableCell.forTableColumn(AccountStringConverter.instance(), presenter.getAccounts()));
 		accountColumn.setCellFactory(
 				ComboBoxTableCell.forTableColumn(AccountStringConverter.instance(), presenter.getAccounts()));
+		descriptionColumn.setCellFactory(TextFieldTableCell.forTableColumn());
 	}
 
 	@FXML
 	public void process(ActionEvent evt) {
 		presenter.process();
+	}
+
+	@FXML
+	public void save(ActionEvent evt) {
+		presenter.save();
+	}
+
+	@FXML
+	public void cancel(ActionEvent evt) {
+		presenter.cancel();
 	}
 
 	private void loadFxml() {

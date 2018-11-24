@@ -12,9 +12,10 @@
 <?import jfxtras.scene.control.*?>
 <?import org.pinguin.gf.gui.control.*?>
 
-<fx:root type="javafx.scene.layout.AnchorPane" xmlns:fx="http://javafx.com/fxml"
-	AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-	AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+<fx:root type="javafx.scene.layout.AnchorPane"
+	xmlns:fx="http://javafx.com/fxml" AnchorPane.bottomAnchor="0.0"
+	AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+	AnchorPane.topAnchor="0.0">
 	<children>
 		<VBox spacing="10">
 			<padding>
@@ -33,13 +34,27 @@
 
 				<Label text="Natureza:" GridPane.rowIndex="1"
 					GridPane.columnIndex="0" />
-				<AutoCompleteComboBox fx:id="natureCombo" GridPane.rowIndex="1"
-					GridPane.columnIndex="1" />
+				<AutoCompleteComboBox fx:id="natureCombo"
+					GridPane.rowIndex="1" GridPane.columnIndex="1" />
 
 				<Label text="Conta pai:" GridPane.rowIndex="2"
 					GridPane.columnIndex="0" />
-				<AutoCompleteComboBox fx:id="parentCombo" GridPane.rowIndex="2"
+				<AutoCompleteComboBox fx:id="parentCombo"
+					GridPane.rowIndex="2" GridPane.columnIndex="1" />
+
+				<Label text="Tag:" GridPane.rowIndex="3"
+					GridPane.columnIndex="0" />
+				<TextField fx:id="tagText" GridPane.rowIndex="3"
 					GridPane.columnIndex="1" />
+				<Button text="New" onAction="#newTag" GridPane.rowIndex="3"
+					GridPane.columnIndex="2" />
+				<Button text="Upd" onAction="#updTag" GridPane.rowIndex="3"
+					GridPane.columnIndex="3" />
+				<Button text="Del" onAction="#delTag" GridPane.rowIndex="3"
+					GridPane.columnIndex="4" />
+				<ListView fx:id="tagsLView" GridPane.rowIndex="4"
+					GridPane.columnIndex="0" GridPane.columnSpan="5" />
+
 			</GridPane>
 			<HBox spacing="10" alignment="CENTER_RIGHT">
 				<Button text="Salvar" onAction="#save" />

@@ -15,6 +15,8 @@ import javax.inject.Inject;
 
 import org.pinguin.gf.service.api.account.AccountService;
 import org.pinguin.gf.service.api.account.AccountTO;
+import org.pinguin.gf.service.api.journalentry.JournalEntryService;
+import org.pinguin.gf.service.api.journalentry.JournalEntryTO;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
@@ -29,6 +31,8 @@ public class JournalEntryListPresenter {
 
 	@Inject
 	private AccountService accService;
+	@Inject
+	private JournalEntryService journalEntryService;
 
 	private final ObservableList<JournalEntryItem> entries = FXCollections.observableArrayList();
 	private final ObservableList<AccountTO> accounts = FXCollections.observableArrayList();
@@ -90,6 +94,23 @@ public class JournalEntryListPresenter {
 		} catch (final Exception e) {
 			throw new IllegalStateException("Erro ao ler o texto", e);
 		}
+	}
+
+	public void save() {
+		for (JournalEntryItem item : entries) {
+			JournalEntryTO to = new JournalEntryTO();
+			to.setEntryId(item.entryIdProperty().get());
+			to.setDebitAccount(item.debitAccountProperty().get());
+			to.setCreditAccount(item.creditAccountProperty().get());
+			to.setValue(item.valueProperty().get());
+			to.setDate(item.dateProperty().get());
+			to.setDescription(item.descriptionProperty().get());
+			journalEntryService.createEntry(to);
+		}
+	}
+
+	public void cancel() {
+		// TODO Auto-generated method stub
 
 	}
 
@@ -101,7 +122,6 @@ public class JournalEntryListPresenter {
 				}
 			}
 		}
-
 		return null;
 	}
 

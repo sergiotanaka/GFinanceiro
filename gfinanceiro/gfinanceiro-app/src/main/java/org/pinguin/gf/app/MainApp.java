@@ -1,7 +1,5 @@
 package org.pinguin.gf.app;
 
-import static java.util.Optional.empty;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,9 +18,7 @@ import org.pinguin.gf.gui.main.MainPane;
 import org.pinguin.gf.gui.planning.AccPlanningForm;
 import org.pinguin.gf.gui.planning.AddPlanningForm;
 import org.pinguin.gf.gui.planning.PlanningForm;
-import org.pinguin.gf.service.api.account.AccountNatureTO;
 import org.pinguin.gf.service.api.account.AccountService;
-import org.pinguin.gf.service.api.account.AccountTO;
 import org.pinguin.gf.service.api.journalentry.JournalEntryTO;
 import org.pinguin.gf.service.api.planning.AccountPlanningTO;
 import org.pinguin.gf.service.api.planning.MonthTO;
@@ -180,41 +176,7 @@ public class MainApp extends Application {
 	}
 
 	private void initResources() {
-
 		injector = Guice.createInjector(new MainModule());
-
-		// Ativo e despesa tem natureza devedora
-		AccountService accService = injector.getInstance(AccountService.class);
-
-		AccountTO created = accService.createAccount(new AccountTO("Teste2", AccountNatureTO.DEBIT));
-		accService.updateAccount(created.getAccountId(), created);
-		accService.deleteAccount(created.getAccountId());
-
-		if (accService.retrieveAll(empty(), empty(), empty(), empty(), empty()).isEmpty()) {
-			accService.createAccount(new AccountTO("Caixa", AccountNatureTO.DEBIT));
-			accService.createAccount(new AccountTO("C/C Santander", AccountNatureTO.DEBIT));
-			accService.createAccount(new AccountTO("Poupança Santander", AccountNatureTO.DEBIT));
-			accService.createAccount(new AccountTO("Investimento - GP", AccountNatureTO.DEBIT));
-			accService.createAccount(new AccountTO("Investimento - CDB", AccountNatureTO.DEBIT));
-			accService.createAccount(new AccountTO("Cartão de crédito", AccountNatureTO.CREDIT));
-			// Despesas
-			accService.createAccount(new AccountTO("Contas residenciais", AccountNatureTO.DEBIT));
-			accService.createAccount(new AccountTO("Mercado", AccountNatureTO.DEBIT));
-			accService.createAccount(new AccountTO("Moradia", AccountNatureTO.DEBIT));
-			accService.createAccount(new AccountTO("Saúde", AccountNatureTO.DEBIT));
-			accService.createAccount(new AccountTO("Transporte", AccountNatureTO.DEBIT));
-			accService.createAccount(new AccountTO("Bares / Restaurantes", AccountNatureTO.DEBIT));
-			accService.createAccount(new AccountTO("Compras", AccountNatureTO.DEBIT));
-			accService.createAccount(new AccountTO("Cuidados pessoais", AccountNatureTO.DEBIT));
-			accService.createAccount(new AccountTO("Impostos / Taxas", AccountNatureTO.DEBIT));
-			accService.createAccount(new AccountTO("Lazer", AccountNatureTO.DEBIT));
-			accService.createAccount(new AccountTO("Presentes / Doações", AccountNatureTO.DEBIT));
-			accService.createAccount(new AccountTO("TV / Internet / Telefonia", AccountNatureTO.DEBIT));
-			// Receitas
-			accService.createAccount(new AccountTO("Salário", AccountNatureTO.CREDIT));
-			// Capital
-			accService.createAccount(new AccountTO("Capital", AccountNatureTO.CREDIT));
-		}
 	}
 
 	public static void main(String[] args) {

@@ -23,15 +23,29 @@ public class AccountFormPresenter {
 	private BindHelper<AccountTO> bindHelper = new BindHelper<AccountTO>();
 
 	private final Property<String> nameProperty = new SimpleObjectProperty<>("");
+	private final Property<String> tagProperty = new SimpleObjectProperty<>("");
 	private final ObservableList<AccountNatureTO> natures = FXCollections.observableArrayList();
 	private final ObservableList<AccountTO> parentAccounts = FXCollections.observableArrayList();
+	private final ObservableList<String> tags = FXCollections.observableArrayList();
 	private Property<AccountNatureTO> nature = new SimpleObjectProperty<>();
 	private Property<AccountTO> parent = new SimpleObjectProperty<>();
+	private Property<String> selectedProperty = new SimpleObjectProperty<>("");
+
+	private boolean selected = false;
 
 	private EditMode editMode = EditMode.CREATE;
 	private AccountTO to;
 
 	private Function<Void, Void> closeWindowCommand;
+
+	AccountFormPresenter() {
+		selectedProperty.addListener((o, oldV, newV) -> {
+			selected = (newV != null && !newV.isEmpty());
+			if (selected) {
+				tagProperty.setValue(newV);
+			}
+		});
+	}
 
 	public Property<String> nameProperty() {
 		return nameProperty;
@@ -51,6 +65,18 @@ public class AccountFormPresenter {
 
 	public Property<AccountTO> parentProperty() {
 		return parent;
+	}
+
+	public Property<String> tagProperty() {
+		return tagProperty;
+	}
+
+	public Property<String> selectedProperty() {
+		return selectedProperty;
+	}
+
+	public ObservableList<String> getTags() {
+		return tags;
 	}
 
 	public AccountTO getTo() {
@@ -86,6 +112,8 @@ public class AccountFormPresenter {
 		bindHelper.bind("name", nameProperty);
 		bindHelper.bind("nature", nature);
 		bindHelper.bind("parent", parent);
+		tags.addAll(to.getTags());
+		to.setTags(tags);
 	}
 
 	public void save() {
@@ -103,6 +131,24 @@ public class AccountFormPresenter {
 		if (closeWindowCommand != null) {
 			closeWindowCommand.apply(null);
 		}
+	}
+
+	public void newTag() {
+		tagProperty.setValue("");
+		selected = false;
+	}
+
+	public void delTag() {
+		if (selected) {
+			tags.remove(selectedProperty.getValue());
+		}
+	}
+
+	public void updTag() {
+		if (selected) {
+			tags.remove(selectedProperty.getValue());
+		}
+		tags.add(tagProperty.getValue());
 	}
 
 }

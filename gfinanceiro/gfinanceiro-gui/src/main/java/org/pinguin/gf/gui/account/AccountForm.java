@@ -12,6 +12,7 @@ import org.pinguin.gf.service.api.account.AccountTO;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 
@@ -23,6 +24,10 @@ public class AccountForm extends AnchorPane {
 	private AutoCompleteComboBox<AccountNatureTO> natureCombo;
 	@FXML
 	private AutoCompleteComboBox<AccountTO> parentCombo;
+	@FXML
+	private TextField tagText;
+	@FXML
+	private ListView<String> tagsLView;
 
 	@Inject
 	private AccountFormPresenter presenter;
@@ -41,6 +46,9 @@ public class AccountForm extends AnchorPane {
 		natureCombo.valueProperty().bindBidirectional(presenter.natureProperty());
 		parentCombo.valueProperty().bindBidirectional(presenter.parentProperty());
 
+		tagText.textProperty().bindBidirectional(presenter.tagProperty());
+		tagsLView.setItems(presenter.getTags());
+		presenter.selectedProperty().bind(tagsLView.getSelectionModel().selectedItemProperty());
 	}
 
 	private void loadFxml() {
@@ -66,5 +74,20 @@ public class AccountForm extends AnchorPane {
 	@FXML
 	public void cancel(ActionEvent evt) {
 		presenter.cancel();
+	}
+
+	@FXML
+	public void updTag(ActionEvent evt) {
+		presenter.updTag();
+	}
+
+	@FXML
+	public void newTag(ActionEvent evt) {
+		presenter.newTag();
+	}
+
+	@FXML
+	public void delTag(ActionEvent evt) {
+		presenter.delTag();
 	}
 }

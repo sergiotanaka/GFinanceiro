@@ -5,7 +5,6 @@ import org.pinguin.gf.domain.account.AccountNature;
 import org.pinguin.gf.domain.account.AccountRepository;
 import org.pinguin.gf.domain.account.BasicAccounts;
 import org.pinguin.gf.domain.account.BasicAccountsRepository;
-import org.pinguin.gf.domain.account.QAccount;
 import org.pinguin.gf.domain.common.impl.CustomQueryDslJpaRepositoryImpl;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -30,18 +29,22 @@ public class GFinanceiroApplication {
 
 			final AccountRepository repo = ctx.getBean(AccountRepository.class);
 
+			if (!repo.findAll().isEmpty()) {
+				return;
+			}
+
 			// Contas basicas
-			final Account asset = repo.save(new Account("Ativo", AccountNature.CREDIT));
-			final Account liability = repo.save(new Account("Passivo", AccountNature.DEBIT));
-			final Account income = repo.save(new Account("Receita", AccountNature.DEBIT));
+			final Account asset = repo.save(new Account("Ativo", AccountNature.DEBIT));
+			final Account liability = repo.save(new Account("Passivo", AccountNature.CREDIT));
+			final Account income = repo.save(new Account("Receita", AccountNature.CREDIT));
 			final Account expense = repo.save(new Account("Despesa", AccountNature.DEBIT));
-			final Account capital = repo.save(new Account("Capital", AccountNature.DEBIT));
+			final Account capital = repo.save(new Account("Capital", AccountNature.CREDIT));
 			// Ativos
-			repo.save(new Account("Caixa", AccountNature.CREDIT, asset));
-			repo.save(new Account("C/C Santander", AccountNature.CREDIT, asset));
-			repo.save(new Account("Poupança Santander", AccountNature.CREDIT, asset));
-			repo.save(new Account("Investimento - GP", AccountNature.CREDIT, asset));
-			repo.save(new Account("Investimento - CDB", AccountNature.CREDIT, asset));
+			repo.save(new Account("Caixa", AccountNature.DEBIT, asset));
+			repo.save(new Account("C/C Santander", AccountNature.DEBIT, asset));
+			repo.save(new Account("Poupança Santander", AccountNature.DEBIT, asset));
+			repo.save(new Account("Investimento - GP", AccountNature.DEBIT, asset));
+			repo.save(new Account("Investimento - CDB", AccountNature.DEBIT, asset));
 			// Passivo
 			repo.save(new Account("C. Crédito Santander", AccountNature.CREDIT, liability));
 			// Receitas
@@ -50,23 +53,20 @@ public class GFinanceiroApplication {
 			repo.save(new Account("Renda investimento - CDB", AccountNature.CREDIT, income));
 			repo.save(new Account("Outras receitas", AccountNature.CREDIT, income));
 			// Despesas
-			repo.save(new Account("Contas residenciais", AccountNature.CREDIT, expense, "INTERNET COMGAS CIA DE GA",
+			repo.save(new Account("Contas residenciais", AccountNature.DEBIT, expense, "INTERNET COMGAS CIA DE GA",
 					"INTERNET AES ELETROPAULO"));
-			repo.save(new Account("Mercado", AccountNature.CREDIT, expense, "QUITANDA BURITI", "PAO DE ACUCAR"));
-			repo.save(new Account("Moradia", AccountNature.CREDIT, expense, "CONDOMINIO EDIFICIOS C CO"));
-			repo.save(new Account("Saúde", AccountNature.CREDIT, expense, "MAYARA J F SILVA", "DIEGO FREITAS TAVARES",
+			repo.save(new Account("Mercado", AccountNature.DEBIT, expense, "QUITANDA BURITI", "PAO DE ACUCAR"));
+			repo.save(new Account("Moradia", AccountNature.DEBIT, expense, "CONDOMINIO EDIFICIOS C CO"));
+			repo.save(new Account("Saúde", AccountNature.DEBIT, expense, "MAYARA J F SILVA", "DIEGO FREITAS TAVARES",
 					"DROG SAO PAULO", "STUDIO F F BAST"));
-			repo.save(new Account("Transporte", AccountNature.CREDIT, expense, "PRODATA MOBILIT"));
-			repo.save(new Account("Bares / Restaurantes", AccountNature.CREDIT, expense, "SANTO TEMAKI", "RAGAZZO"));
-			repo.save(new Account("Compras", AccountNature.CREDIT, expense));
-			repo.save(new Account("Cuidados pessoais", AccountNature.CREDIT, expense));
-			repo.save(new Account("Impostos / Taxas", AccountNature.CREDIT, expense));
-			repo.save(new Account("Lazer", AccountNature.CREDIT, expense));
-			repo.save(new Account("Presentes / Doações", AccountNature.CREDIT, expense));
-			repo.save(new Account("TV / Internet / Telefonia", AccountNature.CREDIT, expense, "CLARO SP"));
-
-			Iterable<Account> accs = repo.findAll(QAccount.account.name.eq("Salário"));
-			accs.iterator().next().toString();
+			repo.save(new Account("Transporte", AccountNature.DEBIT, expense, "PRODATA MOBILIT"));
+			repo.save(new Account("Bares / Restaurantes", AccountNature.DEBIT, expense, "SANTO TEMAKI", "RAGAZZO"));
+			repo.save(new Account("Compras", AccountNature.DEBIT, expense));
+			repo.save(new Account("Cuidados pessoais", AccountNature.DEBIT, expense));
+			repo.save(new Account("Impostos / Taxas", AccountNature.DEBIT, expense));
+			repo.save(new Account("Lazer", AccountNature.DEBIT, expense));
+			repo.save(new Account("Presentes / Doações", AccountNature.DEBIT, expense));
+			repo.save(new Account("TV / Internet / Telefonia", AccountNature.DEBIT, expense, "CLARO SP"));
 
 			final BasicAccounts ba = new BasicAccounts();
 			ba.setAsset(asset);

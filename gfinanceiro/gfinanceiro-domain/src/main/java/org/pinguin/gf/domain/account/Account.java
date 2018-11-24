@@ -1,7 +1,9 @@
 package org.pinguin.gf.domain.account;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.ElementCollection;
@@ -26,7 +28,7 @@ public class Account {
 	@OneToOne(fetch = FetchType.EAGER)
 	private Account parent;
 	@ElementCollection(fetch = FetchType.EAGER)
-	private Set<String> tags = new HashSet<>();
+	private List<String> tags = new ArrayList<>();
 
 	public Account() {
 		super();
@@ -85,11 +87,11 @@ public class Account {
 		this.parent = parent;
 	}
 
-	public Set<String> getTags() {
+	public List<String> getTags() {
 		return tags;
 	}
 
-	public void setTags(Set<String> tags) {
+	public void setTags(List<String> tags) {
 		this.tags = tags;
 	}
 
