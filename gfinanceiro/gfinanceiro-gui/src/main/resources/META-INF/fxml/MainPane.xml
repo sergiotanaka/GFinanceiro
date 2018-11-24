@@ -19,6 +19,7 @@
 				<Menu text="Ações">
 					<items>
 						<MenuItem text="Lançamento" onAction="#onJournalEntry" />
+						<MenuItem text="Lançamento coletivo" onAction="#onJournalEntryList" />
 						<MenuItem text="Consultar histórico" onAction="#onListJournalEntry" />
 						<MenuItem text="Consultar resumo" onAction="#onListBalance" />
 						<MenuItem text="Planejamento" onAction="#onPlanning" />

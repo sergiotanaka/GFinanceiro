@@ -1,14 +1,12 @@
 package org.pinguin.gf.gui.balance;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
 import javax.inject.Inject;
 
+import org.pinguin.gf.service.api.balance.BalanceService;
 import org.pinguin.gf.service.api.balance.BalanceTO;
-import org.pinguin.gf.service.api.common.PeriodTO;
-import org.pinguin.gf.service.api.journalentry.JournalEntryService;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
@@ -17,7 +15,7 @@ import javafx.collections.ObservableList;
 
 public class BalancePresenter {
 	@Inject
-	private JournalEntryService service;
+	private BalanceService service;
 
 	private final Property<Calendar> startDateProperty = new SimpleObjectProperty<>();
 	private final Property<Calendar> endDateProperty = new SimpleObjectProperty<>();
@@ -50,13 +48,8 @@ public class BalancePresenter {
 	}
 
 	public void retrieve() {
-		// FIXME
-//		List<BalanceTO> result = service
-//				.retrieveBalance(new PeriodTO(startDateProperty.getValue(), endDateProperty.getValue()));
-		List<BalanceTO> result = new ArrayList<>();
+		final List<BalanceTO> result = service.retrieveBalance();
 		balanceList.clear();
 		balanceList.addAll(result);
-
-		System.out.println(result);
 	}
 }

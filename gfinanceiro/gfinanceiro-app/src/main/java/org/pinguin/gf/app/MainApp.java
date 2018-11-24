@@ -13,6 +13,7 @@ import org.pinguin.gf.gui.account.AccountList;
 import org.pinguin.gf.gui.accstatement.OpenAccStatementCommand;
 import org.pinguin.gf.gui.accstatement.OpenAccStatementParam;
 import org.pinguin.gf.gui.balance.BalanceReport;
+import org.pinguin.gf.gui.journalentry.JournalEntryListForm;
 import org.pinguin.gf.gui.journalentry.OpenJournalEntryCommand;
 import org.pinguin.gf.gui.journalentry.OpenJournalEntryParam;
 import org.pinguin.gf.gui.main.MainPane;
@@ -45,8 +46,6 @@ public class MainApp extends Application {
 
 		initResources();
 
-		updateDB();
-
 		MainPane mainPane = injector.getInstance(MainPane.class);
 
 		stage.setTitle("Controle financeiro");
@@ -62,6 +61,17 @@ public class MainApp extends Application {
 
 		mainPane.setOnListJournalEntryHandler(
 				(evt) -> injector.getInstance(OpenAccStatementCommand.class).apply(new OpenAccStatementParam(stage)));
+
+		mainPane.setOnJournalEntryListHandler((evt) -> {
+			JournalEntryListForm listForm = injector.getInstance(JournalEntryListForm.class);
+			Stage listStage = new Stage();
+			listStage.setTitle("Lançamentos");
+			listStage.setScene(new Scene(listForm));
+			listStage.sizeToScene();
+			listStage.initOwner(stage);
+			listStage.centerOnScreen();
+			listStage.show();
+		});
 
 		mainPane.setOnListBalance((evt) -> {
 			BalanceReport report = injector.getInstance(BalanceReport.class);
@@ -205,64 +215,6 @@ public class MainApp extends Application {
 			// Capital
 			accService.createAccount(new AccountTO("Capital", AccountNatureTO.CREDIT));
 		}
-	}
-
-	private void updateDB() {
-
-		// EntityManager em = injector.getInstance(EntityManager.class);
-		// em.getTransaction().begin();
-		//
-		// Query query = em.createNativeQuery("select max(j.id) from JournalEntry j");
-		// BigInteger result = (BigInteger) query.getSingleResult();
-		// if (result == null) {
-		// result = BigInteger.ZERO;
-		// }
-		// System.out.println(result);
-		//
-		// Query query2 = em.createNativeQuery("select HIBERNATE_SEQUENCE.currval from
-		// dual");
-		// Object result2 = query2.getSingleResult();
-		// System.out.println(result2);
-		//
-		// Query query3 = em
-		// .createNativeQuery("alter sequence HIBERNATE_SEQUENCE restart with " +
-		// (result.intValue() + 2));
-		// query3.executeUpdate();
-		//
-		// // Query query = em.createNativeQuery("update Appointment set status =
-		// // 'TODO' where status is null");
-		// // query.executeUpdate();
-		//
-		// em.getTransaction().commit();
-		//
-		// // EntityManager em = injector.getInstance(EntityManager.class);
-		// // em.getTransaction().begin();
-		// //
-		// // Query query = em.createNativeQuery("alter table Appointment add
-		// // column if not exists aux varchar(255)");
-		// // query.executeUpdate();
-		// //
-		// // query = em.createNativeQuery("update Appointment set aux =
-		// // description");
-		// // query.executeUpdate();
-		// //
-		// // query = em.createNativeQuery("alter table Appointment drop column
-		// // description");
-		// // query.executeUpdate();
-		// //
-		// // query = em.createNativeQuery("alter table Appointment add column
-		// // description clob");
-		// // query.executeUpdate();
-		// //
-		// // query = em.createNativeQuery("update Appointment set description =
-		// // aux");
-		// // query.executeUpdate();
-		// //
-		// // query = em.createNativeQuery("alter table Appointment drop column
-		// // aux");
-		// // query.executeUpdate();
-		// //
-		// // em.getTransaction().commit();
 	}
 
 	public static void main(String[] args) {

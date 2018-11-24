@@ -22,4 +22,8 @@ public class AccountStringConverter extends StringConverter<AccountTO> {
 	public AccountTO fromString(String str) {
 		return new AccountTO(str, AccountNatureTO.CREDIT);
 	}
+
+	static public AccountStringConverter instance() {
+		return new AccountStringConverter();
+	}
 }

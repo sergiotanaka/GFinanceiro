@@ -1,11 +1,15 @@
 package org.pinguin.gf.facade.account;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class AccountTO {
 
 	private Long id;
 	private String name;
 	private AccountNatureTO nature;
 	private AccountTO parent;
+	private Set<String> tags = new HashSet<>();
 
 	public AccountTO() {
 	}
@@ -47,9 +51,18 @@ public class AccountTO {
 		this.parent = parent;
 	}
 
+	public Set<String> getTags() {
+		return tags;
+	}
+
+	public void setTags(Set<String> tags) {
+		this.tags = tags;
+	}
+
 	@Override
 	public String toString() {
-		return "AccountTO [id=" + id + ", name=" + name + ", nature=" + nature + "]";
+		return "AccountTO [id=" + id + ", name=" + name + ", nature=" + nature + ", parent=" + parent + ", tags=" + tags
+				+ "]";
 	}
 
 }

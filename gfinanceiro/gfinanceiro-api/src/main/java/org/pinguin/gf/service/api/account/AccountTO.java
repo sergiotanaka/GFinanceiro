@@ -1,5 +1,8 @@
 package org.pinguin.gf.service.api.account;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.springframework.hateoas.ResourceSupport;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -12,6 +15,7 @@ public class AccountTO extends ResourceSupport {
 	private String name;
 	private AccountNatureTO nature;
 	private AccountTO parent;
+	private Set<String> tags = new HashSet<>();
 
 	public AccountTO() {
 	}
@@ -53,19 +57,18 @@ public class AccountTO extends ResourceSupport {
 		this.parent = parent;
 	}
 
+	public Set<String> getTags() {
+		return tags;
+	}
+
+	public void setTags(Set<String> tags) {
+		this.tags = tags;
+	}
+
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("AccountTO [accountId=");
-		builder.append(accountId);
-		builder.append(", name=");
-		builder.append(name);
-		builder.append(", nature=");
-		builder.append(nature);
-		builder.append(", parent=");
-		builder.append(parent);
-		builder.append("]");
-		return builder.toString();
+		return "AccountTO [accountId=" + accountId + ", name=" + name + ", nature=" + nature + ", parent=" + parent
+				+ ", tags=" + tags + "]";
 	}
 
 }

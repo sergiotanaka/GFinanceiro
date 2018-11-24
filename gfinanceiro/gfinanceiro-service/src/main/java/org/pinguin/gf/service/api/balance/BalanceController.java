@@ -27,72 +27,74 @@ import fr.xebia.extras.selma.Selma;
 @RequestMapping("/gf/balance")
 public class BalanceController implements BalanceService {
 
-    @Autowired
-    private JournalEntryRepository repo;
-    @Autowired
-    private BasicAccountsRepository basicAccRepo;
-    private AccountMapper accMapper = Selma.mapper(AccountMapper.class);
+	@Autowired
+	private JournalEntryRepository repo;
+	@Autowired
+	private BasicAccountsRepository basicAccRepo;
+	private AccountMapper accMapper = Selma.mapper(AccountMapper.class);
 
-    /* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.pinguin.gf.service.api.balance.BalanceService#retrieveBalance()
 	 */
-    @Override
+	@Override
 	@GetMapping(produces = MediaTypes.HAL_JSON_VALUE)
-    public List<BalanceTO> retrieveBalance() {
+	public List<BalanceTO> retrieveBalance() {
 
-        List<JournalEntry> retrieved = repo.findAll();
+		List<JournalEntry> retrieved = repo.findAll();
 
-        final Map<Account, BalanceTO> balance = new HashMap<>();
+		final Map<Account, BalanceTO> balance = new HashMap<>();
 
-        for (JournalEntry entry : retrieved) {
-            // Tratar credito
-            sumToAccount(entry.getCreditAccount(), entry.getValue(), BigDecimal.ZERO, entry.getValue(), balance);
-            // Tratar debito
-            sumToAccount(entry.getDebitAccount(), BigDecimal.ZERO, entry.getValue(),
-                entry.getValue().multiply(BigDecimal.valueOf(-1.0)), balance);
-        }
+		for (JournalEntry entry : retrieved) {
+			// Tratar credito
+			sumToAccount(entry.getCreditAccount(), entry.getValue(), BigDecimal.ZERO, entry.getValue(), balance);
+			// Tratar debito
+			sumToAccount(entry.getDebitAccount(), BigDecimal.ZERO, entry.getValue(),
+					entry.getValue().multiply(BigDecimal.valueOf(-1.0)), balance);
+		}
 
-        List<BalanceTO> result = new ArrayList<>();
-        for (Entry<Account, BalanceTO> entry : balance.entrySet()) {
-            BalanceTO balanceTO = entry.getValue();
-            if (balanceTO.getAccount().getNature().equals(AccountNatureTO.DEBIT)) {
-                balanceTO.setBalance(balanceTO.getBalance().multiply(BigDecimal.valueOf(-1.0)));
-            }
-            balanceTO.setCredits(balanceTO.getCredits().setScale(2));
-            balanceTO.setDebits(balanceTO.getDebits().setScale(2));
-            balanceTO.setBalance(balanceTO.getBalance().setScale(2));
-            result.add(entry.getValue());
-        }
-        // TODO Adicionar resultado
-        // 1. Encontrar a despesa e a receita
-        BasicAccounts ba = basicAccRepo.getOne(1L);
+		List<BalanceTO> result = new ArrayList<>();
+		for (Entry<Account, BalanceTO> entry : balance.entrySet()) {
+			BalanceTO balanceTO = entry.getValue();
+			if (balanceTO.getAccount().getNature().equals(AccountNatureTO.DEBIT)) {
+				balanceTO.setBalance(balanceTO.getBalance().multiply(BigDecimal.valueOf(-1.0)));
+			}
+			balanceTO.setCredits(balanceTO.getCredits().setScale(2));
+			balanceTO.setDebits(balanceTO.getDebits().setScale(2));
+			balanceTO.setBalance(balanceTO.getBalance().setScale(2));
+			result.add(entry.getValue());
+		}
+		// TODO Adicionar resultado
+		// 1. Encontrar a despesa e a receita
+		BasicAccounts ba = basicAccRepo.getOne(1L);
 
-        Account income = ba.getIncome();
-        Account expense = ba.getExpense();
-        BigDecimal incomeBalance = balance.containsKey(income) ? balance.get(income).getBalance() : BigDecimal.ZERO;
-        BigDecimal expenseBalance = balance.containsKey(expense) ? balance.get(expense).getBalance() : BigDecimal.ZERO;
-        BalanceTO balanceResult = new BalanceTO(new AccountTO("Resultado", AccountNatureTO.CREDIT));
-        balanceResult.setCredits(expenseBalance);
-        balanceResult.setDebits(incomeBalance);
-        balanceResult.setBalance(incomeBalance.subtract(expenseBalance));
-        result.add(balanceResult);
+		Account income = ba.getIncome();
+		Account expense = ba.getExpense();
+		BigDecimal incomeBalance = balance.containsKey(income) ? balance.get(income).getBalance() : BigDecimal.ZERO;
+		BigDecimal expenseBalance = balance.containsKey(expense) ? balance.get(expense).getBalance() : BigDecimal.ZERO;
+		BalanceTO balanceResult = new BalanceTO(new AccountTO("Resultado", AccountNatureTO.CREDIT));
+		balanceResult.setCredits(expenseBalance);
+		balanceResult.setDebits(incomeBalance);
+		balanceResult.setBalance(incomeBalance.subtract(expenseBalance));
+		result.add(balanceResult);
 
-        return result;
-    }
+		return result;
+	}
 
-    private void sumToAccount(Account acc, BigDecimal credit, BigDecimal debit, BigDecimal balance,
-                              Map<Account, BalanceTO> balanceMap) {
-        if (!balanceMap.containsKey(acc)) {
-            balanceMap.put(acc, new BalanceTO(accMapper.asTO(acc)));
-        }
-        BalanceTO balanceTO = balanceMap.get(acc);
-        balanceTO.setCredits(balanceTO.getCredits().add(credit));
-        balanceTO.setDebits(balanceTO.getDebits().add(debit));
-        balanceTO.setBalance(balanceTO.getBalance().add(balance));
+	private void sumToAccount(Account acc, BigDecimal credit, BigDecimal debit, BigDecimal balance,
+			Map<Account, BalanceTO> balanceMap) {
+		if (!balanceMap.containsKey(acc)) {
+			balanceMap.put(acc, new BalanceTO(accMapper.asTO(acc)));
+		}
+		BalanceTO balanceTO = balanceMap.get(acc);
+		balanceTO.setCredits(balanceTO.getCredits().add(credit));
+		balanceTO.setDebits(balanceTO.getDebits().add(debit));
+		balanceTO.setBalance(balanceTO.getBalance().add(balance));
 
-        if (acc.getParent() != null) {
-            sumToAccount(acc.getParent(), credit, debit, balance, balanceMap);
-        }
-    }
+		if (acc.getParent() != null) {
+			sumToAccount(acc.getParent(), credit, debit, balance, balanceMap);
+		}
+	}
 
 }
