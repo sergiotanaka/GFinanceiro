@@ -16,18 +16,18 @@ import javax.persistence.OneToMany;
 public class Planning {
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
-	private Long id;
+	private Long planId;
 	@Embedded
 	private MonthYear monthYear;
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	private Set<AccountPlanning> accountPlannings = new HashSet<>();
 
-	public Long getId() {
-		return id;
+	public Long getPlanId() {
+		return planId;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public void setPlanId(Long planId) {
+		this.planId = planId;
 	}
 
 	public MonthYear getMonthYear() {

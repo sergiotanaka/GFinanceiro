@@ -49,8 +49,9 @@ public class BalanceController implements BalanceService {
 	public List<BalanceTO> retrieveBalance(@RequestParam("start") @DateTimeFormat(iso = ISO.DATE) LocalDate start,
 			@RequestParam("end") @DateTimeFormat(iso = ISO.DATE) LocalDate end) {
 
-		Iterable<JournalEntry> retrieved = repo.findAll(journalEntry.date.after(start.atStartOfDay())
-				.and(journalEntry.date.before(end.plusDays(1).atStartOfDay())));
+		Iterable<JournalEntry> retrieved = repo
+				.findAll((journalEntry.date.after(start.atStartOfDay()).or(journalEntry.date.eq(start.atStartOfDay())))
+						.and(journalEntry.date.before(end.plusDays(1).atStartOfDay())));
 
 		final Map<Account, BalanceTO> balance = new HashMap<>();
 

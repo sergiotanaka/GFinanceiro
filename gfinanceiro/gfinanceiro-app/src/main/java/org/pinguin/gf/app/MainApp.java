@@ -2,6 +2,7 @@ package org.pinguin.gf.app;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -22,7 +23,6 @@ import org.pinguin.gf.service.api.account.AccountService;
 import org.pinguin.gf.service.api.journalentry.JournalEntryService;
 import org.pinguin.gf.service.api.journalentry.JournalEntryTO;
 import org.pinguin.gf.service.api.planning.AccountPlanningTO;
-import org.pinguin.gf.service.api.planning.MonthTO;
 import org.pinguin.gf.service.api.planning.PlanningService;
 import org.pinguin.gf.service.api.planning.PlanningTO;
 import org.pinguin.gui.util.Dialog;
@@ -97,7 +97,7 @@ public class MainApp extends Application {
 				final Stage addFormStage = new Stage();
 				addFormStage.setTitle("Adicionar planejamento");
 				AddPlanningForm addForm = injector.getInstance(AddPlanningForm.class);
-				addForm.getPresenter().getMonths().addAll(MonthTO.values());
+				addForm.getPresenter().getMonths().addAll(Month.values());
 				PlanningTO newTO = new PlanningTO();
 				// newTO.setMonthYear(new MonthYearTO(null, calendar.get(Calendar.YEAR)));
 				addForm.getPresenter().setTo(newTO);

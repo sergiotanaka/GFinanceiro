@@ -43,11 +43,11 @@ public class PlanningFormPresenter {
 					PlanningTO newValue) {
 				if (oldValue != null) {
 					oldValue.getAccountPlannings().clear();
-					oldValue.getAccountPlannings().addAll(accPlannings);
+//					oldValue.getAccountPlannings().addAll(accPlannings);
 				}
 				if (newValue != null) {
 					accPlannings.clear();
-					accPlannings.addAll(newValue.getAccountPlannings());
+//					accPlannings.addAll(newValue.getAccountPlannings());
 				}
 			}
 		});
@@ -105,11 +105,11 @@ public class PlanningFormPresenter {
 		final PlanningTO selected = selectedPlanningProp.getValue();
 		if (selected != null) {
 			selected.getAccountPlannings().clear();
-			selected.getAccountPlannings().addAll(accPlannings);
+//			selected.getAccountPlannings().addAll(accPlannings);
 		}
 
 		for (PlanningTO plan : plannings) {
-			service.updatePlanning(plan.getPlanningId(), plan);
+//			service.updatePlanning(plan.getPlanningId(), plan);
 		}
 	}
 

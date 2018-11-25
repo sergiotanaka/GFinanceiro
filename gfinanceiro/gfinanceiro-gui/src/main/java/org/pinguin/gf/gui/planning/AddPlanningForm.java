@@ -1,11 +1,11 @@
 package org.pinguin.gf.gui.planning;
 
 import java.io.IOException;
+import java.time.Month;
 
 import javax.inject.Inject;
 
 import org.pinguin.gf.gui.control.AutoCompleteComboBox;
-import org.pinguin.gf.service.api.planning.MonthTO;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -16,7 +16,7 @@ import javafx.scene.layout.AnchorPane;
 public class AddPlanningForm extends AnchorPane {
 
 	@FXML
-	private AutoCompleteComboBox<MonthTO> monthCombo;
+	private AutoCompleteComboBox<Month> monthCombo;
 	@FXML
 	private TextField yearText;
 

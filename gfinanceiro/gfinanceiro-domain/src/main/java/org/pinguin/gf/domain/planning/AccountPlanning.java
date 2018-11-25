@@ -15,17 +15,17 @@ import org.pinguin.gf.domain.account.Account;
 public class AccountPlanning {
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
-	private Long id;
+	private Long accPlanId;
 	@OneToOne(fetch = FetchType.EAGER)
 	private Account account;
 	private BigDecimal value;
 
-	public Long getId() {
-		return id;
+	public Long getAccPlanId() {
+		return accPlanId;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public void setAccPlanId(Long accPlanId) {
+		this.accPlanId = accPlanId;
 	}
 
 	public Account getAccount() {

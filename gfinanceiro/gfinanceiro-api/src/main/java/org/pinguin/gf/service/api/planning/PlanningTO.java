@@ -1,62 +1,34 @@
 package org.pinguin.gf.service.api.planning;
 
-import java.math.BigDecimal;
-import java.util.List;
-
-import org.pinguin.gf.service.api.account.AccountTO;
+import java.util.HashSet;
+import java.util.Set;
 
 public class PlanningTO {
-	private Long planningId;
-	private AccountTO account;
-	private BigDecimal valude;
+	private Long planId;
+	private MonthYearTO monthYear;
+	private Set<AccountPlanningTO> accountPlannings = new HashSet<>();
 
-	public Long getPlanningId() {
-		return planningId;
+	public Long getPlanId() {
+		return planId;
 	}
 
-	public void setPlanningId(Long planningId) {
-		this.planningId = planningId;
-	}
-
-	public AccountTO getAccount() {
-		return account;
-	}
-
-	public void setAccount(AccountTO account) {
-		this.account = account;
-	}
-
-	public BigDecimal getValude() {
-		return valude;
-	}
-
-	public void setValude(BigDecimal valude) {
-		this.valude = valude;
+	public void setPlanId(Long planId) {
+		this.planId = planId;
 	}
 
 	public MonthYearTO getMonthYear() {
-		// TODO Auto-generated method stub
-		return null;
+		return monthYear;
 	}
 
-	public void setMonthYear(MonthYearTO monthYearTO) {
-		// TODO Auto-generated method stub
-
+	public void setMonthYear(MonthYearTO monthYear) {
+		this.monthYear = monthYear;
 	}
 
-	public List<PlanningTO> getAccountPlannings() {
-		// TODO Auto-generated method stub
-		return null;
+	public Set<AccountPlanningTO> getAccountPlannings() {
+		return accountPlannings;
 	}
 
-	public BigDecimal getValue() {
-		// TODO Auto-generated method stub
-		return null;
+	public void setAccountPlannings(Set<AccountPlanningTO> accountPlannings) {
+		this.accountPlannings = accountPlannings;
 	}
-
-	public void setValue(BigDecimal value) {
-		// TODO Auto-generated method stub
-
-	}
-
 }

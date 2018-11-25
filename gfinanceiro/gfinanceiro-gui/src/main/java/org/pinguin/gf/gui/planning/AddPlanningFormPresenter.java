@@ -1,10 +1,10 @@
 package org.pinguin.gf.gui.planning;
 
+import java.time.Month;
 import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import org.pinguin.gf.service.api.planning.MonthTO;
 import org.pinguin.gf.service.api.planning.MonthYearTO;
 import org.pinguin.gf.service.api.planning.PlanningService;
 import org.pinguin.gf.service.api.planning.PlanningTO;
@@ -26,19 +26,19 @@ public class AddPlanningFormPresenter {
 
 	private BindHelper<MonthYearTO> bindHelper = new BindHelper<>();
 
-	private final ObservableList<MonthTO> months = FXCollections.observableArrayList();
-	private final Property<MonthTO> monthProperty = new SimpleObjectProperty<>();
+	private final ObservableList<Month> months = FXCollections.observableArrayList();
+	private final Property<Month> monthProperty = new SimpleObjectProperty<>();
 	private final Property<String> yearProperty = new SimpleStringProperty();
 
 	private Function<Void, Void> closeWindowCommand;
 	private EditMode editMode = EditMode.CREATE;
 	private PlanningTO to;
 
-	public ObservableList<MonthTO> getMonths() {
+	public ObservableList<Month> getMonths() {
 		return months;
 	}
 
-	public Property<MonthTO> monthProperty() {
+	public Property<Month> monthProperty() {
 		return monthProperty;
 	}
 
@@ -103,7 +103,7 @@ public class AddPlanningFormPresenter {
 		if (editMode.equals(EditMode.CREATE)) {
 			service.createPlanning(to);
 		} else if (editMode.equals(EditMode.UPDATE)) {
-			service.updatePlanning(to.getPlanningId(), to);
+			service.updatePlanning(to.getPlanId(), to);
 		}
 	}
 

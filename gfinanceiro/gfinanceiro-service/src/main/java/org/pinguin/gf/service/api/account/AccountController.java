@@ -161,10 +161,9 @@ public class AccountController implements AccountService {
 
 		Iterable<JournalEntry> retrieved = null;
 		if (periodBalance) {
-			retrieved = jEntryRepo.findAll(
-					journalEntry.debitAccount.in(accs).or(journalEntry.creditAccount.in(accs))
-							.and(journalEntry.date.after(start.atStartOfDay())
-									.and(journalEntry.date.before(end.plusDays(1).atStartOfDay()))),
+			retrieved = jEntryRepo.findAll(journalEntry.debitAccount.in(accs).or(journalEntry.creditAccount.in(accs))
+					.and(journalEntry.date.after(start.atStartOfDay()).or(journalEntry.date.eq(start.atStartOfDay()))
+							.and(journalEntry.date.before(end.plusDays(1).atStartOfDay()))),
 					Sort.by("date", "entryId"));
 		} else {
 			retrieved = jEntryRepo.findAll(journalEntry.debitAccount.in(accs).or(journalEntry.creditAccount.in(accs))

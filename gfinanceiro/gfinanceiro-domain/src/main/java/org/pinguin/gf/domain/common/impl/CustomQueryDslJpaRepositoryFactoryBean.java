@@ -18,8 +18,9 @@ public class CustomQueryDslJpaRepositoryFactoryBean<R extends JpaRepository<T, I
 		super(repositoryInterface);
 	}
 
+	@Override
 	protected RepositoryFactorySupport createRepositoryFactory(EntityManager entityManager) {
-		return new CustomQueryDslJpaRepositoryFactory(entityManager);
+		return new CustomQueryDslJpaRepositoryFactory<T, I>(entityManager);
 	}
 
 	private static class CustomQueryDslJpaRepositoryFactory<T, I extends Serializable> extends JpaRepositoryFactory {
@@ -31,10 +32,12 @@ public class CustomQueryDslJpaRepositoryFactoryBean<R extends JpaRepository<T, I
 			this.entityManager = entityManager;
 		}
 
+		@SuppressWarnings("unused")
 		protected Object getTargetRepository(RepositoryMetadata metadata) {
 			return new CustomQueryDslJpaRepositoryImpl<>(getEntityInformation(metadata.getDomainType()), entityManager);
 		}
 
+		@Override
 		protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
 			return CustomQueryDslJpaRepository.class;
 		}

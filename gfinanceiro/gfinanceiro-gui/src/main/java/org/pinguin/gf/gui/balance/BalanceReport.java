@@ -2,7 +2,11 @@ package org.pinguin.gf.gui.balance;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.text.Format;
+import java.text.NumberFormat;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -21,10 +25,14 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableColumn.CellDataFeatures;
 import javafx.scene.control.TreeTableView;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.util.Callback;
@@ -103,6 +111,36 @@ public class BalanceReport extends AnchorPane {
 				}
 			}
 		});
+
+		final ContextMenu contextMenu = new ContextMenu();
+		final MenuItem copy = new MenuItem("Copiar para área de transferência.");
+		copy.setOnAction(e -> {
+			StringBuilder sb = new StringBuilder();
+			appendItems(balanceTree.getRoot(), "", sb);
+			final Clipboard clipboard = Clipboard.getSystemClipboard();
+			final ClipboardContent content = new ClipboardContent();
+			content.putString(sb.toString());
+			clipboard.setContent(content);
+		});
+		contextMenu.getItems().add(copy);
+		balanceTree.setContextMenu(contextMenu);
+	}
+
+	private void appendItems(final TreeItem<BalanceTO> parent, final String prefix, final StringBuilder sb) {
+		for (final TreeItem<BalanceTO> item : parent.getChildren()) {
+			sb.append(prefix + item.getValue().getAccount().getName()).append("\t");
+			sb.append(format(item.getValue().getCredits())).append("\t");
+			sb.append(format(item.getValue().getDebits())).append("\t");
+			sb.append(format(item.getValue().getBalance())).append(System.lineSeparator());
+			if (!item.getChildren().isEmpty()) {
+				appendItems(item, prefix + "  ", sb);
+			}
+		}
+	}
+
+	private String format(final BigDecimal number) {
+		Format format = NumberFormat.getNumberInstance(new Locale("pt", "BR"));
+		return format.format(number);
 	}
 
 	private void loadFxml() {
