@@ -1,5 +1,6 @@
 package org.pinguin.gf.app.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -10,6 +11,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 public class BalanceServiceProxy implements BalanceService {
 
@@ -21,9 +23,11 @@ public class BalanceServiceProxy implements BalanceService {
 	private RestTemplate restTemplate;
 
 	@Override
-	public List<BalanceTO> retrieveBalance() {
-		final ResponseEntity<List<BalanceTO>> response = restTemplate.exchange(balanceResourceUrl, HttpMethod.GET, null,
-				balanceTypeRef);
+	public List<BalanceTO> retrieveBalance(LocalDate start, LocalDate end) {
+		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(balanceResourceUrl).queryParam("start", start)
+				.queryParam("end", end);
+		final ResponseEntity<List<BalanceTO>> response = restTemplate.exchange(builder.toUriString(), HttpMethod.GET,
+				null, balanceTypeRef);
 		return response.getBody();
 	}
 

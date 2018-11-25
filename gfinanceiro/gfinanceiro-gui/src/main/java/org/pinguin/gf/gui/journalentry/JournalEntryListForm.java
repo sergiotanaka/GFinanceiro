@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import org.pinguin.gf.gui.control.AutoCompleteComboBox;
 import org.pinguin.gf.gui.util.AccountStringConverter;
 import org.pinguin.gf.service.api.account.AccountTO;
+import org.pinguin.gf.service.api.planning.MonthYearTO;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -26,6 +27,9 @@ public class JournalEntryListForm extends AnchorPane {
 	private TextArea textArea;
 	@FXML
 	private AutoCompleteComboBox<AccountTO> accountCombo;
+	@FXML
+	private AutoCompleteComboBox<MonthYearTO> monthYearCombo;
+
 	@FXML
 	private TableView<JournalEntryItem> journalEntryTView;
 	@FXML

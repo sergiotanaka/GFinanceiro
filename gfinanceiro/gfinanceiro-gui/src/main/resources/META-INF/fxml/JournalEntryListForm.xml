@@ -21,7 +21,10 @@
 				<Insets top="10" right="10" bottom="10" left="10" />
 			</padding>
 			<TextArea fx:id="textArea" VBox.vgrow="ALWAYS" />
-			<AutoCompleteComboBox fx:id="accountCombo" />
+			<HBox spacing="10">
+				<AutoCompleteComboBox fx:id="accountCombo" />
+				<AutoCompleteComboBox fx:id="monthYearCombo" />
+			</HBox>
 			<TableView fx:id="journalEntryTView" VBox.vgrow="ALWAYS">
 				<!-- <columnResizePolicy> -->
 				<!-- <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /> -->

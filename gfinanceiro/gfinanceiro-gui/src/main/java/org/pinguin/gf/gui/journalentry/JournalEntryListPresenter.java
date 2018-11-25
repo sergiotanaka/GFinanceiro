@@ -75,17 +75,11 @@ public class JournalEntryListPresenter {
 				// 2. Split pelo separador
 				String[] splitted = line.split("\t");
 				// 3. Preencher a lista
-				JournalEntryItem entry = new JournalEntryItem();
-				entry.dateProperty().set(parseDate(splitted[0].trim()));
-				entry.descriptionProperty().set(splitted[1].trim());
-				if (splitted[4].trim().isEmpty()) {
-					entry.creditAccountProperty().set(accountProperty.getValue());
-					entry.debitAccountProperty().set(parseDescription(splitted[1].trim()));
-					entry.valueProperty().set(parseValue(splitted[5].trim()).multiply(BigDecimal.valueOf(-1)));
+				JournalEntryItem entry = null;
+				if (splitted.length <= 4) {
+					entry = mapCredit(splitted);
 				} else {
-					entry.creditAccountProperty().set(parseDescription(splitted[1].trim()));
-					entry.debitAccountProperty().set(accountProperty.getValue());
-					entry.valueProperty().set(parseValue(splitted[4].trim()));
+					entry = mapAccount(splitted);
 				}
 
 				entries.add(entry);
@@ -94,6 +88,34 @@ public class JournalEntryListPresenter {
 		} catch (final Exception e) {
 			throw new IllegalStateException("Erro ao ler o texto", e);
 		}
+	}
+
+	private JournalEntryItem mapCredit(String[] splitted) {
+		final JournalEntryItem entry = new JournalEntryItem();
+		entry.dateProperty().set(parseDate(splitted[0].trim()));
+		entry.descriptionProperty().set(splitted[1].trim());
+		entry.creditAccountProperty().set(accountProperty.getValue());
+		entry.debitAccountProperty().set(parseDescription(splitted[1].trim()));
+		if (splitted.length > 3) {
+			entry.valueProperty().set(parseValue(splitted[3].trim()));
+		}
+		return entry;
+	}
+
+	private JournalEntryItem mapAccount(String[] splitted) {
+		final JournalEntryItem entry = new JournalEntryItem();
+		entry.dateProperty().set(parseDate(splitted[0].trim()));
+		entry.descriptionProperty().set(splitted[1].trim());
+		if (splitted[4].trim().isEmpty()) {
+			entry.creditAccountProperty().set(accountProperty.getValue());
+			entry.debitAccountProperty().set(parseDescription(splitted[1].trim()));
+			entry.valueProperty().set(parseValue(splitted[5].trim()).multiply(BigDecimal.valueOf(-1)));
+		} else {
+			entry.creditAccountProperty().set(parseDescription(splitted[1].trim()));
+			entry.debitAccountProperty().set(accountProperty.getValue());
+			entry.valueProperty().set(parseValue(splitted[4].trim()));
+		}
+		return entry;
 	}
 
 	public void save() {

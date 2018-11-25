@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -169,6 +171,8 @@ public class AccountController implements AccountService {
 					.and(journalEntry.date.before(end.plusDays(1).atStartOfDay())), Sort.by("date", "entryId"));
 		}
 
+		final Set<Long> accIds = accs.stream().map(a -> a.getAccountId()).collect(Collectors.toSet());
+
 		BigDecimal balance = BigDecimal.ZERO;
 		List<AccStatementEntryTO> result = new ArrayList<>();
 		for (JournalEntry item : retrieved) {
@@ -179,7 +183,7 @@ public class AccountController implements AccountService {
 			entry.setDate(item.getDate());
 			entry.setOrigin(mapper.asTO(item.getCreditAccount()));
 			entry.setAccount(mapper.asTO(item.getDebitAccount()));
-			if (accs.contains(item.getCreditAccount())) {
+			if (accIds.contains(item.getCreditAccount().getAccountId())) {
 				if (root.getNature().equals(AccountNature.DEBIT)) {
 					entry.setValue(item.getValue().multiply(BigDecimal.valueOf(-1.0)).setScale(2));
 				} else {

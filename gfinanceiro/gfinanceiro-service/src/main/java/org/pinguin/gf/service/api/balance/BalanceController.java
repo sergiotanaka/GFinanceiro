@@ -1,6 +1,9 @@
 package org.pinguin.gf.service.api.balance;
 
+import static org.pinguin.gf.domain.journalentry.QJournalEntry.journalEntry;
+
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,9 +19,12 @@ import org.pinguin.gf.service.api.account.AccountNatureTO;
 import org.pinguin.gf.service.api.account.AccountTO;
 import org.pinguin.gf.service.infra.AccountMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.xebia.extras.selma.Selma;
@@ -40,13 +46,15 @@ public class BalanceController implements BalanceService {
 	 */
 	@Override
 	@GetMapping(produces = MediaTypes.HAL_JSON_VALUE)
-	public List<BalanceTO> retrieveBalance() {
+	public List<BalanceTO> retrieveBalance(@RequestParam("start") @DateTimeFormat(iso = ISO.DATE) LocalDate start,
+			@RequestParam("end") @DateTimeFormat(iso = ISO.DATE) LocalDate end) {
 
-		List<JournalEntry> retrieved = repo.findAll();
+		Iterable<JournalEntry> retrieved = repo.findAll(journalEntry.date.after(start.atStartOfDay())
+				.and(journalEntry.date.before(end.plusDays(1).atStartOfDay())));
 
 		final Map<Account, BalanceTO> balance = new HashMap<>();
 
-		for (JournalEntry entry : retrieved) {
+		for (final JournalEntry entry : retrieved) {
 			// Tratar credito
 			sumToAccount(entry.getCreditAccount(), entry.getValue(), BigDecimal.ZERO, entry.getValue(), balance);
 			// Tratar debito
@@ -82,8 +90,8 @@ public class BalanceController implements BalanceService {
 		return result;
 	}
 
-	private void sumToAccount(Account acc, BigDecimal credit, BigDecimal debit, BigDecimal balance,
-			Map<Account, BalanceTO> balanceMap) {
+	private void sumToAccount(final Account acc, final BigDecimal credit, final BigDecimal debit,
+			final BigDecimal balance, final Map<Account, BalanceTO> balanceMap) {
 		if (!balanceMap.containsKey(acc)) {
 			balanceMap.put(acc, new BalanceTO(accMapper.asTO(acc)));
 		}

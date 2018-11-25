@@ -2,14 +2,23 @@ package org.pinguin.gf.service.api.planning;
 
 public class MonthYearTO {
 
+	private MonthTO month;
+	private Long year;
+
 	public MonthTO getMonth() {
-		// TODO Auto-generated method stub
-		return null;
+		return month;
+	}
+
+	public void setMonth(MonthTO month) {
+		this.month = month;
 	}
 
 	public Long getYear() {
-		// TODO Auto-generated method stub
-		return null;
+		return year;
+	}
+
+	public void setYear(Long year) {
+		this.year = year;
 	}
 
 }

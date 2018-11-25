@@ -1,7 +1,10 @@
 package org.pinguin.gf.gui.balance;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.inject.Inject;
 
@@ -48,8 +51,15 @@ public class BalancePresenter {
 	}
 
 	public void retrieve() {
-		final List<BalanceTO> result = service.retrieveBalance();
+		final List<BalanceTO> result = service.retrieveBalance(map(startDateProperty.getValue()),
+				map(endDateProperty.getValue()));
 		balanceList.clear();
 		balanceList.addAll(result);
+	}
+
+	private LocalDate map(Calendar calendar) {
+		TimeZone tz = calendar.getTimeZone();
+		ZoneId zid = tz == null ? ZoneId.systemDefault() : tz.toZoneId();
+		return LocalDate.ofInstant(calendar.toInstant(), zid);
 	}
 }

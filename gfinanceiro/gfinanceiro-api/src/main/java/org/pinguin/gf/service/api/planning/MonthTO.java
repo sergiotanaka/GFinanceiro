@@ -1,11 +1,5 @@
 package org.pinguin.gf.service.api.planning;
 
-import java.util.List;
-
-public class MonthTO {
-
-	public static List<MonthTO> values() {
-		return null;
-	}
-
+public enum MonthTO {
+	JANUARY, FEBRUARY, MARCH, APRIL, MAY, JUNE, JULY, AUGUST, SEPTEMBER, OCTOBER, NOVEMBER, DECEMBER;
 }
