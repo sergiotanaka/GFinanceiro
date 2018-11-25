@@ -92,16 +92,21 @@ public class BalanceController implements BalanceService {
 
 	private void sumToAccount(final Account acc, final BigDecimal credit, final BigDecimal debit,
 			final BigDecimal balance, final Map<Account, BalanceTO> balanceMap) {
-		if (!balanceMap.containsKey(acc)) {
-			balanceMap.put(acc, new BalanceTO(accMapper.asTO(acc)));
-		}
-		BalanceTO balanceTO = balanceMap.get(acc);
-		balanceTO.setCredits(balanceTO.getCredits().add(credit));
-		balanceTO.setDebits(balanceTO.getDebits().add(debit));
-		balanceTO.setBalance(balanceTO.getBalance().add(balance));
+		try {
 
-		if (acc.getParent() != null) {
-			sumToAccount(acc.getParent(), credit, debit, balance, balanceMap);
+			if (!balanceMap.containsKey(acc)) {
+				balanceMap.put(acc, new BalanceTO(accMapper.asTO(acc)));
+			}
+			BalanceTO balanceTO = balanceMap.get(acc);
+			balanceTO.setCredits(balanceTO.getCredits().add(credit));
+			balanceTO.setDebits(balanceTO.getDebits().add(debit));
+			balanceTO.setBalance(balanceTO.getBalance().add(balance));
+
+			if (acc.getParent() != null) {
+				sumToAccount(acc.getParent(), credit, debit, balance, balanceMap);
+			}
+		} catch (final Exception e) {
+			e.printStackTrace();
 		}
 	}
 

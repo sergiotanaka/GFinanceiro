@@ -19,11 +19,13 @@ import org.pinguin.gf.gui.planning.AccPlanningForm;
 import org.pinguin.gf.gui.planning.AddPlanningForm;
 import org.pinguin.gf.gui.planning.PlanningForm;
 import org.pinguin.gf.service.api.account.AccountService;
+import org.pinguin.gf.service.api.journalentry.JournalEntryService;
 import org.pinguin.gf.service.api.journalentry.JournalEntryTO;
 import org.pinguin.gf.service.api.planning.AccountPlanningTO;
 import org.pinguin.gf.service.api.planning.MonthTO;
 import org.pinguin.gf.service.api.planning.PlanningService;
 import org.pinguin.gf.service.api.planning.PlanningTO;
+import org.pinguin.gui.util.Dialog;
 import org.pinguin.gui.util.EditMode;
 
 import com.google.inject.Guice;
@@ -162,6 +164,19 @@ public class MainApp extends Application {
 			formStage.initOwner(stage);
 			formStage.centerOnScreen();
 			formStage.show();
+		});
+
+		mainPane.setOnClearEntriesHandler(e -> {
+			// Confirmacao
+			int result = Dialog.showQuestionDialog(null, "Confirma a limpeza dos lançamentos?");
+			if (result >= 0) {
+				final JournalEntryService service = injector.getInstance(JournalEntryService.class);
+				final List<JournalEntryTO> entries = service.retrieveAll();
+
+				for (JournalEntryTO entry : entries) {
+					service.deleteEntry(entry.getEntryId());
+				}
+			}
 		});
 
 		stage.setScene(new Scene(mainPane));

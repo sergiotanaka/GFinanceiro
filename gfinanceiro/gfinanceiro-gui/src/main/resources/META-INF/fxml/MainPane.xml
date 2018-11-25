@@ -30,6 +30,11 @@
 						<MenuItem text="Contas" onAction="#onMaintAccount" />
 					</items>
 				</Menu>
+				<Menu text="Configurações">
+					<items>
+						<MenuItem text="Limpar lançamentos" onAction="#onClearEntries" />
+					</items>
+				</Menu>
 			</menus>
 		</MenuBar>
 	</top>

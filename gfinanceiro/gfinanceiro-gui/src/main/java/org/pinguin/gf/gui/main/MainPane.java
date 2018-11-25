@@ -16,6 +16,7 @@ public class MainPane extends BorderPane {
 	private EventHandler<ActionEvent> onPlanningHandler;
 	private EventHandler<ActionEvent> onMaintAccount;
 	private EventHandler<ActionEvent> onJournalEntryListHandler;
+	private EventHandler<ActionEvent> onClearEntriesHandler;
 
 	public MainPane() {
 		loadFxml();
@@ -69,6 +70,14 @@ public class MainPane extends BorderPane {
 		this.onJournalEntryListHandler = onJournalEntryListHandler;
 	}
 
+	public EventHandler<ActionEvent> getOnClearEntriesHandler() {
+		return onClearEntriesHandler;
+	}
+
+	public void setOnClearEntriesHandler(EventHandler<ActionEvent> onClearEntriesHandler) {
+		this.onClearEntriesHandler = onClearEntriesHandler;
+	}
+
 	private void loadFxml() {
 		final FXMLLoader loader = new FXMLLoader(this.getClass().getResource("/META-INF/fxml/MainPane.xml"));
 		loader.setRoot(this);
@@ -119,6 +128,13 @@ public class MainPane extends BorderPane {
 	public void onJournalEntryList(ActionEvent event) {
 		if (onJournalEntryListHandler != null) {
 			onJournalEntryListHandler.handle(event);
+		}
+	}
+
+	@FXML
+	public void onClearEntries(ActionEvent event) {
+		if (onClearEntriesHandler != null) {
+			onClearEntriesHandler.handle(event);
 		}
 	}
 

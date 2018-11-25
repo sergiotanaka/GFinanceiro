@@ -8,8 +8,11 @@ import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import javax.inject.Inject;
 
@@ -38,6 +41,8 @@ public class JournalEntryListPresenter {
 	private final ObservableList<AccountTO> accounts = FXCollections.observableArrayList();
 	private final Property<AccountTO> accountProperty = new SimpleObjectProperty<>();
 	private Property<String> textAreaProperty = new SimpleStringProperty();
+	private Property<Calendar> startDateProperty = new SimpleObjectProperty<>();
+	private Property<Calendar> endDateProperty = new SimpleObjectProperty<>();
 
 	public JournalEntryListPresenter() {
 		nf.setParseBigDecimal(true);
@@ -46,6 +51,15 @@ public class JournalEntryListPresenter {
 	@Inject
 	public void init() {
 		getAccounts().addAll(accService.retrieveAnalytical());
+
+		LocalDate endDate = LocalDate.now().withDayOfMonth(15);
+		if (LocalDate.now().isAfter(endDate)) {
+			endDate = endDate.plusMonths(1);
+		}
+		final LocalDate startDate = endDate.minusMonths(1);
+
+		startDateProperty.setValue(map(startDate));
+		endDateProperty.setValue(map(endDate));
 	}
 
 	public Property<String> textAreaProperty() {
@@ -54,6 +68,14 @@ public class JournalEntryListPresenter {
 
 	public Property<AccountTO> accountProperty() {
 		return accountProperty;
+	}
+
+	public Property<Calendar> startDateProperty() {
+		return startDateProperty;
+	}
+
+	public Property<Calendar> endDateProperty() {
+		return endDateProperty;
 	}
 
 	public ObservableList<AccountTO> getAccounts() {
@@ -92,8 +114,12 @@ public class JournalEntryListPresenter {
 
 	private JournalEntryItem mapCredit(String[] splitted) {
 		final JournalEntryItem entry = new JournalEntryItem();
-		entry.dateProperty().set(parseDate(splitted[0].trim()));
-		entry.descriptionProperty().set(splitted[1].trim());
+
+		LocalDateTime date = parseDate(splitted[0].trim());
+		// Tratamento para parcelas
+		boolean isInstallment = date.isBefore(map(startDateProperty.getValue()));
+		entry.dateProperty().set(isInstallment ? map(startDateProperty.getValue()) : date);
+		entry.descriptionProperty().set(splitted[1].trim() + (isInstallment ? " " + splitted[0].trim() : ""));
 		entry.creditAccountProperty().set(accountProperty.getValue());
 		entry.debitAccountProperty().set(parseDescription(splitted[1].trim()));
 		if (splitted.length > 3) {
@@ -136,6 +162,19 @@ public class JournalEntryListPresenter {
 
 	}
 
+	private Calendar map(final LocalDate localDate) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.clear();
+		calendar.set(localDate.getYear(), localDate.getMonthValue() - 1, localDate.getDayOfMonth(), 0, 0, 0);
+		return calendar;
+	}
+
+	private LocalDateTime map(final Calendar value) {
+		TimeZone tz = value.getTimeZone();
+		ZoneId zid = tz == null ? ZoneId.systemDefault() : tz.toZoneId();
+		return LocalDateTime.ofInstant(value.toInstant(), zid);
+	}
+
 	private AccountTO parseDescription(final String description) {
 		for (AccountTO acc : accounts) {
 			for (final String tag : acc.getTags()) {
@@ -156,5 +195,4 @@ public class JournalEntryListPresenter {
 	private BigDecimal parseValue(final String valueStr) {
 		return (BigDecimal) nf.parse(valueStr, new ParsePosition(0));
 	}
-
 }

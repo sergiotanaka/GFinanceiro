@@ -23,7 +23,8 @@
 			<TextArea fx:id="textArea" VBox.vgrow="ALWAYS" />
 			<HBox spacing="10">
 				<AutoCompleteComboBox fx:id="accountCombo" />
-				<AutoCompleteComboBox fx:id="monthYearCombo" />
+				<CalendarTextField fx:id="startDateText" />
+				<CalendarTextField fx:id="endDateText" />
 			</HBox>
 			<TableView fx:id="journalEntryTView" VBox.vgrow="ALWAYS">
 				<!-- <columnResizePolicy> -->

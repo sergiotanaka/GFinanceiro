@@ -1,24 +1,39 @@
 package org.pinguin.gf.service.api.planning;
 
+import java.time.Month;
+
 public class MonthYearTO {
 
-	private MonthTO month;
-	private Long year;
+	private Month month;
+	private int year;
 
-	public MonthTO getMonth() {
+	public MonthYearTO() {
+	}
+
+	public MonthYearTO(Month month, int year) {
+		this.month = month;
+		this.year = year;
+	}
+
+	public Month getMonth() {
 		return month;
 	}
 
-	public void setMonth(MonthTO month) {
+	public void setMonth(Month month) {
 		this.month = month;
 	}
 
-	public Long getYear() {
+	public int getYear() {
 		return year;
 	}
 
-	public void setYear(Long year) {
+	public void setYear(int year) {
 		this.year = year;
+	}
+
+	@Override
+	public String toString() {
+		return month.name() + "/" + year;
 	}
 
 }

@@ -185,15 +185,15 @@ public class AccountController implements AccountService {
 			entry.setAccount(mapper.asTO(item.getDebitAccount()));
 			if (accIds.contains(item.getCreditAccount().getAccountId())) {
 				if (root.getNature().equals(AccountNature.DEBIT)) {
-					entry.setValue(item.getValue().multiply(BigDecimal.valueOf(-1.0)).setScale(2));
+					entry.setValue(safe(item.getValue()).multiply(BigDecimal.valueOf(-1.0)).setScale(2));
 				} else {
-					entry.setValue(item.getValue().setScale(2));
+					entry.setValue(safe(item.getValue()).setScale(2));
 				}
 			} else {
 				if (root.getNature().equals(AccountNature.DEBIT)) {
-					entry.setValue(item.getValue().setScale(2));
+					entry.setValue(safe(item.getValue()).setScale(2));
 				} else {
-					entry.setValue(item.getValue().multiply(BigDecimal.valueOf(-1.0)).setScale(2));
+					entry.setValue(safe(item.getValue()).multiply(BigDecimal.valueOf(-1.0)).setScale(2));
 				}
 			}
 			entry.setDescription(item.getDescription());
@@ -208,6 +208,10 @@ public class AccountController implements AccountService {
 		}
 
 		return result;
+	}
+
+	private BigDecimal safe(final BigDecimal value) {
+		return value == null ? BigDecimal.ZERO : value;
 	}
 
 	private List<Account> retrieveAnalyticalAccounts(Account parent) {

@@ -1,14 +1,15 @@
 package org.pinguin.gf.gui.journalentry;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.util.Calendar;
 
 import javax.inject.Inject;
 
 import org.pinguin.gf.gui.control.AutoCompleteComboBox;
 import org.pinguin.gf.gui.util.AccountStringConverter;
 import org.pinguin.gf.service.api.account.AccountTO;
-import org.pinguin.gf.service.api.planning.MonthYearTO;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -20,6 +21,7 @@ import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.AnchorPane;
 import javafx.util.StringConverter;
+import jfxtras.scene.control.CalendarTextField;
 
 public class JournalEntryListForm extends AnchorPane {
 
@@ -28,7 +30,9 @@ public class JournalEntryListForm extends AnchorPane {
 	@FXML
 	private AutoCompleteComboBox<AccountTO> accountCombo;
 	@FXML
-	private AutoCompleteComboBox<MonthYearTO> monthYearCombo;
+	private CalendarTextField startDateText;
+	@FXML
+	private CalendarTextField endDateText;
 
 	@FXML
 	private TableView<JournalEntryItem> journalEntryTView;
@@ -49,6 +53,12 @@ public class JournalEntryListForm extends AnchorPane {
 		final StringConverter<AccountTO> accStrConverter = new AccountStringConverter();
 		accountCombo.setConverter(accStrConverter);
 
+		startDateText.setDateFormat(new SimpleDateFormat("dd/MM/yy"));
+		startDateText.setCalendar(Calendar.getInstance());
+
+		endDateText.setDateFormat(new SimpleDateFormat("dd/MM/yy"));
+		endDateText.setCalendar(Calendar.getInstance());
+
 		journalEntryTView.setEditable(true);
 	}
 
@@ -60,6 +70,9 @@ public class JournalEntryListForm extends AnchorPane {
 
 		accountCombo.setOriginalItems(presenter.getAccounts());
 		accountCombo.valueProperty().bindBidirectional(presenter.accountProperty());
+
+		startDateText.calendarProperty().bindBidirectional(presenter.startDateProperty());
+		endDateText.calendarProperty().bindBidirectional(presenter.endDateProperty());
 
 		originColumn.setCellFactory(
 				ComboBoxTableCell.forTableColumn(AccountStringConverter.instance(), presenter.getAccounts()));
