@@ -3,7 +3,9 @@ package org.pinguin.gf.service.api.planning;
 import java.util.HashSet;
 import java.util.Set;
 
-public class PlanningTO {
+import org.springframework.hateoas.ResourceSupport;
+
+public class PlanningTO extends ResourceSupport {
 	private Long planId;
 	private MonthYearTO monthYear;
 	private Set<AccountPlanningTO> accountPlannings = new HashSet<>();

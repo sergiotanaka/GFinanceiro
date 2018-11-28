@@ -8,6 +8,7 @@ import javax.inject.Inject;
 
 import org.pinguin.gf.service.api.account.AccountService;
 import org.pinguin.gf.service.api.account.AccountTO;
+import org.pinguin.gf.service.api.planning.AccountPlanningTO;
 import org.pinguin.gf.service.api.planning.PlanningService;
 import org.pinguin.gf.service.api.planning.PlanningTO;
 
@@ -26,8 +27,8 @@ public class PlanningFormPresenter {
 	private AccountService accService;
 
 	private Function<Void, Void> addPlanningCommand;
-	private Function<PlanningTO, Void> addAccPlanCommand;
-	private Function<PlanningTO, Void> editAccPlanCommand;
+	private Function<AccountPlanningTO, Void> addAccPlanCommand;
+	private Function<AccountPlanningTO, Void> editAccPlanCommand;
 
 	private final ObservableList<PlanningTO> plannings = FXCollections.observableArrayList();
 	private final Property<PlanningTO> selectedPlanningProp = new SimpleObjectProperty<>();
@@ -61,11 +62,11 @@ public class PlanningFormPresenter {
 		this.addPlanningCommand = addPlanningCommand;
 	}
 
-	public Function<PlanningTO, Void> getAddAccPlanCommand() {
+	public Function<AccountPlanningTO, Void> getAddAccPlanCommand() {
 		return addAccPlanCommand;
 	}
 
-	public void setAddAccPlanCommand(Function<PlanningTO, Void> addAccPlanCommand) {
+	public void setAddAccPlanCommand(Function<AccountPlanningTO, Void> addAccPlanCommand) {
 		this.addAccPlanCommand = addAccPlanCommand;
 	}
 
@@ -81,11 +82,11 @@ public class PlanningFormPresenter {
 		return accPlannings;
 	}
 
-	public Function<PlanningTO, Void> getEditAccPlanCommand() {
+	public Function<AccountPlanningTO, Void> getEditAccPlanCommand() {
 		return editAccPlanCommand;
 	}
 
-	public void setEditAccPlanCommand(Function<PlanningTO, Void> editAccPlanCommand) {
+	public void setEditAccPlanCommand(Function<AccountPlanningTO, Void> editAccPlanCommand) {
 		this.editAccPlanCommand = editAccPlanCommand;
 	}
 
@@ -113,11 +114,11 @@ public class PlanningFormPresenter {
 		}
 	}
 
-	public void deleteAccPlan(PlanningTO selectedItem) {
+	public void deleteAccPlan(AccountPlanningTO selectedItem) {
 		accPlannings.remove(selectedItem);
 	}
 
-	public void editAccPlan(PlanningTO selectedItem) {
+	public void editAccPlan(AccountPlanningTO selectedItem) {
 		if (editAccPlanCommand != null) {
 			editAccPlanCommand.apply(selectedItem);
 		}

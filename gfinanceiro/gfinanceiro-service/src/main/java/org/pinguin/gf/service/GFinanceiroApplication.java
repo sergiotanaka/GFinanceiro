@@ -1,5 +1,9 @@
 package org.pinguin.gf.service;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Query;
+
 import org.pinguin.gf.domain.account.Account;
 import org.pinguin.gf.domain.account.AccountNature;
 import org.pinguin.gf.domain.account.AccountRepository;
@@ -26,6 +30,16 @@ public class GFinanceiroApplication {
 	@Bean
 	public CommandLineRunner commandLineRunner(ApplicationContext ctx) {
 		return args -> {
+			
+//			final EntityManagerFactory emf = ctx.getBean(EntityManagerFactory.class);
+//			final EntityManager em = emf.createEntityManager();
+//
+//			em.getTransaction().begin();
+//			final Query qry1 = em.createNativeQuery("DROP TABLE IF EXISTS AccountPlanning CASCADE;");
+//			qry1.executeUpdate();
+//			Query qry2 = em.createNativeQuery("DROP TABLE IF EXISTS Planning CASCADE;");
+//			qry2.executeUpdate();
+//			em.getTransaction().commit();
 
 			final AccountRepository repo = ctx.getBean(AccountRepository.class);
 

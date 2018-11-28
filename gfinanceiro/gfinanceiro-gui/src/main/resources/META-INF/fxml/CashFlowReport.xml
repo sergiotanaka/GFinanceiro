@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import java.lang.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.textfield.*?>
+<?import javafx.geometry.*?>
+<?import javafx.collections.*?>
+<?import javafx.scene.control.cell.*?>
+<?import javafx.scene.chart.*?>
+<?import jfxtras.scene.control.*?>
+<?import org.pinguin.gf.gui.control.*?>
+
+<fx:root type="javafx.scene.layout.AnchorPane"
+	xmlns:fx="http://javafx.com/fxml" AnchorPane.bottomAnchor="0.0"
+	AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+	AnchorPane.topAnchor="0.0">
+	<children>
+		<VBox spacing="10" AnchorPane.bottomAnchor="0.0"
+			AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+			AnchorPane.topAnchor="0.0">
+			<padding>
+				<Insets top="10" right="10" bottom="10" left="10" />
+			</padding>
+			<HBox spacing="10">
+				<Label text="Conta:" />
+				<AutoCompleteComboBox fx:id="accountCombo" />
+				<Label text="Início:" />
+				<CalendarTextField fx:id="startDateText" />
+				<Label text="Fim:" />
+				<CalendarTextField fx:id="endDateText" />
+				<Button text="Consultar" onAction="#retrieve" />
+			</HBox>
+			<HBox>
+				<fx:define>
+					<ToggleGroup fx:id="group" />
+				</fx:define>
+				<children>
+					<RadioButton text="Saldo" toggleGroup="$group"
+						fx:id="balanceRadio" selected="true" />
+					<RadioButton text="Resultado" toggleGroup="$group"
+						fx:id="resultRadio" />
+				</children>
+			</HBox>
+			<StackPane>
+				<BarChart fx:id="barChart">
+					<xAxis>
+						<CategoryAxis fx:id="categoryAxis" animated="false"
+							side="BOTTOM" />
+					</xAxis>
+					<yAxis>
+						<NumberAxis id="numberAxis" animated="false"
+							side="LEFT" />
+					</yAxis>
+				</BarChart>
+				<LineChart fx:id="lineChart" legendVisible="false">
+					<xAxis>
+						<CategoryAxis fx:id="categoryAxis" animated="false"
+							side="BOTTOM" />
+					</xAxis>
+					<yAxis>
+						<NumberAxis id="numberAxis" animated="false"
+							side="LEFT" />
+					</yAxis>
+				</LineChart>
+			</StackPane>
+		</VBox>
+	</children>
+</fx:root>

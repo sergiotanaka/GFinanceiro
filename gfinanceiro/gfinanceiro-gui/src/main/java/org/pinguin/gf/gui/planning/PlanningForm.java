@@ -48,6 +48,9 @@ public class PlanningForm extends AnchorPane {
 
 			@Override
 			public String toString(PlanningTO object) {
+				if (object == null) {
+					return "";
+				}
 				return String.format("%s/%s", object.getMonthYear().getMonth(), object.getMonthYear().getYear());
 			}
 
@@ -66,7 +69,7 @@ public class PlanningForm extends AnchorPane {
 				if (evt.getCode().equals(KeyCode.DELETE)) {
 					int result = Dialog.showQuestionDialog(null, "Confirma a exclusao do item?");
 					if (result >= 0) {
-						presenter.deleteAccPlan(accPlanTree.getSelectionModel().getSelectedItem().getValue());
+//						presenter.deleteAccPlan(accPlanTree.getSelectionModel().getSelectedItem().getValue());
 					}
 				}
 			}
@@ -77,7 +80,7 @@ public class PlanningForm extends AnchorPane {
 			public void handle(MouseEvent evt) {
 				if (evt.getClickCount() == 3) {
 					if (accPlanTree.getSelectionModel().getSelectedItem().getChildren().isEmpty()) {
-						presenter.editAccPlan(accPlanTree.getSelectionModel().getSelectedItem().getValue());
+//						presenter.editAccPlan(accPlanTree.getSelectionModel().getSelectedItem().getValue());
 					}
 				}
 			}
@@ -106,7 +109,7 @@ public class PlanningForm extends AnchorPane {
 			private void retrieveParents(Long id, Map<Long, TreeItem<PlanningTO>> map) {
 				AccountTO retrieved = presenter.retrieveAccountById(id);
 				PlanningTO parentPlan = new PlanningTO();
-//				parentPlan.setAccount(retrieved);
+				// parentPlan.setAccount(retrieved);
 				map.put(retrieved.getAccountId(), new TreeItem<PlanningTO>(parentPlan));
 				if (retrieved.getParent() != null) {
 					retrieveParents(retrieved.getParent().getAccountId(), map);
@@ -118,21 +121,22 @@ public class PlanningForm extends AnchorPane {
 				Map<Long, TreeItem<PlanningTO>> map = new HashMap<>();
 				for (PlanningTO item : list) {
 					TreeItem<PlanningTO> treeItem = new TreeItem<>(item);
-//					map.put(item.getAccount().getAccountId(), treeItem);
-//					// 2. Preencher os pais
-//					if (item.getAccount().getParent() != null) {
-//						retrieveParents(item.getAccount().getParent().getAccountId(), map);
-//					}
+					// map.put(item.getAccount().getAccountId(), treeItem);
+					// // 2. Preencher os pais
+					// if (item.getAccount().getParent() != null) {
+					// retrieveParents(item.getAccount().getParent().getAccountId(), map);
+					// }
 
 				}
 				// 2. Montar a hierarquia e guardar os roots
 				for (TreeItem<PlanningTO> item : map.values()) {
-//					if (item.getValue().getAccount().getParent() != null) {
-//						TreeItem<PlanningTO> parent = map.get(item.getValue().getAccount().getParent().getId());
-//						parent.getChildren().add(item);
-//					} else {
-//						root.getChildren().add(item);
-//					}
+					// if (item.getValue().getAccount().getParent() != null) {
+					// TreeItem<PlanningTO> parent =
+					// map.get(item.getValue().getAccount().getParent().getId());
+					// parent.getChildren().add(item);
+					// } else {
+					// root.getChildren().add(item);
+					// }
 				}
 				// 3. Totalizar
 				totalize(root);
@@ -141,7 +145,7 @@ public class PlanningForm extends AnchorPane {
 			private BigDecimal totalize(TreeItem<PlanningTO> root) {
 				if (root.getChildren().isEmpty()) {
 					// Caso analitico
-//					return root.getValue().getValue();
+					// return root.getValue().getValue();
 					return null;
 				} else {
 					// Caso sintetico
@@ -149,7 +153,7 @@ public class PlanningForm extends AnchorPane {
 					for (TreeItem<PlanningTO> child : root.getChildren()) {
 						total = total.add(totalize(child));
 					}
-//					root.getValue().setValue(total.setScale(2));
+					// root.getValue().setValue(total.setScale(2));
 					return total;
 				}
 			}

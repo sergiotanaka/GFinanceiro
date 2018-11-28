@@ -17,6 +17,7 @@ public class MainPane extends BorderPane {
 	private EventHandler<ActionEvent> onMaintAccount;
 	private EventHandler<ActionEvent> onJournalEntryListHandler;
 	private EventHandler<ActionEvent> onClearEntriesHandler;
+	private EventHandler<ActionEvent> onCashFlowHandler;
 
 	public MainPane() {
 		loadFxml();
@@ -76,6 +77,14 @@ public class MainPane extends BorderPane {
 
 	public void setOnClearEntriesHandler(EventHandler<ActionEvent> onClearEntriesHandler) {
 		this.onClearEntriesHandler = onClearEntriesHandler;
+	}
+
+	public EventHandler<ActionEvent> getOnCashFlowHandler() {
+		return onCashFlowHandler;
+	}
+
+	public void setOnCashFlowHandler(EventHandler<ActionEvent> onCashFlowHandler) {
+		this.onCashFlowHandler = onCashFlowHandler;
 	}
 
 	private void loadFxml() {
@@ -138,4 +147,10 @@ public class MainPane extends BorderPane {
 		}
 	}
 
+	@FXML
+	public void onCashFlow(ActionEvent event) {
+		if (onCashFlowHandler != null) {
+			onCashFlowHandler.handle(event);
+		}
+	}
 }

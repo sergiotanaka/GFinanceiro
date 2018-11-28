@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import org.pinguin.gf.service.api.account.AccStatementEntryTO;
 import org.pinguin.gf.service.api.account.AccountService;
 import org.pinguin.gf.service.api.account.AccountTO;
+import org.pinguin.gf.service.api.account.DayResultTO;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -22,6 +23,8 @@ public class AccountServiceProxy implements AccountService {
 	private final ParameterizedTypeReference<List<AccountTO>> accListTypeRef = new ParameterizedTypeReference<List<AccountTO>>() {
 	};
 	private final ParameterizedTypeReference<List<AccStatementEntryTO>> accStateListTypeRef = new ParameterizedTypeReference<List<AccStatementEntryTO>>() {
+	};
+	private final ParameterizedTypeReference<List<DayResultTO>> dayResultListTypeRef = new ParameterizedTypeReference<List<DayResultTO>>() {
 	};
 
 	@Inject
@@ -89,6 +92,16 @@ public class AccountServiceProxy implements AccountService {
 	public List<AccountTO> retrieveExpenseAccounts() {
 		final ResponseEntity<List<AccountTO>> response = restTemplate.exchange(accountResourceUrl + "/expenses",
 				HttpMethod.GET, null, accListTypeRef);
+		return response.getBody();
+	}
+
+	@Override
+	public List<DayResultTO> retrieveCashFlow(Long id, LocalDate start, LocalDate end) {
+		String resourceUrl = accountResourceUrl + '/' + id + "/cashflow";
+		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(resourceUrl).queryParam("start", start)
+				.queryParam("end", end);
+		final ResponseEntity<List<DayResultTO>> response = restTemplate.exchange(builder.toUriString(),
+				HttpMethod.GET, null, dayResultListTypeRef);
 		return response.getBody();
 	}
 

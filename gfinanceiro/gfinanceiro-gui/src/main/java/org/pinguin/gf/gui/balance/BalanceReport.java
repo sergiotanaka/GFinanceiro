@@ -100,15 +100,11 @@ public class BalanceReport extends AnchorPane {
 		balanceTColumn
 				.setCellValueFactory(new SimpleTVCellValueFactory<BalanceTO, AccountTO>("account", accStrConverter));
 
-		balanceTree.setOnMouseClicked(new EventHandler<MouseEvent>() {
-
-			@Override
-			public void handle(MouseEvent event) {
-				if (event.getClickCount() == 3) {
-					BalanceTO selected = balanceTree.getSelectionModel().getSelectedItem().getValue();
-					openAccStatement.apply(new OpenAccStatementParam(null, selected.getAccount(),
-							presenter.startDateProperty().getValue(), presenter.endDateProperty().getValue()));
-				}
+		balanceTree.setOnMouseClicked(event -> {
+			if (event.getClickCount() == 3) {
+				BalanceTO selected = balanceTree.getSelectionModel().getSelectedItem().getValue();
+				openAccStatement.apply(new OpenAccStatementParam(null, selected.getAccount(),
+						presenter.startDateProperty().getValue(), presenter.endDateProperty().getValue()));
 			}
 		});
 

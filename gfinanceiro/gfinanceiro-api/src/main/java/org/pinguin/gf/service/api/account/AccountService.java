@@ -39,4 +39,6 @@ public interface AccountService {
 
 	List<AccountTO> retrieveExpenseAccounts();
 
+	List<DayResultTO> retrieveCashFlow(Long id, LocalDate start, LocalDate end);
+
 }

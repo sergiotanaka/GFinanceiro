@@ -1,10 +1,10 @@
 package org.pinguin.gf.app;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.function.Function;
 
@@ -12,6 +12,7 @@ import org.pinguin.gf.gui.account.AccountList;
 import org.pinguin.gf.gui.accstatement.OpenAccStatementCommand;
 import org.pinguin.gf.gui.accstatement.OpenAccStatementParam;
 import org.pinguin.gf.gui.balance.BalanceReport;
+import org.pinguin.gf.gui.cashflow.CashFlowReport;
 import org.pinguin.gf.gui.journalentry.JournalEntryListForm;
 import org.pinguin.gf.gui.journalentry.OpenJournalEntryCommand;
 import org.pinguin.gf.gui.journalentry.OpenJournalEntryParam;
@@ -23,6 +24,7 @@ import org.pinguin.gf.service.api.account.AccountService;
 import org.pinguin.gf.service.api.journalentry.JournalEntryService;
 import org.pinguin.gf.service.api.journalentry.JournalEntryTO;
 import org.pinguin.gf.service.api.planning.AccountPlanningTO;
+import org.pinguin.gf.service.api.planning.MonthYearTO;
 import org.pinguin.gf.service.api.planning.PlanningService;
 import org.pinguin.gf.service.api.planning.PlanningTO;
 import org.pinguin.gui.util.Dialog;
@@ -90,16 +92,17 @@ public class MainApp extends Application {
 			formStage.setTitle("Planejamento");
 
 			final PlanningForm form = injector.getInstance(PlanningForm.class);
+
 			form.getPresenter().setAddPlanningCommand((param) -> {
 
-				Calendar calendar = Calendar.getInstance();
+				final LocalDate now = LocalDate.now();
 
 				final Stage addFormStage = new Stage();
 				addFormStage.setTitle("Adicionar planejamento");
 				AddPlanningForm addForm = injector.getInstance(AddPlanningForm.class);
 				addForm.getPresenter().getMonths().addAll(Month.values());
 				PlanningTO newTO = new PlanningTO();
-				// newTO.setMonthYear(new MonthYearTO(null, calendar.get(Calendar.YEAR)));
+				newTO.setMonthYear(new MonthYearTO(now.getMonth(), now.getYear()));
 				addForm.getPresenter().setTo(newTO);
 				addFormStage.setScene(new Scene(addForm));
 				addFormStage.sizeToScene();
@@ -119,10 +122,10 @@ public class MainApp extends Application {
 				accPlanForm.getPresenter().getAccounts().addAll(accService.retrieveIncomeAccounts());
 				accPlanForm.getPresenter().getAccounts().addAll(accService.retrieveExpenseAccounts());
 				if (to == null) {
-					// accPlanForm.getPresenter().setTo(new AccountPlanningTO());
+					accPlanForm.getPresenter().setTo(new AccountPlanningTO());
 					accPlanForm.getPresenter().setEditMode(EditMode.CREATE);
 				} else {
-					// accPlanForm.getPresenter().setTo(to);
+					accPlanForm.getPresenter().setTo(to);
 					accPlanForm.getPresenter().setEditMode(EditMode.UPDATE);
 				}
 				accPlanForm.getPresenter().setOnSaveCommand((param) -> {
@@ -131,7 +134,7 @@ public class MainApp extends Application {
 					form.getPresenter().getAccPlannings().clear();
 					// form.getPresenter().getAccPlannings().addAll(aux);
 					if (accPlanForm.getPresenter().getEditMode().equals(EditMode.CREATE)) {
-						form.getPresenter().getAccPlannings().add(accPlanForm.getPresenter().getTo());
+						// form.getPresenter().getAccPlannings().add(accPlanForm.getPresenter().getTo());
 					}
 					accPlanStage.close();
 					return null;
@@ -144,9 +147,9 @@ public class MainApp extends Application {
 
 				return null;
 			};
-			// form.getPresenter().setAddAccPlanCommand(editAccPlanCommand);
-			// form.getPresenter().setEditAccPlanCommand(editAccPlanCommand);
-			// form.getPresenter().getPlannings().addAll(service.retrievePlannings());
+			form.getPresenter().setAddAccPlanCommand(editAccPlanCommand);
+			form.getPresenter().setEditAccPlanCommand(editAccPlanCommand);
+			form.getPresenter().getPlannings().addAll(service.retrieveAll());
 
 			formStage.setScene(new Scene(form));
 			formStage.sizeToScene();
@@ -177,6 +180,17 @@ public class MainApp extends Application {
 					service.deleteEntry(entry.getEntryId());
 				}
 			}
+		});
+
+		mainPane.setOnCashFlowHandler(e -> {
+			final CashFlowReport cashFlowReport = injector.getInstance(CashFlowReport.class);
+			Stage repStage = new Stage();
+			repStage.setTitle("Fluxo de Caixa");
+			repStage.setScene(new Scene(cashFlowReport));
+			repStage.sizeToScene();
+			repStage.initOwner(stage);
+			repStage.centerOnScreen();
+			repStage.show();
 		});
 
 		stage.setScene(new Scene(mainPane));

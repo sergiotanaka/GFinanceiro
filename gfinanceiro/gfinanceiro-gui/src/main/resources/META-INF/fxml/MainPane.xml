@@ -23,6 +23,7 @@
 						<MenuItem text="Consultar histórico" onAction="#onListJournalEntry" />
 						<MenuItem text="Consultar resumo" onAction="#onListBalance" />
 						<MenuItem text="Planejamento" onAction="#onPlanning" />
+						<MenuItem text="Fluxo de Caixa" onAction="#onCashFlow" />
 					</items>
 				</Menu>
 				<Menu text="Cadastro">

@@ -9,7 +9,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -19,6 +21,8 @@ import javax.validation.Valid;
 import org.pinguin.gf.domain.account.Account;
 import org.pinguin.gf.domain.account.AccountNature;
 import org.pinguin.gf.domain.account.AccountRepository;
+import org.pinguin.gf.domain.account.BasicAccounts;
+import org.pinguin.gf.domain.account.BasicAccountsRepository;
 import org.pinguin.gf.domain.common.impl.RequestParamsMapper;
 import org.pinguin.gf.domain.common.impl.RequestParamsMapper.Result;
 import org.pinguin.gf.domain.journalentry.JournalEntry;
@@ -54,6 +58,9 @@ public class AccountController implements AccountService {
 	private AccountRepository repo;
 	@Autowired
 	private JournalEntryRepository jEntryRepo;
+	@Autowired
+	private BasicAccountsRepository basicAccRepo;
+
 	private AccountMapper mapper;
 	private RequestParamsMapper<Account> reqMapper = new RequestParamsMapper<>(Account.class);
 
@@ -281,14 +288,91 @@ public class AccountController implements AccountService {
 	@Override
 	@GetMapping(value = "/income", produces = MediaTypes.HAL_JSON_VALUE)
 	public List<AccountTO> retrieveIncomeAccounts() {
-		// TODO Auto-generated method stub
-		return null;
+		final BasicAccounts basicAccs = basicAccRepo.getOne(1L);
+
+		final List<Account> accs = new ArrayList<>();
+		accs.addAll(retrieveAnalyticalAccounts(basicAccs.getIncome()));
+
+		final List<AccountTO> result = new ArrayList<>();
+		for (Account item : accs) {
+			result.add(mapper.asTO(item));
+		}
+
+		return result;
 	}
 
 	@Override
 	@GetMapping(value = "/expenses", produces = MediaTypes.HAL_JSON_VALUE)
 	public List<AccountTO> retrieveExpenseAccounts() {
-		// TODO Auto-generated method stub
-		return null;
+		final BasicAccounts basicAccs = basicAccRepo.getOne(1L);
+
+		final List<Account> accs = new ArrayList<>();
+		accs.addAll(retrieveAnalyticalAccounts(basicAccs.getExpense()));
+
+		final List<AccountTO> result = new ArrayList<>();
+		for (Account item : accs) {
+			result.add(mapper.asTO(item));
+		}
+
+		return result;
 	}
+
+	@Override
+	@GetMapping(value = "/{id}/cashflow", produces = MediaTypes.HAL_JSON_VALUE)
+	public List<DayResultTO> retrieveCashFlow(@PathVariable("id") Long id,
+			@RequestParam("start") @DateTimeFormat(iso = ISO.DATE) LocalDate start,
+			@RequestParam("end") @DateTimeFormat(iso = ISO.DATE) LocalDate end) {
+
+		final Account root = repo.getOne(id);
+		final List<Account> accs = retrieveAnalyticalAccounts(root);
+		final Set<Long> accIds = accs.stream().map(a -> a.getAccountId()).collect(Collectors.toSet());
+
+		Iterable<JournalEntry> retrieved = jEntryRepo.findAll(journalEntry.debitAccount.in(accs)
+				.or(journalEntry.creditAccount.in(accs)).and(journalEntry.date.before(end.plusDays(1).atStartOfDay())),
+				Sort.by("date", "entryId"));
+
+		LocalDate first = null;
+		final Map<LocalDate, DayResultTO> map = new HashMap<>();
+		for (final JournalEntry entry : retrieved) {
+			final LocalDate date = entry.getDate().toLocalDate();
+			if (first == null) {
+				first = date;
+			}
+			if (!map.containsKey(date)) {
+				map.put(date, new DayResultTO(date));
+			}
+			// Calulando o resultado do dia
+			if (accIds.contains(entry.getCreditAccount().getAccountId())) {
+				if (root.getNature().equals(AccountNature.DEBIT)) {
+					map.get(date).setResult(map.get(date).getResult().subtract(safe(entry.getValue())).setScale(2));
+				} else {
+					map.get(date).setResult(map.get(date).getResult().add(safe(entry.getValue()).setScale(2)));
+				}
+			} else {
+				if (root.getNature().equals(AccountNature.DEBIT)) {
+					map.get(date).setResult(map.get(date).getResult().add(safe(entry.getValue()).setScale(2)));
+				} else {
+					map.get(date).setResult(map.get(date).getResult().subtract(safe(entry.getValue()).setScale(2)));
+				}
+			}
+		}
+
+		BigDecimal balance = BigDecimal.ZERO;
+		final List<DayResultTO> result = new ArrayList<>();
+		for (LocalDate aux = first; aux.isBefore(end); aux = aux.plusDays(1)) {
+			if (!map.containsKey(aux)) {
+				continue;
+			}
+			final DayResultTO item = map.get(aux);
+			balance = balance.add(item.getResult());
+
+			if (aux.isEqual(start) || aux.isAfter(start)) {
+				item.setBalance(balance);
+				result.add(item);
+			}
+		}
+
+		return result;
+	}
+
 }

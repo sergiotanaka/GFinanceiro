@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.util.function.Function;
 
 import org.pinguin.gf.service.api.account.AccountTO;
-import org.pinguin.gf.service.api.planning.PlanningTO;
+import org.pinguin.gf.service.api.planning.AccountPlanningTO;
 import org.pinguin.gui.util.BindHelper;
 import org.pinguin.gui.util.EditMode;
 import org.pinguin.gui.util.PropertyAdapter;
@@ -18,7 +18,7 @@ import javafx.collections.ObservableList;
 
 public class AccPlanningFormPresenter {
 
-	private BindHelper<PlanningTO> bindHelper = new BindHelper<>();
+	private BindHelper<AccountPlanningTO> bindHelper = new BindHelper<>();
 
 	private final ObservableList<AccountTO> accounts = FXCollections.observableArrayList();
 	private final Property<AccountTO> accountProperty = new SimpleObjectProperty<>();
@@ -26,7 +26,7 @@ public class AccPlanningFormPresenter {
 
 	private EditMode editMode = EditMode.CREATE;
 
-	private PlanningTO to;
+	private AccountPlanningTO to;
 
 	private Function<Void, Void> onSaveCommand;
 
@@ -50,11 +50,11 @@ public class AccPlanningFormPresenter {
 		this.editMode = editMode;
 	}
 
-	public PlanningTO getTo() {
+	public AccountPlanningTO getTo() {
 		return to;
 	}
 
-	public void setTo(PlanningTO to) {
+	public void setTo(AccountPlanningTO to) {
 		this.to = to;
 
 		if (to != null) {
@@ -70,7 +70,7 @@ public class AccPlanningFormPresenter {
 		this.onSaveCommand = onSaveCommand;
 	}
 
-	private void mapToPresenter(PlanningTO to) {
+	private void mapToPresenter(AccountPlanningTO to) {
 		bindHelper.setTo(to);
 		bindHelper.bind("account", accountProperty);
 		bindHelper.bind("value",
