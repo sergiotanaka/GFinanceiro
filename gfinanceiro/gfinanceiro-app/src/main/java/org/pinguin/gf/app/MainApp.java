@@ -18,6 +18,7 @@ import org.pinguin.gf.gui.journalentry.OpenJournalEntryCommand;
 import org.pinguin.gf.gui.journalentry.OpenJournalEntryParam;
 import org.pinguin.gf.gui.main.MainPane;
 import org.pinguin.gf.gui.planning.AccPlanningForm;
+import org.pinguin.gf.gui.planning.AccountPlanningItem;
 import org.pinguin.gf.gui.planning.AddPlanningForm;
 import org.pinguin.gf.gui.planning.PlanningForm;
 import org.pinguin.gf.service.api.account.AccountService;
@@ -112,7 +113,7 @@ public class MainApp extends Application {
 
 				return null;
 			});
-			Function<AccountPlanningTO, Void> editAccPlanCommand = (to) -> {
+			Function<AccountPlanningItem, Void> editAccPlanCommand = (to) -> {
 
 				AccountService accService = injector.getInstance(AccountService.class);
 
@@ -122,19 +123,19 @@ public class MainApp extends Application {
 				accPlanForm.getPresenter().getAccounts().addAll(accService.retrieveIncomeAccounts());
 				accPlanForm.getPresenter().getAccounts().addAll(accService.retrieveExpenseAccounts());
 				if (to == null) {
-					accPlanForm.getPresenter().setTo(new AccountPlanningTO());
+					accPlanForm.getPresenter().setTo(new AccountPlanningItem());
 					accPlanForm.getPresenter().setEditMode(EditMode.CREATE);
 				} else {
 					accPlanForm.getPresenter().setTo(to);
 					accPlanForm.getPresenter().setEditMode(EditMode.UPDATE);
 				}
 				accPlanForm.getPresenter().setOnSaveCommand((param) -> {
-					List<AccountPlanningTO> aux = new ArrayList<>();
-					// aux.addAll(form.getPresenter().getAccPlannings());
-					form.getPresenter().getAccPlannings().clear();
-					// form.getPresenter().getAccPlannings().addAll(aux);
+//					List<AccountPlanningTO> aux = new ArrayList<>();
+//					aux.addAll(form.getPresenter().getAccPlannings());
+//					form.getPresenter().getAccPlannings().clear();
+//					form.getPresenter().getAccPlannings().addAll(aux);
 					if (accPlanForm.getPresenter().getEditMode().equals(EditMode.CREATE)) {
-						// form.getPresenter().getAccPlannings().add(accPlanForm.getPresenter().getTo());
+						form.getPresenter().getAccPlannings().add(accPlanForm.getPresenter().getTo());
 					}
 					accPlanStage.close();
 					return null;

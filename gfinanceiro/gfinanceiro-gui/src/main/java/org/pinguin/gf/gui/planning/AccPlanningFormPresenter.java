@@ -4,8 +4,6 @@ import java.math.BigDecimal;
 import java.util.function.Function;
 
 import org.pinguin.gf.service.api.account.AccountTO;
-import org.pinguin.gf.service.api.planning.AccountPlanningTO;
-import org.pinguin.gui.util.BindHelper;
 import org.pinguin.gui.util.EditMode;
 import org.pinguin.gui.util.PropertyAdapter;
 import org.pinguin.gui.util.ValueConverter;
@@ -18,15 +16,13 @@ import javafx.collections.ObservableList;
 
 public class AccPlanningFormPresenter {
 
-	private BindHelper<AccountPlanningTO> bindHelper = new BindHelper<>();
-
 	private final ObservableList<AccountTO> accounts = FXCollections.observableArrayList();
 	private final Property<AccountTO> accountProperty = new SimpleObjectProperty<>();
 	private final Property<String> valueProperty = new SimpleStringProperty();
 
 	private EditMode editMode = EditMode.CREATE;
 
-	private AccountPlanningTO to;
+	private AccountPlanningItem to;
 
 	private Function<Void, Void> onSaveCommand;
 
@@ -50,11 +46,11 @@ public class AccPlanningFormPresenter {
 		this.editMode = editMode;
 	}
 
-	public AccountPlanningTO getTo() {
+	public AccountPlanningItem getTo() {
 		return to;
 	}
 
-	public void setTo(AccountPlanningTO to) {
+	public void setTo(AccountPlanningItem to) {
 		this.to = to;
 
 		if (to != null) {
@@ -70,16 +66,15 @@ public class AccPlanningFormPresenter {
 		this.onSaveCommand = onSaveCommand;
 	}
 
-	private void mapToPresenter(AccountPlanningTO to) {
-		bindHelper.setTo(to);
-		bindHelper.bind("account", accountProperty);
-		bindHelper.bind("value",
-				new PropertyAdapter<BigDecimal, String>(valueProperty, new ValueConverter<BigDecimal, String>() {
+	private void mapToPresenter(AccountPlanningItem to) {
+		accountProperty.bindBidirectional(to.accountProperty());
+		final Property<BigDecimal> valuePropertyAdapter = new PropertyAdapter<BigDecimal, String>(valueProperty,
+				new ValueConverter<BigDecimal, String>() {
 
 					@Override
 					public BigDecimal convert1(String value) {
 						try {
-							return new BigDecimal(value);
+							return new BigDecimal(value).setScale(2);
 						} catch (Exception e) {
 							return BigDecimal.ZERO;
 						}
@@ -92,7 +87,8 @@ public class AccPlanningFormPresenter {
 						}
 						return value.toString();
 					}
-				}));
+				});
+		valuePropertyAdapter.bindBidirectional(to.valueProperty());
 	}
 
 	public void save() {

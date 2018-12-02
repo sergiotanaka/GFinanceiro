@@ -359,7 +359,7 @@ public class AccountController implements AccountService {
 
 		BigDecimal balance = BigDecimal.ZERO;
 		final List<DayResultTO> result = new ArrayList<>();
-		for (LocalDate aux = first; aux.isBefore(end); aux = aux.plusDays(1)) {
+		for (LocalDate aux = first; aux.isBefore(end) || aux.isEqual(end); aux = aux.plusDays(1)) {
 			if (!map.containsKey(aux)) {
 				continue;
 			}

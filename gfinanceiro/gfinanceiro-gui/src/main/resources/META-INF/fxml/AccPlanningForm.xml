@@ -12,9 +12,10 @@
 <?import jfxtras.scene.control.*?>
 <?import org.pinguin.gf.gui.control.*?>
 
-<fx:root type="javafx.scene.layout.AnchorPane" xmlns:fx="http://javafx.com/fxml"
-	AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-	AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+<fx:root type="javafx.scene.layout.AnchorPane"
+	xmlns:fx="http://javafx.com/fxml" AnchorPane.bottomAnchor="0.0"
+	AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+	AnchorPane.topAnchor="0.0">
 	<children>
 		<VBox spacing="10">
 			<padding>
@@ -28,8 +29,8 @@
 
 				<Label text="Conta:" GridPane.rowIndex="0"
 					GridPane.columnIndex="0" />
-				<AutoCompleteComboBox fx:id="accountCombo" GridPane.rowIndex="0"
-					GridPane.columnIndex="1" />
+				<AutoCompleteComboBox fx:id="accountCombo"
+					GridPane.rowIndex="0" GridPane.columnIndex="1" />
 
 				<Label text="Valor:" GridPane.rowIndex="1"
 					GridPane.columnIndex="0" />

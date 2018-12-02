@@ -1,13 +1,19 @@
 package org.pinguin.gf.gui.planning;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 import javax.inject.Inject;
 
 import org.pinguin.gf.service.api.account.AccountService;
 import org.pinguin.gf.service.api.account.AccountTO;
+import org.pinguin.gf.service.api.balance.BalanceService;
 import org.pinguin.gf.service.api.planning.AccountPlanningTO;
 import org.pinguin.gf.service.api.planning.PlanningService;
 import org.pinguin.gf.service.api.planning.PlanningTO;
@@ -25,14 +31,16 @@ public class PlanningFormPresenter {
 	private PlanningService service;
 	@Inject
 	private AccountService accService;
+	@Inject
+	private BalanceService balService;
 
 	private Function<Void, Void> addPlanningCommand;
-	private Function<AccountPlanningTO, Void> addAccPlanCommand;
-	private Function<AccountPlanningTO, Void> editAccPlanCommand;
+	private Function<AccountPlanningItem, Void> addAccPlanCommand;
+	private Function<AccountPlanningItem, Void> editAccPlanCommand;
 
 	private final ObservableList<PlanningTO> plannings = FXCollections.observableArrayList();
 	private final Property<PlanningTO> selectedPlanningProp = new SimpleObjectProperty<>();
-	private ObservableList<PlanningTO> accPlannings = FXCollections.observableArrayList();
+	private ObservableList<AccountPlanningItem> accPlannings = FXCollections.observableArrayList();
 
 	private final Map<Long, AccountTO> accCache = new HashMap<>();
 
@@ -44,14 +52,41 @@ public class PlanningFormPresenter {
 					PlanningTO newValue) {
 				if (oldValue != null) {
 					oldValue.getAccountPlannings().clear();
-//					oldValue.getAccountPlannings().addAll(accPlannings);
+					oldValue.getAccountPlannings().addAll(map2(accPlannings));
 				}
 				if (newValue != null) {
 					accPlannings.clear();
-//					accPlannings.addAll(newValue.getAccountPlannings());
+					accPlannings.addAll(map(newValue.getAccountPlannings()));
 				}
 			}
 		});
+	}
+
+	protected List<AccountPlanningItem> map(Collection<AccountPlanningTO> plannings) {
+
+		final List<AccountPlanningItem> result = new ArrayList<>();
+
+		for (final AccountPlanningTO plan : plannings) {
+			final AccountPlanningItem item = new AccountPlanningItem();
+			item.accPlanIdProperty().setValue(plan.getAccPlanId());
+			item.accountProperty().setValue(plan.getAccount());
+			item.valueProperty().setValue(plan.getValue());
+			result.add(item);
+		}
+
+		return result;
+	}
+
+	private Set<AccountPlanningTO> map2(Collection<AccountPlanningItem> plannings) {
+		final Set<AccountPlanningTO> result = new HashSet<>();
+		for (final AccountPlanningItem item : plannings) {
+			final AccountPlanningTO plan = new AccountPlanningTO();
+			plan.setAccPlanId(item.accPlanIdProperty().getValue());
+			plan.setAccount(item.accountProperty().getValue());
+			plan.setValue(item.valueProperty().getValue());
+			result.add(plan);
+		}
+		return result;
 	}
 
 	public Function<Void, Void> getAddPlanningCommand() {
@@ -62,11 +97,11 @@ public class PlanningFormPresenter {
 		this.addPlanningCommand = addPlanningCommand;
 	}
 
-	public Function<AccountPlanningTO, Void> getAddAccPlanCommand() {
+	public Function<AccountPlanningItem, Void> getAddAccPlanCommand() {
 		return addAccPlanCommand;
 	}
 
-	public void setAddAccPlanCommand(Function<AccountPlanningTO, Void> addAccPlanCommand) {
+	public void setAddAccPlanCommand(Function<AccountPlanningItem, Void> addAccPlanCommand) {
 		this.addAccPlanCommand = addAccPlanCommand;
 	}
 
@@ -78,16 +113,20 @@ public class PlanningFormPresenter {
 		return selectedPlanningProp;
 	}
 
-	public ObservableList<PlanningTO> getAccPlannings() {
+	public ObservableList<AccountPlanningItem> getAccPlannings() {
 		return accPlannings;
 	}
 
-	public Function<AccountPlanningTO, Void> getEditAccPlanCommand() {
+	public Function<AccountPlanningItem, Void> getEditAccPlanCommand() {
 		return editAccPlanCommand;
 	}
 
-	public void setEditAccPlanCommand(Function<AccountPlanningTO, Void> editAccPlanCommand) {
+	public void setEditAccPlanCommand(Function<AccountPlanningItem, Void> editAccPlanCommand) {
 		this.editAccPlanCommand = editAccPlanCommand;
+	}
+
+	public BalanceService getBalService() {
+		return balService;
 	}
 
 	public void add() {
@@ -106,19 +145,19 @@ public class PlanningFormPresenter {
 		final PlanningTO selected = selectedPlanningProp.getValue();
 		if (selected != null) {
 			selected.getAccountPlannings().clear();
-//			selected.getAccountPlannings().addAll(accPlannings);
+			selected.getAccountPlannings().addAll(map2(accPlannings));
 		}
 
 		for (PlanningTO plan : plannings) {
-//			service.updatePlanning(plan.getPlanningId(), plan);
+			service.updatePlanning(plan.getPlanId(), plan);
 		}
 	}
 
-	public void deleteAccPlan(AccountPlanningTO selectedItem) {
+	public void deleteAccPlan(AccountPlanningItem selectedItem) {
 		accPlannings.remove(selectedItem);
 	}
 
-	public void editAccPlan(AccountPlanningTO selectedItem) {
+	public void editAccPlan(AccountPlanningItem selectedItem) {
 		if (editAccPlanCommand != null) {
 			editAccPlanCommand.apply(selectedItem);
 		}

@@ -18,6 +18,7 @@ public class JournalEntryTO extends ResourceSupport {
 	private BigDecimal value;
 	private LocalDateTime date;
 	private String description;
+	private Boolean future;
 
 	public JournalEntryTO() {
 	}
@@ -70,4 +71,11 @@ public class JournalEntryTO extends ResourceSupport {
 		this.description = description;
 	}
 
+	public Boolean getFuture() {
+		return future;
+	}
+
+	public void setFuture(Boolean future) {
+		this.future = future;
+	}
 }

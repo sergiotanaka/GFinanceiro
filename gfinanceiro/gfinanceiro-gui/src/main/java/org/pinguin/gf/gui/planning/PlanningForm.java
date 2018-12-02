@@ -2,15 +2,18 @@ package org.pinguin.gf.gui.planning;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import org.pinguin.gf.gui.balance.BalanceReport.SimpleTVCellValueFactory;
 import org.pinguin.gf.gui.control.AutoCompleteComboBox;
-import org.pinguin.gf.gui.util.AccountStringConverter;
 import org.pinguin.gf.service.api.account.AccountTO;
+import org.pinguin.gf.service.api.balance.BalanceTO;
+import org.pinguin.gf.service.api.planning.MonthYearTO;
 import org.pinguin.gf.service.api.planning.PlanningTO;
 import org.pinguin.gui.util.Dialog;
 
@@ -21,12 +24,14 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 public class PlanningForm extends AnchorPane {
@@ -37,57 +42,21 @@ public class PlanningForm extends AnchorPane {
 	@FXML
 	private AutoCompleteComboBox<PlanningTO> monthYearCombo;
 	@FXML
-	private TreeTableView<PlanningTO> accPlanTree;
+	private TreeTableView<AccountPlanningItem> accPlanTree;
 	@FXML
-	private TreeTableColumn<PlanningTO, String> accountTColumn;
+	private TreeTableColumn<AccountPlanningItem, AccountTO> accountTColumn;
 
+	/**
+	 * Construtor.
+	 */
 	public PlanningForm() {
 		loadFxml();
 		accPlanTree.setShowRoot(false);
-		monthYearCombo.setConverter(new StringConverter<PlanningTO>() {
-
-			@Override
-			public String toString(PlanningTO object) {
-				if (object == null) {
-					return "";
-				}
-				return String.format("%s/%s", object.getMonthYear().getMonth(), object.getMonthYear().getYear());
-			}
-
-			@Override
-			public PlanningTO fromString(String string) {
-				return new PlanningTO();
-			}
-		});
-		final StringConverter<AccountTO> accStrConverter = new AccountStringConverter();
-
+		monthYearCombo.setConverter(buildPlanStrConverter());
 		// Tratamento a entrada de teclado
-		accPlanTree.setOnKeyPressed(new EventHandler<KeyEvent>() {
-
-			@Override
-			public void handle(KeyEvent evt) {
-				if (evt.getCode().equals(KeyCode.DELETE)) {
-					int result = Dialog.showQuestionDialog(null, "Confirma a exclusao do item?");
-					if (result >= 0) {
-//						presenter.deleteAccPlan(accPlanTree.getSelectionModel().getSelectedItem().getValue());
-					}
-				}
-			}
-		});
-		accPlanTree.setOnMouseClicked(new EventHandler<MouseEvent>() {
-
-			@Override
-			public void handle(MouseEvent evt) {
-				if (evt.getClickCount() == 3) {
-					if (accPlanTree.getSelectionModel().getSelectedItem().getChildren().isEmpty()) {
-//						presenter.editAccPlan(accPlanTree.getSelectionModel().getSelectedItem().getValue());
-					}
-				}
-			}
-		});
-
-		accountTColumn
-				.setCellValueFactory(new SimpleTVCellValueFactory<PlanningTO, AccountTO>("account", accStrConverter));
+		accPlanTree.setOnKeyPressed(buildKeyHandler());
+		accPlanTree.setOnMouseClicked(buildMouseHandler());
+		accountTColumn.setCellFactory(buildAccCellFactory());
 	}
 
 	@Inject
@@ -95,65 +64,107 @@ public class PlanningForm extends AnchorPane {
 		monthYearCombo.setOriginalItems(presenter.getPlannings());
 		monthYearCombo.valueProperty().bindBidirectional(presenter.selectedPlanningProp());
 
-		presenter.getAccPlannings().addListener(new ListChangeListener<PlanningTO>() {
+		// "Bind" entre o presenter#accPlannings e o TreeTableView
+		presenter.getAccPlannings().addListener(new ListChangeListener<AccountPlanningItem>() {
 
 			@Override
-			public void onChanged(Change<? extends PlanningTO> c) {
-				ObservableList<? extends PlanningTO> list = c.getList();
+			public void onChanged(Change<? extends AccountPlanningItem> c) {
+				ObservableList<? extends AccountPlanningItem> list = c.getList();
+				// TODO estou reconstruindo a arvore toda vez. talvez pudesso so' inserir ou
+				// alterar
 				// Transformar e preencher
-				TreeItem<PlanningTO> root = new TreeItem<PlanningTO>(new PlanningTO());
+				TreeItem<AccountPlanningItem> root = new TreeItem<AccountPlanningItem>(new AccountPlanningItem());
 				transform(list, root);
 				accPlanTree.setRoot(root);
 			}
 
-			private void retrieveParents(Long id, Map<Long, TreeItem<PlanningTO>> map) {
+			private void retrieveParents(Long id, Map<Long, TreeItem<AccountPlanningItem>> map) {
 				AccountTO retrieved = presenter.retrieveAccountById(id);
-				PlanningTO parentPlan = new PlanningTO();
-				// parentPlan.setAccount(retrieved);
-				map.put(retrieved.getAccountId(), new TreeItem<PlanningTO>(parentPlan));
+				AccountPlanningItem parentPlan = new AccountPlanningItem();
+				parentPlan.accountProperty().setValue(retrieved);
+				map.put(retrieved.getAccountId(), new TreeItem<AccountPlanningItem>(parentPlan));
 				if (retrieved.getParent() != null) {
 					retrieveParents(retrieved.getParent().getAccountId(), map);
 				}
 			}
 
-			private void transform(ObservableList<? extends PlanningTO> list, TreeItem<PlanningTO> root) {
+			private void transform(ObservableList<? extends AccountPlanningItem> list,
+					TreeItem<AccountPlanningItem> root) {
 				// 1. Criar TreeItem e guardar no map, por ID da Conta
-				Map<Long, TreeItem<PlanningTO>> map = new HashMap<>();
-				for (PlanningTO item : list) {
-					TreeItem<PlanningTO> treeItem = new TreeItem<>(item);
-					// map.put(item.getAccount().getAccountId(), treeItem);
-					// // 2. Preencher os pais
-					// if (item.getAccount().getParent() != null) {
-					// retrieveParents(item.getAccount().getParent().getAccountId(), map);
-					// }
+				final Map<Long, TreeItem<AccountPlanningItem>> map = new HashMap<>();
+				for (final AccountPlanningItem item : list) {
+					final TreeItem<AccountPlanningItem> treeItem = new TreeItem<>(item);
+					map.put(item.accountProperty().getValue().getAccountId(), treeItem);
+					// 2. Preencher os pais
+					if (item.accountProperty().getValue().getParent() != null) {
+						retrieveParents(item.accountProperty().getValue().getParent().getAccountId(), map);
+					}
 
 				}
 				// 2. Montar a hierarquia e guardar os roots
-				for (TreeItem<PlanningTO> item : map.values()) {
-					// if (item.getValue().getAccount().getParent() != null) {
-					// TreeItem<PlanningTO> parent =
-					// map.get(item.getValue().getAccount().getParent().getId());
-					// parent.getChildren().add(item);
-					// } else {
-					// root.getChildren().add(item);
-					// }
+				for (final TreeItem<AccountPlanningItem> item : map.values()) {
+					if (item.getValue().accountProperty().getValue().getParent() != null) {
+						final TreeItem<AccountPlanningItem> parent = map
+								.get(item.getValue().accountProperty().getValue().getParent().getAccountId());
+						parent.getChildren().add(item);
+					} else {
+						root.getChildren().add(item);
+					}
 				}
-				// 3. Totalizar
+				// 3. Preencher realizados
+				final Map<Long, BigDecimal> balanceMap = retrieveBalanceMap();
+				fillAccomplished(root, balanceMap);
+
+				// 4. Totalizar planejados
 				totalize(root);
 			}
 
-			private BigDecimal totalize(TreeItem<PlanningTO> root) {
-				if (root.getChildren().isEmpty()) {
+			private Map<Long, BigDecimal> retrieveBalanceMap() {
+				MonthYearTO monthYear = presenter.selectedPlanningProp().getValue().getMonthYear();
+				final LocalDate start = LocalDate.of(monthYear.getYear(), monthYear.getMonth(), 1);
+				final LocalDate end = LocalDate.of(monthYear.getYear(), monthYear.getMonth(), 1).plusMonths(1)
+						.minusDays(1);
+				final List<BalanceTO> balance = presenter.getBalService().retrieveBalance(start, end);
+				final Map<Long, BigDecimal> balanceMap = balance.stream()
+						.collect(Collectors.toMap(b -> b.getAccount().getAccountId(), BalanceTO::getBalance));
+				return balanceMap;
+			}
+
+			private BigDecimal fillAccomplished(final TreeItem<AccountPlanningItem> item, Map<Long, BigDecimal> map) {
+				if (item.getChildren().isEmpty()) {
 					// Caso analitico
-					// return root.getValue().getValue();
-					return null;
+					if (item.getValue().accountProperty().getValue() == null
+							|| !map.containsKey(item.getValue().accountProperty().getValue().getAccountId())) {
+						return BigDecimal.ZERO;
+					}
+					final BigDecimal balance = map.get(item.getValue().accountProperty().getValue().getAccountId());
+					item.getValue().accomplishedProperty().set(balance);
+					return balance;
 				} else {
 					// Caso sintetico
 					BigDecimal total = BigDecimal.ZERO;
-					for (TreeItem<PlanningTO> child : root.getChildren()) {
+					for (TreeItem<AccountPlanningItem> child : item.getChildren()) {
+						total = total.add(fillAccomplished(child, map));
+					}
+					item.getValue().accomplishedProperty().setValue(total.setScale(2));
+					return total;
+				}
+			}
+
+			private BigDecimal totalize(TreeItem<AccountPlanningItem> root) {
+				if (root.getChildren().isEmpty()) {
+					// Caso analitico
+					if (root.getValue().valueProperty().getValue() == null) {
+						return BigDecimal.ZERO;
+					}
+					return root.getValue().valueProperty().getValue();
+				} else {
+					// Caso sintetico
+					BigDecimal total = BigDecimal.ZERO;
+					for (TreeItem<AccountPlanningItem> child : root.getChildren()) {
 						total = total.add(totalize(child));
 					}
-					// root.getValue().setValue(total.setScale(2));
+					root.getValue().valueProperty().setValue(total.setScale(2));
 					return total;
 				}
 			}
@@ -190,4 +201,80 @@ public class PlanningForm extends AnchorPane {
 	public void save(ActionEvent evt) {
 		presenter.save();
 	}
+
+	private StringConverter<PlanningTO> buildPlanStrConverter() {
+		return new StringConverter<PlanningTO>() {
+
+			@Override
+			public String toString(PlanningTO object) {
+				if (object == null) {
+					return "";
+				}
+				return String.format("%s/%s", object.getMonthYear().getMonth(), object.getMonthYear().getYear());
+			}
+
+			@Override
+			public PlanningTO fromString(String string) {
+				return new PlanningTO();
+			}
+		};
+	}
+
+	private EventHandler<KeyEvent> buildKeyHandler() {
+		return new EventHandler<KeyEvent>() {
+
+			@Override
+			public void handle(KeyEvent evt) {
+				if (evt.getCode().equals(KeyCode.DELETE)) {
+					int result = Dialog.showQuestionDialog(null, "Confirma a exclusao do item?");
+					if (result >= 0) {
+						presenter.deleteAccPlan(accPlanTree.getSelectionModel().getSelectedItem().getValue());
+					}
+				}
+			}
+		};
+	}
+
+	private EventHandler<MouseEvent> buildMouseHandler() {
+		return new EventHandler<MouseEvent>() {
+
+			@Override
+			public void handle(MouseEvent evt) {
+				if (evt.getClickCount() == 3) {
+					if (accPlanTree.getSelectionModel().getSelectedItem().getChildren().isEmpty()) {
+						presenter.editAccPlan(accPlanTree.getSelectionModel().getSelectedItem().getValue());
+					}
+				}
+			}
+		};
+	}
+
+	private Callback<TreeTableColumn<AccountPlanningItem, AccountTO>, TreeTableCell<AccountPlanningItem, AccountTO>> buildAccCellFactory() {
+		return new Callback<TreeTableColumn<AccountPlanningItem, AccountTO>, TreeTableCell<AccountPlanningItem, AccountTO>>() {
+
+			@Override
+			public TreeTableCell<AccountPlanningItem, AccountTO> call(
+					TreeTableColumn<AccountPlanningItem, AccountTO> param) {
+				return new TreeTableCell<>() {
+
+					@Override
+					protected void updateItem(AccountTO item, boolean empty) {
+						if (item == getItem()) {
+							return;
+						}
+						super.updateItem(item, empty);
+						if (item == null) {
+							super.setText(null);
+							super.setGraphic(null);
+						} else {
+							super.setText(item.getName());
+							super.setGraphic(null);
+						}
+					}
+
+				};
+			}
+		};
+	}
+
 }

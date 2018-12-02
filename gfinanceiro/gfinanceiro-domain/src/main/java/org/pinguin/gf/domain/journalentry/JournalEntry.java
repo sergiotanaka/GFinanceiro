@@ -26,6 +26,7 @@ public class JournalEntry {
 	private Account creditAccount;
 	private BigDecimal value;
 	private LocalDateTime date;
+	private Boolean future = false;
 
 	private String description;
 
@@ -91,10 +92,19 @@ public class JournalEntry {
 		this.description = description;
 	}
 
+	public Boolean getFuture() {
+		return future;
+	}
+
+	public void setFuture(Boolean future) {
+		this.future = future;
+	}
+
 	@Override
 	public String toString() {
-		return "JournalEntry [id=" + entryId + ", debitAccount=" + debitAccount + ", creditAccount=" + creditAccount
-				+ ", value=" + value + ", date=" + date + ", description=" + description + "]";
+		return "JournalEntry [entryId=" + entryId + ", debitAccount=" + debitAccount + ", creditAccount="
+				+ creditAccount + ", value=" + value + ", date=" + date + ", future=" + future + ", description="
+				+ description + "]";
 	}
 
 }

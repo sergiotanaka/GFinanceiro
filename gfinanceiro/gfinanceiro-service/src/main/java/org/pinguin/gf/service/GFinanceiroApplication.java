@@ -35,10 +35,13 @@ public class GFinanceiroApplication {
 //			final EntityManager em = emf.createEntityManager();
 //
 //			em.getTransaction().begin();
-//			final Query qry1 = em.createNativeQuery("DROP TABLE IF EXISTS AccountPlanning CASCADE;");
+//			final Query qry1 = em.createNativeQuery("DROP TABLE IF EXISTS account_planning CASCADE;");
 //			qry1.executeUpdate();
 //			Query qry2 = em.createNativeQuery("DROP TABLE IF EXISTS Planning CASCADE;");
 //			qry2.executeUpdate();
+//			Query qry3 = em.createNativeQuery("DROP TABLE IF EXISTS planning_account_plannings CASCADE;");
+//			qry3.executeUpdate();
+//			
 //			em.getTransaction().commit();
 
 			final AccountRepository repo = ctx.getBean(AccountRepository.class);
