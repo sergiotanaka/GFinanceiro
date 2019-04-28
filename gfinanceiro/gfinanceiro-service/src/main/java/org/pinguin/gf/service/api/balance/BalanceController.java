@@ -47,11 +47,13 @@ public class BalanceController implements BalanceService {
 	@Override
 	@GetMapping(produces = MediaTypes.HAL_JSON_VALUE)
 	public List<BalanceTO> retrieveBalance(@RequestParam("start") @DateTimeFormat(iso = ISO.DATE) LocalDate start,
-			@RequestParam("end") @DateTimeFormat(iso = ISO.DATE) LocalDate end) {
+			@RequestParam("end") @DateTimeFormat(iso = ISO.DATE) LocalDate end,
+			@RequestParam("considerFuture") boolean considerFuture) {
 
 		Iterable<JournalEntry> retrieved = repo
 				.findAll((journalEntry.date.after(start.atStartOfDay()).or(journalEntry.date.eq(start.atStartOfDay())))
-						.and(journalEntry.date.before(end.plusDays(1).atStartOfDay())));
+						.and(journalEntry.date.before(end.plusDays(1).atStartOfDay()))
+						.and(journalEntry.future.eq(considerFuture)));
 
 		final Map<Account, BalanceTO> balance = new HashMap<>();
 

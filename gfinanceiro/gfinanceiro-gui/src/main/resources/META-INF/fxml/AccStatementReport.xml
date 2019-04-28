@@ -84,6 +84,12 @@
 							<PropertyValueFactory property="balance" />
 						</cellValueFactory>
 					</TableColumn>
+					<TableColumn fx:id="futureColumn" text="Futuro"
+						prefWidth="50">
+						<cellValueFactory>
+							<PropertyValueFactory property="future" />
+						</cellValueFactory>
+					</TableColumn>
 				</columns>
 			</TableView>
 		</VBox>

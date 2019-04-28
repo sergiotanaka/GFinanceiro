@@ -12,9 +12,10 @@
 <?import jfxtras.scene.control.*?>
 <?import org.pinguin.gf.gui.control.*?>
 
-<fx:root type="javafx.scene.layout.AnchorPane" xmlns:fx="http://javafx.com/fxml"
-	AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-	AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+<fx:root type="javafx.scene.layout.AnchorPane"
+	xmlns:fx="http://javafx.com/fxml" AnchorPane.bottomAnchor="0.0"
+	AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+	AnchorPane.topAnchor="0.0">
 	<children>
 		<VBox spacing="10">
 			<padding>
@@ -28,13 +29,13 @@
 
 				<Label text="Origem:" GridPane.rowIndex="0"
 					GridPane.columnIndex="0" />
-				<AutoCompleteComboBox fx:id="creditCombo" GridPane.rowIndex="0"
-					GridPane.columnIndex="1" />
+				<AutoCompleteComboBox fx:id="creditCombo"
+					GridPane.rowIndex="0" GridPane.columnIndex="1" />
 
 				<Label text="Destino:" GridPane.rowIndex="1"
 					GridPane.columnIndex="0" />
-				<AutoCompleteComboBox fx:id="debitCombo" GridPane.rowIndex="1"
-					GridPane.columnIndex="1" />
+				<AutoCompleteComboBox fx:id="debitCombo"
+					GridPane.rowIndex="1" GridPane.columnIndex="1" />
 
 				<Label text="Valor:" GridPane.rowIndex="2"
 					GridPane.columnIndex="0" />
@@ -50,6 +51,9 @@
 					GridPane.columnIndex="0" />
 				<TextField fx:id="descriptionText" GridPane.rowIndex="4"
 					GridPane.columnIndex="1" />
+
+				<CheckBox fx:id="futureCheck" text="Futuro"
+					GridPane.rowIndex="5" GridPane.columnIndex="0" />
 			</GridPane>
 			<HBox spacing="10" alignment="CENTER_RIGHT">
 				<Button text="Salvar" onAction="#save" />

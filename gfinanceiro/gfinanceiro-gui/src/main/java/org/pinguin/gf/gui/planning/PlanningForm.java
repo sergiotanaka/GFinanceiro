@@ -2,15 +2,23 @@ package org.pinguin.gf.gui.planning;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.text.Format;
+import java.text.NumberFormat;
 import java.time.LocalDate;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import org.pinguin.gf.gui.accstatement.OpenAccStatementCommand;
+import org.pinguin.gf.gui.accstatement.OpenAccStatementParam;
 import org.pinguin.gf.gui.control.AutoCompleteComboBox;
+import org.pinguin.gf.gui.control.ProgressBarTreeTableCell;
 import org.pinguin.gf.service.api.account.AccountTO;
 import org.pinguin.gf.service.api.balance.BalanceTO;
 import org.pinguin.gf.service.api.planning.MonthYearTO;
@@ -23,10 +31,14 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -38,6 +50,8 @@ public class PlanningForm extends AnchorPane {
 
 	@Inject
 	private PlanningFormPresenter presenter;
+	@Inject
+	private OpenAccStatementCommand openAccStatement;
 
 	@FXML
 	private AutoCompleteComboBox<PlanningTO> monthYearCombo;
@@ -45,6 +59,8 @@ public class PlanningForm extends AnchorPane {
 	private TreeTableView<AccountPlanningItem> accPlanTree;
 	@FXML
 	private TreeTableColumn<AccountPlanningItem, AccountTO> accountTColumn;
+	@FXML
+	private TreeTableColumn<AccountPlanningItem, Double> percentTColumn;
 
 	/**
 	 * Construtor.
@@ -57,6 +73,7 @@ public class PlanningForm extends AnchorPane {
 		accPlanTree.setOnKeyPressed(buildKeyHandler());
 		accPlanTree.setOnMouseClicked(buildMouseHandler());
 		accountTColumn.setCellFactory(buildAccCellFactory());
+		percentTColumn.setCellFactory(ProgressBarTreeTableCell.forTreeTableColumn());
 	}
 
 	@Inject
@@ -124,7 +141,7 @@ public class PlanningForm extends AnchorPane {
 				final LocalDate start = LocalDate.of(monthYear.getYear(), monthYear.getMonth(), 1);
 				final LocalDate end = LocalDate.of(monthYear.getYear(), monthYear.getMonth(), 1).plusMonths(1)
 						.minusDays(1);
-				final List<BalanceTO> balance = presenter.getBalService().retrieveBalance(start, end);
+				final List<BalanceTO> balance = presenter.getBalService().retrieveBalance(start, end, false);
 				final Map<Long, BigDecimal> balanceMap = balance.stream()
 						.collect(Collectors.toMap(b -> b.getAccount().getAccountId(), BalanceTO::getBalance));
 				return balanceMap;
@@ -138,7 +155,7 @@ public class PlanningForm extends AnchorPane {
 						return BigDecimal.ZERO;
 					}
 					final BigDecimal balance = map.get(item.getValue().accountProperty().getValue().getAccountId());
-					item.getValue().accomplishedProperty().set(balance);
+					item.getValue().accomplishedProperty().setValue(balance);
 					return balance;
 				} else {
 					// Caso sintetico
@@ -170,6 +187,59 @@ public class PlanningForm extends AnchorPane {
 			}
 		});
 
+		final ContextMenu contextMenu = new ContextMenu();
+		final MenuItem copy = new MenuItem("Copiar para área de transferência");
+		copy.setOnAction(e -> {
+			StringBuilder sb = new StringBuilder();
+			appendItems(accPlanTree.getRoot(), "", sb);
+			final Clipboard clipboard = Clipboard.getSystemClipboard();
+			final ClipboardContent content = new ClipboardContent();
+			content.putString(sb.toString());
+			clipboard.setContent(content);
+		});
+		final MenuItem detail = new MenuItem("Abrir detalhes");
+		detail.setOnAction(e -> {
+			MonthYearTO monthYear = presenter.selectedPlanningProp().getValue().getMonthYear();
+			final Calendar ini = GregorianCalendar.getInstance();
+			ini.set(monthYear.getYear(), monthYear.getMonth().getValue() - 1, 1, 0, 0, 0);
+			Calendar end = (Calendar) ini.clone();
+			end.add(Calendar.MONTH, 1);
+			AccountPlanningItem selected = accPlanTree.getSelectionModel().getSelectedItem().getValue();
+			openAccStatement.apply(new OpenAccStatementParam(null, selected.accountProperty().getValue(), ini, end));
+		});
+
+		final MenuItem edit = new MenuItem("Editar");
+		edit.setOnAction(e -> {
+			if (accPlanTree.getSelectionModel().getSelectedItem().getChildren().isEmpty()) {
+				presenter.editAccPlan(accPlanTree.getSelectionModel().getSelectedItem().getValue());
+			}
+		});
+
+		contextMenu.getItems().addAll(edit, detail, copy);
+		accPlanTree.setContextMenu(contextMenu);
+	}
+
+	private void appendItems(final TreeItem<AccountPlanningItem> treeItem, final String prefix,
+			final StringBuilder sb) {
+		for (final TreeItem<AccountPlanningItem> item : treeItem.getChildren()) {
+			sb.append(prefix + item.getValue().accountProperty().getValue().getName()).append("\t");
+			sb.append(format(item.getValue().valueProperty().getValue())).append("\t");
+			sb.append(format(item.getValue().accomplishedProperty().getValue())).append("\t");
+			sb.append(format(item.getValue().percentProperty().getValue())).append("\n");
+			if (!item.getChildren().isEmpty()) {
+				appendItems(item, prefix + "  ", sb);
+			}
+		}
+	}
+
+	private String format(final BigDecimal number) {
+		Format format = NumberFormat.getNumberInstance(new Locale("pt", "BR"));
+		return format.format(number);
+	}
+
+	private String format(final Double number) {
+		Format format = NumberFormat.getNumberInstance(new Locale("pt", "BR"));
+		return format.format(number);
 	}
 
 	public PlanningFormPresenter getPresenter() {

@@ -1,5 +1,7 @@
 package org.pinguin.gf.gui.journalentry;
 
+import static org.pinguin.gf.gui.control.AutoCompleteCBCellFactory.forTableColumn;
+
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -76,8 +78,7 @@ public class JournalEntryListForm extends AnchorPane {
 
 		originColumn.setCellFactory(
 				ComboBoxTableCell.forTableColumn(AccountStringConverter.instance(), presenter.getAccounts()));
-		accountColumn.setCellFactory(
-				ComboBoxTableCell.forTableColumn(AccountStringConverter.instance(), presenter.getAccounts()));
+		accountColumn.setCellFactory(forTableColumn(AccountStringConverter.instance(), presenter.getAccounts()));
 		descriptionColumn.setCellFactory(TextFieldTableCell.forTableColumn());
 	}
 
@@ -94,6 +95,11 @@ public class JournalEntryListForm extends AnchorPane {
 	@FXML
 	public void cancel(ActionEvent evt) {
 		presenter.cancel();
+	}
+	
+	@FXML
+	public void clean(ActionEvent evt) {
+		presenter.clean();
 	}
 
 	private void loadFxml() {

@@ -52,7 +52,7 @@ public class BalancePresenter {
 
 	public void retrieve() {
 		final List<BalanceTO> result = service.retrieveBalance(map(startDateProperty.getValue()),
-				map(endDateProperty.getValue()));
+				map(endDateProperty.getValue()), false);
 		balanceList.clear();
 		balanceList.addAll(result);
 	}

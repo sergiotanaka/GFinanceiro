@@ -5,6 +5,6 @@ import java.util.List;
 
 public interface BalanceService {
 
-	List<BalanceTO> retrieveBalance(LocalDate start, LocalDate end);
+	List<BalanceTO> retrieveBalance(LocalDate start, LocalDate end, boolean considerFuture);
 
 }

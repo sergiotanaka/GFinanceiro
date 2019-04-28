@@ -69,6 +69,13 @@
 								property="accomplished" />
 						</cellValueFactory>
 					</TreeTableColumn>
+					<TreeTableColumn fx:id="percentTColumn"
+						text="Percentual">
+						<cellValueFactory>
+							<TreeItemPropertyValueFactory
+								property="percent" />
+						</cellValueFactory>
+					</TreeTableColumn>
 				</columns>
 			</TreeTableView>
 		</VBox>

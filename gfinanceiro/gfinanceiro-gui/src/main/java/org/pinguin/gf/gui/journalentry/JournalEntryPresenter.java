@@ -19,6 +19,7 @@ import org.pinguin.gui.util.PropertyAdapter;
 import org.pinguin.gui.util.ValueConverter;
 
 import javafx.beans.property.Property;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -36,6 +37,7 @@ public class JournalEntryPresenter {
 	private final Property<String> valueProperty = new SimpleObjectProperty<>("");
 	private final Property<Calendar> dateProperty = new SimpleObjectProperty<>(GregorianCalendar.getInstance());
 	private final Property<String> descriptionProperty = new SimpleObjectProperty<>("");
+	private final Property<Boolean> futureProperty = new SimpleBooleanProperty(false);
 
 	private EditMode editMode = EditMode.CREATE;
 	private JournalEntryTO to;
@@ -71,6 +73,10 @@ public class JournalEntryPresenter {
 
 	public Property<String> descriptionProperty() {
 		return descriptionProperty;
+	}
+	
+	public Property<Boolean> futureProperty() {
+		return futureProperty;
 	}
 
 	public JournalEntryTO getTo() {
@@ -148,6 +154,7 @@ public class JournalEntryPresenter {
 				}));
 		bindHelper.bind("date", adapter);
 		bindHelper.bind("description", descriptionProperty);
+		bindHelper.bind("future", futureProperty);
 	}
 
 	public void save() {

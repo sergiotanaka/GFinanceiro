@@ -1,12 +1,14 @@
 package org.pinguin.gf.gui.planning;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import org.pinguin.gf.service.api.account.AccountTO;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 
 /**
  * 
@@ -17,6 +19,20 @@ public class AccountPlanningItem {
 	private final ObjectProperty<AccountTO> accountProperty = new SimpleObjectProperty<>();
 	private final ObjectProperty<BigDecimal> valueProperty = new SimpleObjectProperty<>(BigDecimal.ZERO);
 	private final ObjectProperty<BigDecimal> accomplishedProperty = new SimpleObjectProperty<>(BigDecimal.ZERO);
+	private final ObjectProperty<Double> percentProperty = new SimpleObjectProperty<>(0d);
+
+	public AccountPlanningItem() {
+		final ChangeListener<? super BigDecimal> listener = (r, o, n) -> {
+			if (!valueProperty.get().equals(BigDecimal.ZERO)) {
+				percentProperty.set(
+						accomplishedProperty.get().divide(valueProperty.get(), 2, RoundingMode.HALF_UP).doubleValue());
+			}
+		};
+
+		valueProperty.addListener(listener);
+		accomplishedProperty.addListener(listener);
+
+	}
 
 	public Property<Long> accPlanIdProperty() {
 		return accPlanIdProperty;
@@ -30,8 +46,11 @@ public class AccountPlanningItem {
 		return valueProperty;
 	}
 
-	public ObjectProperty<BigDecimal> accomplishedProperty() {
+	public Property<BigDecimal> accomplishedProperty() {
 		return accomplishedProperty;
 	}
 
+	public Property<Double> percentProperty() {
+		return percentProperty;
+	}
 }

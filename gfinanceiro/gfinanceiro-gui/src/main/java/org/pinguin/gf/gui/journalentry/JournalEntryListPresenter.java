@@ -153,6 +153,7 @@ public class JournalEntryListPresenter {
 			to.setValue(item.valueProperty().get());
 			to.setDate(item.dateProperty().get());
 			to.setDescription(item.descriptionProperty().get());
+			to.setFuture(false);
 			journalEntryService.createEntry(to);
 		}
 	}
@@ -163,7 +164,7 @@ public class JournalEntryListPresenter {
 	}
 
 	private Calendar map(final LocalDate localDate) {
-		Calendar calendar = Calendar.getInstance();
+		final Calendar calendar = Calendar.getInstance();
 		calendar.clear();
 		calendar.set(localDate.getYear(), localDate.getMonthValue() - 1, localDate.getDayOfMonth(), 0, 0, 0);
 		return calendar;
@@ -194,5 +195,9 @@ public class JournalEntryListPresenter {
 
 	private BigDecimal parseValue(final String valueStr) {
 		return (BigDecimal) nf.parse(valueStr, new ParsePosition(0));
+	}
+
+	public void clean() {
+		entries.clear();
 	}
 }

@@ -23,9 +23,9 @@ public class BalanceServiceProxy implements BalanceService {
 	private RestTemplate restTemplate;
 
 	@Override
-	public List<BalanceTO> retrieveBalance(LocalDate start, LocalDate end) {
+	public List<BalanceTO> retrieveBalance(LocalDate start, LocalDate end, boolean considerFuture) {
 		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(balanceResourceUrl).queryParam("start", start)
-				.queryParam("end", end);
+				.queryParam("end", end).queryParam("considerFuture", considerFuture);
 		final ResponseEntity<List<BalanceTO>> response = restTemplate.exchange(builder.toUriString(), HttpMethod.GET,
 				null, balanceTypeRef);
 		return response.getBody();

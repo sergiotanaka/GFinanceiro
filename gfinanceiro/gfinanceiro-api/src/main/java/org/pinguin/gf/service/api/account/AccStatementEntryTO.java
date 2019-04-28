@@ -13,18 +13,20 @@ public class AccStatementEntryTO {
 	private BigDecimal value;
 	private String description;
 	private BigDecimal balance;
+	private Boolean future;
 
 	public AccStatementEntryTO() {
 	}
 
-	public AccStatementEntryTO(LocalDateTime date, AccountTO origin, AccountTO account, BigDecimal value, String description,
-			BigDecimal balance) {
+	public AccStatementEntryTO(LocalDateTime date, AccountTO origin, AccountTO account, BigDecimal value,
+			String description, BigDecimal balance, Boolean future) {
 		this.date = date;
 		this.origin = origin;
 		this.account = account;
 		this.value = value;
 		this.description = description;
 		this.balance = balance;
+		this.future = future;
 	}
 
 	public Long getId() {
@@ -81,6 +83,14 @@ public class AccStatementEntryTO {
 
 	public void setBalance(BigDecimal balance) {
 		this.balance = balance;
+	}
+
+	public Boolean getFuture() {
+		return future;
+	}
+
+	public void setFuture(Boolean future) {
+		this.future = future;
 	}
 
 	@Override

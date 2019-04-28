@@ -16,7 +16,9 @@
 	AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
 	AnchorPane.topAnchor="0.0">
 	<children>
-		<VBox spacing="10">
+		<VBox spacing="10" AnchorPane.bottomAnchor="0.0"
+			AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+			AnchorPane.topAnchor="0.0">
 			<padding>
 				<Insets top="10" right="10" bottom="10" left="10" />
 			</padding>
@@ -67,6 +69,7 @@
 			</TableView>
 			<HBox spacing="10" alignment="CENTER_RIGHT" VBox.vgrow="ALWAYS">
 				<Button text="Processar" onAction="#process" />
+				<Button text="Limpar" onAction="#clean" />
 				<Button text="Salvar" onAction="#save" />
 				<Button text="Cancelar" onAction="#cancel" />
 			</HBox>

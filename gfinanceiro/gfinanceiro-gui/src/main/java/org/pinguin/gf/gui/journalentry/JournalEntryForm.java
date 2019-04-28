@@ -14,6 +14,7 @@ import org.pinguin.gf.service.api.account.AccountTO;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.AnchorPane;
@@ -35,6 +36,8 @@ public class JournalEntryForm extends AnchorPane {
 	private CalendarTextField dateText;
 	@FXML
 	private TextField descriptionText;
+	@FXML
+	private CheckBox futureCheck;
 
 	@Inject
 	private JournalEntryPresenter presenter;
@@ -77,6 +80,7 @@ public class JournalEntryForm extends AnchorPane {
 		valueText.textProperty().bindBidirectional(presenter.valueProperty());
 		dateText.calendarProperty().bindBidirectional(presenter.dateProperty());
 		descriptionText.textProperty().bindBidirectional(presenter.descriptionProperty());
+		futureCheck.selectedProperty().bindBidirectional(presenter.futureProperty());
 	}
 
 	public JournalEntryPresenter getPresenter() {

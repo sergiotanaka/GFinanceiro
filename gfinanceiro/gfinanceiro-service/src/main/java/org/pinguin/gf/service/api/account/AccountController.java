@@ -203,6 +203,7 @@ public class AccountController implements AccountService {
 				}
 			}
 			entry.setDescription(item.getDescription());
+			entry.setFuture(item.getFuture());
 
 			// Calculo do saldo
 			balance = balance.add(entry.getValue());
