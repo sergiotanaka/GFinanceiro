@@ -1,5 +1,9 @@
 package org.pinguin.gf.gui.planning;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -17,6 +21,8 @@ import org.pinguin.gf.service.api.balance.BalanceService;
 import org.pinguin.gf.service.api.planning.AccountPlanningTO;
 import org.pinguin.gf.service.api.planning.PlanningService;
 import org.pinguin.gf.service.api.planning.PlanningTO;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.ResponseEntity;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
@@ -138,6 +144,28 @@ public class PlanningFormPresenter {
 	public void addAccPlan() {
 		if (addAccPlanCommand != null) {
 			addAccPlanCommand.apply(null);
+		}
+	}
+
+	public void report() {
+		final PlanningTO selected = selectedPlanningProp.getValue();
+		if (selected != null) {
+			try {
+				ResponseEntity<InputStreamResource> report = service.retrieveReport(selected.getPlanId());
+				InputStreamResource isr = report.getBody();
+
+				String userHome = System.getProperty("user.home");
+				File targetFile = new File(userHome + "/test.pdf");
+				OutputStream outStream = new FileOutputStream(targetFile);
+				byte[] buffer = new byte[8 * 1024];
+				int bytesRead;
+				final InputStream is = isr.getInputStream();
+				while ((bytesRead = is.read(buffer)) != -1) {
+					outStream.write(buffer, 0, bytesRead);
+				}
+			} catch (final Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 

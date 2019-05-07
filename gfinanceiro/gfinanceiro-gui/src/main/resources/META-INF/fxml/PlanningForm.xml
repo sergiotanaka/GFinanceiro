@@ -43,6 +43,8 @@
 					GridPane.columnIndex="5" />
 				<Button text="Salvar" onAction="#save" GridPane.rowIndex="0"
 					GridPane.columnIndex="6" />
+				<Button text="Relatório" onAction="#report" GridPane.rowIndex="0"
+					GridPane.columnIndex="7" />
 			</GridPane>
 			<TreeTableView fx:id="accPlanTree" VBox.vgrow="ALWAYS">
 				<columnResizePolicy>

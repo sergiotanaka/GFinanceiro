@@ -2,6 +2,7 @@ package org.pinguin.gf.service.api.planning;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -12,8 +13,12 @@ import org.pinguin.gf.domain.planning.Planning;
 import org.pinguin.gf.domain.planning.PlanningRepository;
 import org.pinguin.gf.service.infra.PlanningMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,6 +37,9 @@ public class PlanningController implements PlanningService {
 
 	@Autowired
 	private PlanningRepository repo;
+	@Autowired
+	private PdfReportGenerator reportGenerator;
+
 	private PlanningMapper mapper;
 
 	public PlanningController() {
@@ -101,6 +109,24 @@ public class PlanningController implements PlanningService {
 		}
 
 		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	@GetMapping(value = "/report/{id}", produces = MediaType.APPLICATION_PDF_VALUE)
+	public ResponseEntity<InputStreamResource> retrieveReport(@PathVariable("id") Long id) {
+
+		Optional<Planning> found = repo.findById(id);
+
+		if (found.isPresent()) {
+			final ByteArrayInputStream bis = reportGenerator.build(found.get());
+			final HttpHeaders headers = new HttpHeaders();
+			headers.add("Content-Disposition", "inline; filename=citiesreport.pdf");
+			return ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_PDF)
+					.body(new InputStreamResource(bis));
+		}
+
+		return (ResponseEntity<InputStreamResource>) ResponseEntity.noContent();
 	}
 
 }

@@ -204,6 +204,7 @@ public class PlanningForm extends AnchorPane {
 			ini.set(monthYear.getYear(), monthYear.getMonth().getValue() - 1, 1, 0, 0, 0);
 			Calendar end = (Calendar) ini.clone();
 			end.add(Calendar.MONTH, 1);
+			end.add(Calendar.SECOND, -1);
 			AccountPlanningItem selected = accPlanTree.getSelectionModel().getSelectedItem().getValue();
 			openAccStatement.apply(new OpenAccStatementParam(null, selected.accountProperty().getValue(), ini, end));
 		});
@@ -270,6 +271,11 @@ public class PlanningForm extends AnchorPane {
 	@FXML
 	public void save(ActionEvent evt) {
 		presenter.save();
+	}
+	
+	@FXML
+	public void report(ActionEvent evt) {
+		presenter.report();
 	}
 
 	private StringConverter<PlanningTO> buildPlanStrConverter() {
