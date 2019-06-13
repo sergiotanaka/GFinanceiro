@@ -44,4 +44,8 @@ public class AccountPlanning {
 		this.value = value;
 	}
 
+	@Override
+	public String toString() {
+		return "AccountPlanning [accPlanId=" + accPlanId + ", account=" + account + ", value=" + value + "]";
+	}
 }
