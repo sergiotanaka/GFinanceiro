@@ -19,14 +19,16 @@ public class AccountPlanningItem {
 	private final ObjectProperty<AccountTO> accountProperty = new SimpleObjectProperty<>();
 	private final ObjectProperty<BigDecimal> valueProperty = new SimpleObjectProperty<>(BigDecimal.ZERO);
 	private final ObjectProperty<BigDecimal> accomplishedProperty = new SimpleObjectProperty<>(BigDecimal.ZERO);
+	private final ObjectProperty<BigDecimal> balanceProperty = new SimpleObjectProperty<>(BigDecimal.ZERO);
 	private final ObjectProperty<Double> percentProperty = new SimpleObjectProperty<>(0d);
 
 	public AccountPlanningItem() {
 		final ChangeListener<? super BigDecimal> listener = (r, o, n) -> {
-			if (!valueProperty.get().equals(BigDecimal.ZERO)) {
+			if (!valueProperty.get().equals(BigDecimal.ZERO) && !accomplishedProperty.get().equals(BigDecimal.ZERO)) {
 				percentProperty.set(
 						accomplishedProperty.get().divide(valueProperty.get(), 2, RoundingMode.HALF_UP).doubleValue());
 			}
+			balanceProperty.set(valueProperty.get().subtract(accomplishedProperty.get()));
 		};
 
 		valueProperty.addListener(listener);
@@ -48,6 +50,10 @@ public class AccountPlanningItem {
 
 	public Property<BigDecimal> accomplishedProperty() {
 		return accomplishedProperty;
+	}
+
+	public Property<BigDecimal> balanceProperty() {
+		return balanceProperty;
 	}
 
 	public Property<Double> percentProperty() {

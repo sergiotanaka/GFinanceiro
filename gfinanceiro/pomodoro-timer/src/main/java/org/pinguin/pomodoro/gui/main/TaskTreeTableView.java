@@ -40,7 +40,7 @@ import javafx.util.Callback;
  */
 public class TaskTreeTableView extends TreeTableView<TaskRow> {
 
-	private static final DataFormat SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
+	private static final DataFormat SERIALIZED_MIME_TYPE = buildMimeType();
 
 	@Inject
 	private EntityManager em;
@@ -176,7 +176,7 @@ public class TaskTreeTableView extends TreeTableView<TaskRow> {
 						parent = sel.getParent();
 						newItem.getValue().getTask().setParentId(parent.getValue().getTask().getId());
 					} else {
-						this.getRoot();
+						parent = this.getRoot();
 					}
 					parent.getChildren().add(indexOfSel + 1, newItem);
 					em.persist(newTask);
@@ -299,6 +299,14 @@ public class TaskTreeTableView extends TreeTableView<TaskRow> {
 			result.addAll(getAllTaskTreeItems(ti));
 		});
 		return result;
+	}
+	
+	private static DataFormat buildMimeType() {
+		DataFormat mimeType = DataFormat.lookupMimeType("application/x-java-serialized-object");
+		if (mimeType == null) {
+			mimeType = new DataFormat("application/x-java-serialized-object");
+		}
+		return mimeType;
 	}
 
 }

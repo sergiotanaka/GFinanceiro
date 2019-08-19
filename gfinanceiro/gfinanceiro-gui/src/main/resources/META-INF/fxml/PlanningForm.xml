@@ -71,6 +71,12 @@
 								property="accomplished" />
 						</cellValueFactory>
 					</TreeTableColumn>
+					<TreeTableColumn text="Saldo">
+						<cellValueFactory>
+							<TreeItemPropertyValueFactory
+								property="balance" />
+						</cellValueFactory>
+					</TreeTableColumn>
 					<TreeTableColumn fx:id="percentTColumn"
 						text="Percentual">
 						<cellValueFactory>

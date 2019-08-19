@@ -3,6 +3,9 @@ package org.pinguin.pomodoro.gui.report;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -44,14 +47,14 @@ public class DailyReportPane extends BorderPane {
 	@Inject
 	private void init() {
 		try {
-			for (DailyReportItem item : reportService.retrieveDailyReport()) {
+			final List<DailyReportItem> report = reportService.retrieveDailyReport();
+			Collections.sort(report, (o1, o2) -> o1.getDate().compareTo(o2.getDate()));
+			for (final DailyReportItem item : report) {
 				final TreeItem<DailyReportRow> dayTreeItem = new TreeItem<DailyReportRow>(
 						new DailyReportRow(item.getDate(), "", null, null, item.getDuration()));
 				for (DailyReportItem taskItem : item.getSubItems()) {
-					final Task task = em.find(Task.class, taskItem.getTaskId());
 					final TreeItem<DailyReportRow> taskTreeItem = new TreeItem<DailyReportRow>(new DailyReportRow(null,
-							task != null ? task.getName() : "Tarefa excluída [" + taskItem.getTaskId() + "]", null,
-							null, taskItem.getDuration()));
+							resolveTaskName(taskItem.getTaskId()), null, null, taskItem.getDuration()));
 					for (DailyReportItem periodItem : taskItem.getSubItems()) {
 						taskTreeItem.getChildren().add(new TreeItem<DailyReportRow>(new DailyReportRow(null, null,
 								periodItem.getStart(), periodItem.getEnd(), periodItem.getDuration())));
@@ -65,6 +68,24 @@ public class DailyReportPane extends BorderPane {
 		} catch (Exception e) {
 			throw e;
 		}
+	}
+
+	private String parentPath(final Long parentTaskId) {
+		if (parentTaskId == null) {
+			return "";
+		}
+		final Task parent = em.find(Task.class, parentTaskId);
+		String path = parentPath(parent.getParentId());
+		return path.isEmpty() ? parent.getName() : path + "/" + parent.getName();
+	}
+
+	private String resolveTaskName(final Long taskId) {
+		final Task task = em.find(Task.class, taskId);
+		if (task == null) {
+			return "Tarefa excluída [" + taskId + "]";
+		}
+		final String path = parentPath(task.getParentId());
+		return path.isEmpty() ? task.getName() : path + "/" + task.getName();
 	}
 
 	@SuppressWarnings("unchecked")
