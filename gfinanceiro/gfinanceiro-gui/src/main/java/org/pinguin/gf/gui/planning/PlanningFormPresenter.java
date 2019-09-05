@@ -77,6 +77,7 @@ public class PlanningFormPresenter {
 			item.accPlanIdProperty().setValue(plan.getAccPlanId());
 			item.accountProperty().setValue(plan.getAccount());
 			item.valueProperty().setValue(plan.getValue());
+			item.commentProperty().setValue(plan.getComment());
 			result.add(item);
 		}
 
@@ -90,6 +91,7 @@ public class PlanningFormPresenter {
 			plan.setAccPlanId(item.accPlanIdProperty().getValue());
 			plan.setAccount(item.accountProperty().getValue());
 			plan.setValue(item.valueProperty().getValue());
+			plan.setComment(item.commentProperty().getValue());
 			result.add(plan);
 		}
 		return result;

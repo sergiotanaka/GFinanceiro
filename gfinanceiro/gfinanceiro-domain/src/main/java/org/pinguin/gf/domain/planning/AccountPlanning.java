@@ -19,6 +19,7 @@ public class AccountPlanning {
 	@OneToOne(fetch = FetchType.EAGER)
 	private Account account;
 	private BigDecimal value;
+	private String comment;
 
 	public Long getAccPlanId() {
 		return accPlanId;
@@ -44,8 +45,18 @@ public class AccountPlanning {
 		this.value = value;
 	}
 
+	public String getComment() {
+		return comment;
+	}
+
+	public void setComment(String comment) {
+		this.comment = comment;
+	}
+
 	@Override
 	public String toString() {
-		return "AccountPlanning [accPlanId=" + accPlanId + ", account=" + account + ", value=" + value + "]";
+		return "AccountPlanning [accPlanId=" + accPlanId + ", account=" + account + ", value=" + value + ", comment="
+				+ comment + "]";
 	}
+
 }

@@ -19,6 +19,7 @@ public class AccPlanningFormPresenter {
 	private final ObservableList<AccountTO> accounts = FXCollections.observableArrayList();
 	private final Property<AccountTO> accountProperty = new SimpleObjectProperty<>();
 	private final Property<String> valueProperty = new SimpleStringProperty();
+	private final Property<String> commentProperty = new SimpleStringProperty();
 
 	private EditMode editMode = EditMode.CREATE;
 
@@ -36,6 +37,10 @@ public class AccPlanningFormPresenter {
 
 	public Property<String> valueProperty() {
 		return valueProperty;
+	}
+
+	public Property<String> commentProperty() {
+		return commentProperty;
 	}
 
 	public EditMode getEditMode() {
@@ -89,6 +94,7 @@ public class AccPlanningFormPresenter {
 					}
 				});
 		valuePropertyAdapter.bindBidirectional(to.valueProperty());
+		commentProperty.bindBidirectional(to.commentProperty());
 	}
 
 	public void save() {

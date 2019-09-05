@@ -17,6 +17,7 @@ public class AccountPlanningItem {
 
 	private final ObjectProperty<Long> accPlanIdProperty = new SimpleObjectProperty<>();
 	private final ObjectProperty<AccountTO> accountProperty = new SimpleObjectProperty<>();
+	private final ObjectProperty<String> commentProperty = new SimpleObjectProperty<>();
 	private final ObjectProperty<BigDecimal> valueProperty = new SimpleObjectProperty<>(BigDecimal.ZERO);
 	private final ObjectProperty<BigDecimal> accomplishedProperty = new SimpleObjectProperty<>(BigDecimal.ZERO);
 	private final ObjectProperty<BigDecimal> balanceProperty = new SimpleObjectProperty<>(BigDecimal.ZERO);
@@ -33,7 +34,6 @@ public class AccountPlanningItem {
 
 		valueProperty.addListener(listener);
 		accomplishedProperty.addListener(listener);
-
 	}
 
 	public Property<Long> accPlanIdProperty() {
@@ -48,6 +48,10 @@ public class AccountPlanningItem {
 		return valueProperty;
 	}
 
+	public Property<String> commentProperty() {
+		return commentProperty;
+	}
+
 	public Property<BigDecimal> accomplishedProperty() {
 		return accomplishedProperty;
 	}
@@ -59,4 +63,14 @@ public class AccountPlanningItem {
 	public Property<Double> percentProperty() {
 		return percentProperty;
 	}
+
+	@Override
+	public String toString() {
+		return "AccountPlanningItem [accPlanIdProperty=" + accPlanIdProperty.getValue() + ", accountProperty="
+				+ accountProperty.getValue() + ", commentProperty=" + commentProperty.getValue() + ", valueProperty="
+				+ valueProperty.getValue() + ", accomplishedProperty=" + accomplishedProperty.getValue()
+				+ ", balanceProperty=" + balanceProperty.getValue() + ", percentProperty=" + percentProperty.getValue()
+				+ "]";
+	}
+
 }

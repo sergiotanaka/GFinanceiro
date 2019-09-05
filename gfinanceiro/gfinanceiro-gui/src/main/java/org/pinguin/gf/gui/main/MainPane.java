@@ -18,6 +18,7 @@ public class MainPane extends BorderPane {
 	private EventHandler<ActionEvent> onJournalEntryListHandler;
 	private EventHandler<ActionEvent> onClearEntriesHandler;
 	private EventHandler<ActionEvent> onCashFlowHandler;
+	private EventHandler<ActionEvent> onCalendarHandler;
 
 	public MainPane() {
 		loadFxml();
@@ -151,6 +152,13 @@ public class MainPane extends BorderPane {
 	public void onCashFlow(ActionEvent event) {
 		if (onCashFlowHandler != null) {
 			onCashFlowHandler.handle(event);
+		}
+	}
+	
+	@FXML
+	public void onCalendar(ActionEvent event) {
+		if (onCalendarHandler != null) {
+			onCalendarHandler.handle(event);
 		}
 	}
 }

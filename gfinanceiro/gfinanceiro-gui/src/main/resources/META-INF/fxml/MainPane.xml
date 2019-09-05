@@ -24,6 +24,7 @@
 						<MenuItem text="Consultar resumo" onAction="#onListBalance" />
 						<MenuItem text="Planejamento" onAction="#onPlanning" />
 						<MenuItem text="Fluxo de Caixa" onAction="#onCashFlow" />
+						<MenuItem text="Calendário" onAction="#onCalendar" />
 					</items>
 				</Menu>
 				<Menu text="Cadastro">

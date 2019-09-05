@@ -11,6 +11,7 @@ import org.pinguin.gf.service.api.account.AccountTO;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 
@@ -23,6 +24,8 @@ public class AccPlanningForm extends AnchorPane {
 	private AutoCompleteComboBox<AccountTO> accountCombo;
 	@FXML
 	private TextField valueText;
+	@FXML
+	private TextArea commentText;
 
 	public AccPlanningForm() {
 		loadFxml();
@@ -34,6 +37,7 @@ public class AccPlanningForm extends AnchorPane {
 		accountCombo.setOriginalItems(presenter.getAccounts());
 		accountCombo.valueProperty().bindBidirectional(presenter.accountProperty());
 		valueText.textProperty().bindBidirectional(presenter.valueProperty());
+		commentText.textProperty().bindBidirectional(presenter.commentProperty());
 	}
 
 	private void loadFxml() {

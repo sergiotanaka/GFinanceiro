@@ -8,6 +8,7 @@ public class AccountPlanningTO {
 	private Long accPlanId;
 	private AccountTO account;
 	private BigDecimal value;
+	private String comment;
 
 	public Long getAccPlanId() {
 		return accPlanId;
@@ -32,5 +33,21 @@ public class AccountPlanningTO {
 	public void setValue(BigDecimal value) {
 		this.value = value;
 	}
+
+	public String getComment() {
+		return comment;
+	}
+
+	public void setComment(String comment) {
+		this.comment = comment;
+	}
+
+	@Override
+	public String toString() {
+		return "AccountPlanningTO [accPlanId=" + accPlanId + ", account=" + account + ", value=" + value + ", comment="
+				+ comment + "]";
+	}
+	
+	
 
 }
