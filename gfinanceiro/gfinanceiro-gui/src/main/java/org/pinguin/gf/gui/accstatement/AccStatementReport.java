@@ -2,10 +2,14 @@ package org.pinguin.gf.gui.accstatement;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.text.Format;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
+import java.util.Locale;
 
 import javax.inject.Inject;
 
@@ -22,9 +26,13 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -34,6 +42,8 @@ import javafx.util.StringConverter;
 import jfxtras.scene.control.CalendarTextField;
 
 public class AccStatementReport extends AnchorPane {
+
+	private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
 	@FXML
 	private AutoCompleteComboBox<AccountTO> accountCombo;
@@ -88,6 +98,40 @@ public class AccStatementReport extends AnchorPane {
 				}
 			}
 		});
+
+		final ContextMenu contextMenu = new ContextMenu();
+		final MenuItem copy = new MenuItem("Copiar para área de transferência");
+		copy.setOnAction(e -> {
+			StringBuilder sb = new StringBuilder();
+			appendItems(accStatementTView, "", sb);
+			final Clipboard clipboard = Clipboard.getSystemClipboard();
+			final ClipboardContent content = new ClipboardContent();
+			content.putString(sb.toString());
+			clipboard.setContent(content);
+		});
+		contextMenu.getItems().addAll(copy);
+		accStatementTView.setContextMenu(contextMenu);
+	}
+
+	private void appendItems(final TableView<AccStatementEntryTO> tableView, final String prefix,
+			final StringBuilder sb) {
+		for (AccStatementEntryTO item : tableView.getItems()) {
+			sb.append(format(item.getDate())).append("\t");
+			sb.append(item.getOrigin().getName()).append("\t");
+			sb.append(item.getAccount().getName()).append("\t");
+			sb.append(item.getDescription()).append("\t");
+			sb.append(format(item.getValue())).append("\t");
+			sb.append(format(item.getBalance())).append("\n");
+		}
+	}
+
+	private String format(final BigDecimal number) {
+		Format format = NumberFormat.getNumberInstance(new Locale("pt", "BR"));
+		return format.format(number);
+	}
+
+	private String format(final LocalDateTime dateTime) {
+		return formatter.format(dateTime);
 	}
 
 	public static class CalendarStrConverter extends StringConverter<Calendar> {

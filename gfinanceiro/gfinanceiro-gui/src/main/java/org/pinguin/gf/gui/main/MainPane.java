@@ -88,6 +88,14 @@ public class MainPane extends BorderPane {
 		this.onCashFlowHandler = onCashFlowHandler;
 	}
 
+	public EventHandler<ActionEvent> getOnCalendarHandler() {
+		return onCalendarHandler;
+	}
+
+	public void setOnCalendarHandler(EventHandler<ActionEvent> onCalendarHandler) {
+		this.onCalendarHandler = onCalendarHandler;
+	}
+
 	private void loadFxml() {
 		final FXMLLoader loader = new FXMLLoader(this.getClass().getResource("/META-INF/fxml/MainPane.xml"));
 		loader.setRoot(this);
@@ -154,7 +162,7 @@ public class MainPane extends BorderPane {
 			onCashFlowHandler.handle(event);
 		}
 	}
-	
+
 	@FXML
 	public void onCalendar(ActionEvent event) {
 		if (onCalendarHandler != null) {

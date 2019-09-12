@@ -3,6 +3,7 @@ package org.pinguin.gf.app;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.Month;
 import java.util.List;
 import java.util.function.Function;
@@ -29,10 +30,16 @@ import org.pinguin.gf.service.api.planning.PlanningTO;
 import org.pinguin.gui.util.Dialog;
 import org.pinguin.gui.util.EditMode;
 
+import com.calendarfx.model.Calendar;
+import com.calendarfx.model.Calendar.Style;
+import com.calendarfx.model.CalendarSource;
+import com.calendarfx.model.Entry;
+import com.calendarfx.view.CalendarView;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
@@ -128,10 +135,10 @@ public class MainApp extends Application {
 					accPlanForm.getPresenter().setEditMode(EditMode.UPDATE);
 				}
 				accPlanForm.getPresenter().setOnSaveCommand((param) -> {
-//					List<AccountPlanningTO> aux = new ArrayList<>();
-//					aux.addAll(form.getPresenter().getAccPlannings());
-//					form.getPresenter().getAccPlannings().clear();
-//					form.getPresenter().getAccPlannings().addAll(aux);
+					// List<AccountPlanningTO> aux = new ArrayList<>();
+					// aux.addAll(form.getPresenter().getAccPlannings());
+					// form.getPresenter().getAccPlannings().clear();
+					// form.getPresenter().getAccPlannings().addAll(aux);
 					if (accPlanForm.getPresenter().getEditMode().equals(EditMode.CREATE)) {
 						form.getPresenter().getAccPlannings().add(accPlanForm.getPresenter().getTo());
 					}
@@ -190,6 +197,62 @@ public class MainApp extends Application {
 			repStage.initOwner(stage);
 			repStage.centerOnScreen();
 			repStage.show();
+		});
+		
+		mainPane.setOnCalendarHandler(e -> {
+			CalendarView calendarView = new CalendarView();
+
+			Calendar birthdays = new Calendar("Birthdays");
+			Calendar holidays = new Calendar("Holidays");
+			Calendar financas = new Calendar("Financas");
+
+			birthdays.setStyle(Style.STYLE1);
+			holidays.setStyle(Style.STYLE2);
+			holidays.setStyle(Style.STYLE3);
+			
+			Entry<String> entry = new Entry<>();
+			entry.setCalendar(financas);
+			entry.setTitle("Abcd");
+			
+			CalendarSource myCalendarSource = new CalendarSource("My Calendars");
+			myCalendarSource.getCalendars().addAll(birthdays, holidays, financas);
+
+			calendarView.getCalendarSources().addAll(myCalendarSource);
+
+			calendarView.setRequestedTime(LocalTime.now());
+
+			Thread updateTimeThread = new Thread("Calendar: Update Time Thread") {
+				@Override
+				public void run() {
+					while (true) {
+						Platform.runLater(() -> {
+							calendarView.setToday(LocalDate.now());
+							calendarView.setTime(LocalTime.now());
+						});
+
+						try {
+							// update every 10 seconds
+							sleep(10000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+
+					}
+				};
+			};
+
+			updateTimeThread.setPriority(Thread.MIN_PRIORITY);
+			updateTimeThread.setDaemon(true);
+			updateTimeThread.start();
+
+			Stage calStage = new Stage();
+			Scene scene = new Scene(calendarView);
+			calStage.setTitle("Calendar");
+			calStage.setScene(scene);
+			calStage.setWidth(1300);
+			calStage.setHeight(1000);
+			calStage.centerOnScreen();
+			calStage.show();
 		});
 
 		stage.setScene(new Scene(mainPane));

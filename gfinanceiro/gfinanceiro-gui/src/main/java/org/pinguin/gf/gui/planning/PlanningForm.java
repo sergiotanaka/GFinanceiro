@@ -191,7 +191,7 @@ public class PlanningForm extends AnchorPane {
 		final MenuItem copy = new MenuItem("Copiar para área de transferência");
 		copy.setOnAction(e -> {
 			StringBuilder sb = new StringBuilder();
-			appendItems(accPlanTree.getRoot(), "", sb);
+			appendItems(accPlanTree.getRoot(), "\u2514", sb);
 			final Clipboard clipboard = Clipboard.getSystemClipboard();
 			final ClipboardContent content = new ClipboardContent();
 			content.putString(sb.toString());
@@ -226,9 +226,10 @@ public class PlanningForm extends AnchorPane {
 			sb.append(prefix + item.getValue().accountProperty().getValue().getName()).append("\t");
 			sb.append(format(item.getValue().valueProperty().getValue())).append("\t");
 			sb.append(format(item.getValue().accomplishedProperty().getValue())).append("\t");
+			sb.append(format(item.getValue().balanceProperty().getValue())).append("\t");
 			sb.append(format(item.getValue().percentProperty().getValue())).append("\n");
 			if (!item.getChildren().isEmpty()) {
-				appendItems(item, prefix + "  ", sb);
+				appendItems(item, prefix + "\u2500\u2500", sb);
 			}
 		}
 	}
@@ -272,7 +273,7 @@ public class PlanningForm extends AnchorPane {
 	public void save(ActionEvent evt) {
 		presenter.save();
 	}
-	
+
 	@FXML
 	public void report(ActionEvent evt) {
 		presenter.report();

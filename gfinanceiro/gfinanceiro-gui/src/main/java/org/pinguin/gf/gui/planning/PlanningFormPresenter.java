@@ -158,6 +158,7 @@ public class PlanningFormPresenter {
 
 				String userHome = System.getProperty("user.home");
 				File targetFile = new File(userHome + "/test.pdf");
+				@SuppressWarnings("resource")
 				OutputStream outStream = new FileOutputStream(targetFile);
 				byte[] buffer = new byte[8 * 1024];
 				int bytesRead;
