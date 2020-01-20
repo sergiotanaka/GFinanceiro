@@ -167,9 +167,11 @@ public class TaskTreeTableView extends TreeTableView<TaskRow> {
 					sel.getChildren().add(newItem);
 					em.persist(newTask);
 					this.getSelectionModel().select(newItem);
+					this.edit(this.getSelectionModel().getSelectedIndex(), nameColumn);
 				} else if (ins.match(e)) {
+					// Deslocar os proximos
 					final Task newTask = new Task();
-					newTask.setIndex(taskRepo.getNextIndex());
+
 					final TreeItem<TaskRow> newItem = new TreeItem<TaskRow>(buildTaskRow(newTask));
 					TreeItem<TaskRow> parent = null;
 					if (sel != null) {
@@ -179,15 +181,34 @@ public class TaskTreeTableView extends TreeTableView<TaskRow> {
 						parent = this.getRoot();
 					}
 					parent.getChildren().add(indexOfSel + 1, newItem);
-					em.persist(newTask);
+					// Deslocando os indices
+					shift(indexOfSel, parent.getChildren());
 					this.getSelectionModel().select(newItem);
+					this.edit(this.getSelectionModel().getSelectedIndex(), nameColumn);
 				} else if (del.match(e) && sel != null) {
 					// TODO fazer cascata?
-					sel.getParent().getChildren().remove(sel);
-					em.remove(sel.getValue().getTask());
+					if (this.getEditingCell() == null) {
+						sel.getParent().getChildren().remove(sel);
+						em.remove(sel.getValue().getTask());
+					}
 				}
 			}
 		});
+	}
+
+	private void shift(final int indexOfSel, final ObservableList<TreeItem<TaskRow>> list) {
+		// Deslocando os indices
+		for (int i = indexOfSel + 1; i < list.size() - 1; i++) {
+			final Task task = list.get(i).getValue().getTask();
+			final Task nextTask = list.get(i + 1).getValue().getTask();
+			task.setIndex(nextTask.getIndex());
+			em.persist(task);
+		}
+		// Ultima task
+		final Task last = list.get(list.size() - 1).getValue().getTask();
+		last.setIndex(taskRepo.getNextIndex());
+		em.persist(last);
+
 	}
 
 	private TaskRow buildTaskRow(final Task task) {
@@ -300,7 +321,7 @@ public class TaskTreeTableView extends TreeTableView<TaskRow> {
 		});
 		return result;
 	}
-	
+
 	private static DataFormat buildMimeType() {
 		DataFormat mimeType = DataFormat.lookupMimeType("application/x-java-serialized-object");
 		if (mimeType == null) {

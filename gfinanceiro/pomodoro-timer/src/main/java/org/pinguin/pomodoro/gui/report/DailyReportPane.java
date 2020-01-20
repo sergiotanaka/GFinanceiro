@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -59,7 +58,6 @@ public class DailyReportPane extends BorderPane {
 						taskTreeItem.getChildren().add(new TreeItem<DailyReportRow>(new DailyReportRow(null, null,
 								periodItem.getStart(), periodItem.getEnd(), periodItem.getDuration())));
 					}
-
 					dayTreeItem.getChildren().add(taskTreeItem);
 				}
 
@@ -75,6 +73,9 @@ public class DailyReportPane extends BorderPane {
 			return "";
 		}
 		final Task parent = em.find(Task.class, parentTaskId);
+		if (parent == null) {
+			return "";
+		}
 		String path = parentPath(parent.getParentId());
 		return path.isEmpty() ? parent.getName() : path + "/" + parent.getName();
 	}
