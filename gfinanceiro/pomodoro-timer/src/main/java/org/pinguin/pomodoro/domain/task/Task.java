@@ -14,6 +14,7 @@ public class Task {
 	private String name;
 	private TaskState state = TaskState.STOPPED;
 	private Long parentId;
+	private String description;
 
 	public Task(String name, TaskState state) {
 		this.name = name;
@@ -68,9 +69,17 @@ public class Task {
 		this.parentId = parentId;
 	}
 
-	@Override
-	public String toString() {
-		return "Task [id=" + id + ", index=" + index + ", name=" + name + ", state=" + state + "]";
+	public String getDescription() {
+		return description;
 	}
 
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	@Override
+	public String toString() {
+		return "Task [id=" + id + ", index=" + index + ", name=" + name + ", state=" + state + ", parentId=" + parentId
+				+ ", description=" + description + "]";
+	}
 }

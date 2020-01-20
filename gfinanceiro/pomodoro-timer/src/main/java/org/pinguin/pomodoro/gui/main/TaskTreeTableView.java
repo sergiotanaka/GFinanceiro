@@ -10,12 +10,18 @@ import org.pinguin.pomodoro.domain.task.Task;
 import org.pinguin.pomodoro.domain.task.TaskRepository;
 import org.pinguin.pomodoro.domain.task.TaskState;
 import org.pinguin.pomodoro.domain.taskstatetransition.TaskStateTransition;
+import org.pinguin.pomodoro.gui.description.DescriptionPane;
+
+import com.google.inject.Injector;
 
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.ObservableList;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
@@ -24,6 +30,7 @@ import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.ComboBoxTreeTableCell;
 import javafx.scene.control.cell.TextFieldTreeTableCell;
 import javafx.scene.control.cell.TreeItemPropertyValueFactory;
+import javafx.scene.image.Image;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.Dragboard;
@@ -33,6 +40,7 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
+import javafx.stage.Stage;
 import javafx.util.Callback;
 
 /**
@@ -42,6 +50,8 @@ public class TaskTreeTableView extends TreeTableView<TaskRow> {
 
 	private static final DataFormat SERIALIZED_MIME_TYPE = buildMimeType();
 
+	@Inject
+	private Injector injector;
 	@Inject
 	private EntityManager em;
 	@Inject
@@ -97,8 +107,10 @@ public class TaskTreeTableView extends TreeTableView<TaskRow> {
 								taskRow.stateProperty().set(TaskState.STOPPED);
 							}
 						});
-						finishBtn.setOnAction(e -> this.getTreeTableRow().getTreeItem().getValue().stateProperty()
-								.set(TaskState.DONE));
+						finishBtn.setOnAction(e -> {
+							doneChilds(this.getTreeTableRow().getTreeItem());
+							this.getTreeTableRow().getTreeItem().getValue().stateProperty().set(TaskState.DONE);
+						});
 					}
 
 					@Override
@@ -127,7 +139,6 @@ public class TaskTreeTableView extends TreeTableView<TaskRow> {
 		actionColumn.setCellFactory(actionColCellFactory);
 
 		this.getColumns().add(nameColumn);
-		// this.getColumns().add(stateColumn);
 		this.getColumns().add(actionColumn);
 
 		final KeyCodeCombination ctrlUp = new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN);
@@ -186,14 +197,56 @@ public class TaskTreeTableView extends TreeTableView<TaskRow> {
 					this.getSelectionModel().select(newItem);
 					this.edit(this.getSelectionModel().getSelectedIndex(), nameColumn);
 				} else if (del.match(e) && sel != null) {
-					// TODO fazer cascata?
 					if (this.getEditingCell() == null) {
+						// Fazer cascata?
+						removeChilds(sel);
 						sel.getParent().getChildren().remove(sel);
 						em.remove(sel.getValue().getTask());
 					}
 				}
 			}
 		});
+
+		// create a menu
+		final ContextMenu contextMenu = new ContextMenu();
+		final MenuItem descrItem = new MenuItem("Descrição");
+		descrItem.setOnAction(e -> {
+
+			final TreeItem<TaskRow> sel = this.getSelectionModel().getSelectedItem();
+			if (sel == null) {
+				return;
+			}
+
+			final Stage stage = new Stage();
+			stage.getIcons().add(new Image(MainPane.class.getResourceAsStream("/META-INF/256x256bb.jpg")));
+			final DescriptionPane pane = injector.getInstance(DescriptionPane.class);
+			pane.taskProperty().setValue(sel.getValue().getTask());
+			pane.setCloseAction(c -> stage.close());
+			stage.setScene(new Scene(pane));
+			stage.setTitle("Descrição");
+			stage.sizeToScene();
+			stage.toFront();
+			Platform.runLater(stage::centerOnScreen);
+			stage.show();
+		});
+		contextMenu.getItems().add(descrItem);
+		this.setContextMenu(contextMenu);
+
+	}
+
+	private void doneChilds(final TreeItem<TaskRow> ref) {
+		for (TreeItem<TaskRow> child : ref.getChildren()) {
+			doneChilds(child);
+			child.getValue().stateProperty().set(TaskState.DONE);
+		}
+	}
+
+	private void removeChilds(final TreeItem<TaskRow> ref) {
+		for (TreeItem<TaskRow> child : ref.getChildren()) {
+			removeChilds(child);
+			em.remove(child.getValue().getTask());
+		}
+		ref.getChildren().clear();
 	}
 
 	private void shift(final int indexOfSel, final ObservableList<TreeItem<TaskRow>> list) {
