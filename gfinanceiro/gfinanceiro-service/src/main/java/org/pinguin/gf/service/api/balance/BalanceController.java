@@ -21,7 +21,6 @@ import org.pinguin.gf.service.infra.AccountMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
-import org.springframework.hateoas.MediaTypes;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -45,7 +44,7 @@ public class BalanceController implements BalanceService {
 	 * @see org.pinguin.gf.service.api.balance.BalanceService#retrieveBalance()
 	 */
 	@Override
-	@GetMapping(produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping(produces = "application/hal+json")
 	public List<BalanceTO> retrieveBalance(@RequestParam("start") @DateTimeFormat(iso = ISO.DATE) LocalDate start,
 			@RequestParam("end") @DateTimeFormat(iso = ISO.DATE) LocalDate end,
 			@RequestParam("considerFuture") boolean considerFuture) {
@@ -76,12 +75,11 @@ public class BalanceController implements BalanceService {
 			balanceTO.setBalance(balanceTO.getBalance().setScale(2));
 			result.add(entry.getValue());
 		}
-		// TODO Adicionar resultado
 		// 1. Encontrar a despesa e a receita
-		BasicAccounts ba = basicAccRepo.getOne(1L);
+		final BasicAccounts ba = basicAccRepo.findById(1L).get();
 
-		Account income = ba.getIncome();
-		Account expense = ba.getExpense();
+		final Account income = ba.getIncome();
+		final Account expense = ba.getExpense();
 		BigDecimal incomeBalance = balance.containsKey(income) ? balance.get(income).getBalance() : BigDecimal.ZERO;
 		BigDecimal expenseBalance = balance.containsKey(expense) ? balance.get(expense).getBalance() : BigDecimal.ZERO;
 		BalanceTO balanceResult = new BalanceTO(new AccountTO("Resultado", AccountNatureTO.CREDIT));
@@ -96,6 +94,9 @@ public class BalanceController implements BalanceService {
 	private void sumToAccount(final Account acc, final BigDecimal credit, final BigDecimal debit,
 			final BigDecimal balance, final Map<Account, BalanceTO> balanceMap) {
 		try {
+			if (acc == null) {
+				return;
+			}
 
 			if (!balanceMap.containsKey(acc)) {
 				balanceMap.put(acc, new BalanceTO(accMapper.asTO(acc)));

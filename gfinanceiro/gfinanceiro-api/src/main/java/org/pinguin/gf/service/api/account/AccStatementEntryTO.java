@@ -3,6 +3,11 @@ package org.pinguin.gf.service.api.account;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
 public class AccStatementEntryTO {
 
 	/** Conta de debito / credito */
@@ -15,9 +20,6 @@ public class AccStatementEntryTO {
 	private BigDecimal balance;
 	private Boolean future;
 
-	public AccStatementEntryTO() {
-	}
-
 	public AccStatementEntryTO(LocalDateTime date, AccountTO origin, AccountTO account, BigDecimal value,
 			String description, BigDecimal balance, Boolean future) {
 		this.date = date;
@@ -28,75 +30,4 @@ public class AccStatementEntryTO {
 		this.balance = balance;
 		this.future = future;
 	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public LocalDateTime getDate() {
-		return date;
-	}
-
-	public void setDate(LocalDateTime date) {
-		this.date = date;
-	}
-
-	public AccountTO getOrigin() {
-		return origin;
-	}
-
-	public void setOrigin(AccountTO origin) {
-		this.origin = origin;
-	}
-
-	public AccountTO getAccount() {
-		return account;
-	}
-
-	public void setAccount(AccountTO account) {
-		this.account = account;
-	}
-
-	public BigDecimal getValue() {
-		return value;
-	}
-
-	public void setValue(BigDecimal value) {
-		this.value = value;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public BigDecimal getBalance() {
-		return balance;
-	}
-
-	public void setBalance(BigDecimal balance) {
-		this.balance = balance;
-	}
-
-	public Boolean getFuture() {
-		return future;
-	}
-
-	public void setFuture(Boolean future) {
-		this.future = future;
-	}
-
-	@Override
-	public String toString() {
-		return "AccStatementEntryTO [id=" + id + ", date=" + date + ", origin=" + origin + ", account=" + account
-				+ ", value=" + value + ", description=" + description + ", balance=" + balance + "]";
-	}
-
 }

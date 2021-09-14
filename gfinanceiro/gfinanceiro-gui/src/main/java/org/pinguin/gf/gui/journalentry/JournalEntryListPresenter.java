@@ -26,7 +26,9 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class JournalEntryListPresenter {
 
 	private final Locale locale = new Locale("pt", "BR");
@@ -112,6 +114,40 @@ public class JournalEntryListPresenter {
 		}
 	}
 
+	public void save() {
+		for (JournalEntryItem item : entries) {
+			JournalEntryTO to = new JournalEntryTO();
+			to.setEntryId(item.entryIdProperty().get());
+			to.setDebitAccount(item.debitAccountProperty().get());
+			to.setCreditAccount(item.creditAccountProperty().get());
+			to.setValue(item.valueProperty().get());
+			to.setDate(item.dateProperty().get());
+			to.setDescription(item.descriptionProperty().get());
+			to.setFuture(false);
+			if (journalEntryService.exists(to.getDate(), to.getValue(), to.getDescription())) {
+				log.warn("Entrada ja' existente: {}", to.toString());
+			} else {
+				journalEntryService.createEntry(to);
+			}
+		}
+	}
+
+	public void cancel() {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void clean() {
+		entries.clear();
+	}
+
+	public void reloadAccounts() {
+		getAccounts().clear();
+		getAccounts().addAll(accService.retrieveAnalytical());
+	}
+
+	// METODOS DE APOIO //
+
 	private JournalEntryItem mapCredit(String[] splitted) {
 		final JournalEntryItem entry = new JournalEntryItem();
 
@@ -142,25 +178,6 @@ public class JournalEntryListPresenter {
 			entry.valueProperty().set(parseValue(splitted[4].trim()));
 		}
 		return entry;
-	}
-
-	public void save() {
-		for (JournalEntryItem item : entries) {
-			JournalEntryTO to = new JournalEntryTO();
-			to.setEntryId(item.entryIdProperty().get());
-			to.setDebitAccount(item.debitAccountProperty().get());
-			to.setCreditAccount(item.creditAccountProperty().get());
-			to.setValue(item.valueProperty().get());
-			to.setDate(item.dateProperty().get());
-			to.setDescription(item.descriptionProperty().get());
-			to.setFuture(false);
-			journalEntryService.createEntry(to);
-		}
-	}
-
-	public void cancel() {
-		// TODO Auto-generated method stub
-
 	}
 
 	private Calendar map(final LocalDate localDate) {
@@ -195,9 +212,5 @@ public class JournalEntryListPresenter {
 
 	private BigDecimal parseValue(final String valueStr) {
 		return (BigDecimal) nf.parse(valueStr, new ParsePosition(0));
-	}
-
-	public void clean() {
-		entries.clear();
 	}
 }

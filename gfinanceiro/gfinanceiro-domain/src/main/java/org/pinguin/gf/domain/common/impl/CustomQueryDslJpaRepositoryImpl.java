@@ -36,6 +36,7 @@ public class CustomQueryDslJpaRepositoryImpl<T, ID extends Serializable> extends
 		this(entityInformation, entityManager, DEFAULT_ENTITY_PATH_RESOLVER);
 	}
 
+	@SuppressWarnings("deprecation")
 	public CustomQueryDslJpaRepositoryImpl(JpaEntityInformation<T, ID> entityInformation, EntityManager entityManager,
 			EntityPathResolver resolver) {
 		super(entityInformation, entityManager);
@@ -47,7 +48,9 @@ public class CustomQueryDslJpaRepositoryImpl<T, ID extends Serializable> extends
 	@Override
 	public Page<T> findAll(FactoryExpression<T> factoryExpression, Predicate predicate, Pageable pageable) {
 
+		@SuppressWarnings("deprecation")
 		final JPQLQuery<?> countQuery = createCountQuery(predicate);
+		@SuppressWarnings("deprecation")
 		final JPQLQuery<T> query = querydsl.applyPagination(pageable, createQuery(predicate).select(factoryExpression));
 
 		final long total = countQuery.fetchCount();

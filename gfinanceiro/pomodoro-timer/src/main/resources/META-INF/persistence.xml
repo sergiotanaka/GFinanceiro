@@ -16,7 +16,7 @@
 			<property name="hibernate.dialect"
 				value="org.hibernate.dialect.H2Dialect" />
 			<property name="hibernate.connection.url"
-				value="jdbc:h2:file:./testdb" />
+				value="jdbc:h2:file:./testdb;DB_CLOSE_ON_EXIT=TRUE" />
 			<property name="hibernate.connection.username" value="sa" />
 			<property name="hibernate.connection.password"
 				value="secret" />

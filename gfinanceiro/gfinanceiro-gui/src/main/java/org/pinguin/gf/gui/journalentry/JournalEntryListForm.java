@@ -101,10 +101,16 @@ public class JournalEntryListForm extends AnchorPane {
 	public void clean(ActionEvent evt) {
 		presenter.clean();
 	}
+	
+	@FXML
+	public void reloadAccounts(ActionEvent evt) {
+		presenter.reloadAccounts();
+	}
 
 	private void loadFxml() {
 		final FXMLLoader loader = new FXMLLoader(
 				this.getClass().getResource("/META-INF/fxml/JournalEntryListForm.xml"));
+		System.out.println("passou aqui");
 		loader.setRoot(this);
 		loader.setController(this);
 		try {

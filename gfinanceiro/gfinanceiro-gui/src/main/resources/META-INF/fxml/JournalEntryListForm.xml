@@ -68,6 +68,7 @@
 				</columns>
 			</TableView>
 			<HBox spacing="10" alignment="CENTER_RIGHT" VBox.vgrow="ALWAYS">
+				<Button text="Recarregar contas" onAction="#reloadAccounts" />
 				<Button text="Processar" onAction="#process" />
 				<Button text="Limpar" onAction="#clean" />
 				<Button text="Salvar" onAction="#save" />

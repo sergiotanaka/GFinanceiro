@@ -23,6 +23,8 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 
 public class JournalEntryPresenter {
 
@@ -74,7 +76,7 @@ public class JournalEntryPresenter {
 	public Property<String> descriptionProperty() {
 		return descriptionProperty;
 	}
-	
+
 	public Property<Boolean> futureProperty() {
 		return futureProperty;
 	}
@@ -159,8 +161,14 @@ public class JournalEntryPresenter {
 
 	public void save() {
 		if (editMode.equals(EditMode.CREATE)) {
-			service.createEntry(to);
-			clearForm();
+			try {
+				service.createEntry(to);
+				clearForm();
+			} catch (final Exception e) {
+				final Alert a = new Alert(AlertType.ERROR);
+				a.setContentText(e.getMessage());
+				a.show();
+			}
 		} else if (editMode.equals(EditMode.UPDATE)) {
 			service.updateEntry(to.getEntryId(), to);
 			closeWindowCommand.apply(null);

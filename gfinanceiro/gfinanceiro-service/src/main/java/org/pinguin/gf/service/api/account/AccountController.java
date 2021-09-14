@@ -3,7 +3,6 @@ package org.pinguin.gf.service.api.account;
 import static com.querydsl.jpa.JPAExpressions.select;
 import static org.pinguin.gf.domain.account.QAccount.account;
 import static org.pinguin.gf.domain.journalentry.QJournalEntry.journalEntry;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -32,7 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
-import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -76,14 +74,15 @@ public class AccountController implements AccountService {
 	 * gf.service.api.account.AccountTO)
 	 */
 	@Override
-	@PostMapping(produces = MediaTypes.HAL_JSON_VALUE)
+	@PostMapping(produces = "application/hal+json")
 	@ResponseStatus(HttpStatus.CREATED)
 	public AccountTO createAccount(@Valid @RequestBody AccountTO account) {
 
 		Account saved = repo.save(mapper.asEntity(account));
 
 		AccountTO response = mapper.asTO(saved);
-		response.add(linkTo(AccountController.class).slash(response.getAccountId()).withSelfRel());
+
+//		response.add(WebMvcLinkBuilder.linkTo(AccountController.class).slash(response.getAccountId()).withSelfRel());
 
 		return response;
 	}
@@ -96,14 +95,14 @@ public class AccountController implements AccountService {
 	 * Long, org.pinguin.gf.service.api.account.AccountTO)
 	 */
 	@Override
-	@PutMapping(value = "/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+	@PutMapping(value = "/{id}", produces = "application/hal+json")
 	public AccountTO updateAccount(@PathVariable("id") Long id, @Valid @RequestBody AccountTO account) {
 
 		account.setAccountId(id);
 		Account saved = repo.save(mapper.asEntity(account));
 
 		AccountTO response = mapper.asTO(saved);
-		response.add(linkTo(AccountController.class).slash(response.getAccountId()).withSelfRel());
+//		response.add(linkTo(AccountController.class).slash(response.getAccountId()).withSelfRel());
 
 		return response;
 	}
@@ -116,7 +115,7 @@ public class AccountController implements AccountService {
 	 * Long)
 	 */
 	@Override
-	@DeleteMapping(value = "/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+	@DeleteMapping(value = "/{id}", produces = "application/hal+json")
 	public AccountTO deleteAccount(@PathVariable("id") Long id) {
 
 		Optional<Account> found = repo.findById(id);
@@ -126,7 +125,7 @@ public class AccountController implements AccountService {
 
 		repo.delete(found.get());
 		AccountTO response = mapper.asTO(found.get());
-		response.add(linkTo(AccountController.class).slash(response.getAccountId()).withSelfRel());
+//		response.add(linkTo(AccountController.class).slash(response.getAccountId()).withSelfRel());
 		return response;
 	}
 
@@ -138,14 +137,14 @@ public class AccountController implements AccountService {
 	 * Long)
 	 */
 	@Override
-	@GetMapping(value = "/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping(value = "/{id}", produces = "application/hal+json")
 	public AccountTO retrieveById(@PathVariable("id") Long id) {
 		Optional<Account> found = repo.findById(id);
 		if (!found.isPresent()) {
 			return null;
 		}
 		AccountTO response = mapper.asTO(found.get());
-		response.add(linkTo(AccountController.class).slash(response.getAccountId()).withSelfRel());
+//		response.add(linkTo(AccountController.class).slash(response.getAccountId()).withSelfRel());
 		return response;
 	}
 
@@ -157,13 +156,13 @@ public class AccountController implements AccountService {
 	 * lang.Long)
 	 */
 	@Override
-	@GetMapping(value = "/{id}/statements", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping(value = "/{id}/statements", produces = "application/hal+json")
 	public List<AccStatementEntryTO> retrieveStatements(@PathVariable("id") Long id,
 			@RequestParam("start") @DateTimeFormat(iso = ISO.DATE) LocalDate start,
 			@RequestParam("end") @DateTimeFormat(iso = ISO.DATE) LocalDate end,
 			@RequestParam("periodBalance") boolean periodBalance) {
 
-		final Account root = repo.getOne(id);
+		final Account root = repo.findById(id).get();
 		final List<Account> accs = retrieveAnalyticalAccounts(root);
 
 		Iterable<JournalEntry> retrieved = null;
@@ -189,7 +188,8 @@ public class AccountController implements AccountService {
 			entry.setDate(item.getDate());
 			entry.setOrigin(mapper.asTO(item.getCreditAccount()));
 			entry.setAccount(mapper.asTO(item.getDebitAccount()));
-			if (accIds.contains(item.getCreditAccount().getAccountId())) {
+			if ((item.getCreditAccount() != null && accIds.contains(item.getCreditAccount().getAccountId()))
+					|| (item.getDebitAccount() != null && !accIds.contains(item.getDebitAccount().getAccountId()))) {
 				if (root.getNature().equals(AccountNature.DEBIT)) {
 					entry.setValue(safe(item.getValue()).multiply(BigDecimal.valueOf(-1.0)).setScale(2));
 				} else {
@@ -202,6 +202,7 @@ public class AccountController implements AccountService {
 					entry.setValue(safe(item.getValue()).multiply(BigDecimal.valueOf(-1.0)).setScale(2));
 				}
 			}
+
 			entry.setDescription(item.getDescription());
 			entry.setFuture(item.getFuture());
 
@@ -242,7 +243,7 @@ public class AccountController implements AccountService {
 	 * java.util.Optional)
 	 */
 	@Override
-	@GetMapping(produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping(produces = "application/hal+json")
 	public List<AccountTO> retrieveAll(@RequestParam(value = "filters", required = false) Optional<String> filters,
 			@RequestParam(value = "sort", required = false) Optional<String> sort,
 			@RequestParam(value = "page", required = false) Optional<String> page,
@@ -254,9 +255,9 @@ public class AccountController implements AccountService {
 		List<AccountTO> list = new ArrayList<>();
 		for (Account entity : repo.findAll(result.getPredicate(), result.getPageable())) {
 			AccountTO to = mapper.asTO(entity);
-			to.add(linkTo(AccountController.class).slash(to.getAccountId()).withSelfRel());
+//			to.add(linkTo(AccountController.class).slash(to.getAccountId()).withSelfRel());
 			if (to.getParent() != null) {
-				to.add(linkTo(AccountController.class).slash(to.getParent().getAccountId()).withRel("parent"));
+//				to.add(linkTo(AccountController.class).slash(to.getParent().getAccountId()).withRel("parent"));
 			}
 			to.setParent(null);
 			list.add(to);
@@ -270,15 +271,15 @@ public class AccountController implements AccountService {
 	 * @see org.pinguin.gf.service.api.account.AccountService#retrieveAnalSytical()
 	 */
 	@Override
-	@GetMapping(value = "/analytical", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping(value = "/analytical", produces = "application/hal+json")
 	public List<AccountTO> retrieveAnalytical() {
 		final List<AccountTO> list = new ArrayList<>();
 		for (final Account entity : repo.findAll(account.accountId
 				.notIn(select(account.parent.accountId).from(account).where(account.parent.accountId.isNotNull())))) {
 			final AccountTO to = mapper.asTO(entity);
-			to.add(linkTo(AccountController.class).slash(to.getAccountId()).withSelfRel());
+//			to.add(linkTo(AccountController.class).slash(to.getAccountId()).withSelfRel());
 			if (to.getParent() != null) {
-				to.add(linkTo(AccountController.class).slash(to.getParent().getAccountId()).withRel("parent"));
+//				to.add(linkTo(AccountController.class).slash(to.getParent().getAccountId()).withRel("parent"));
 			}
 			to.setParent(null);
 			list.add(to);
@@ -287,9 +288,9 @@ public class AccountController implements AccountService {
 	}
 
 	@Override
-	@GetMapping(value = "/income", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping(value = "/income", produces = "application/hal+json")
 	public List<AccountTO> retrieveIncomeAccounts() {
-		final BasicAccounts basicAccs = basicAccRepo.getOne(1L);
+		final BasicAccounts basicAccs = basicAccRepo.findById(1L).get();
 
 		final List<Account> accs = new ArrayList<>();
 		accs.addAll(retrieveAnalyticalAccounts(basicAccs.getIncome()));
@@ -303,9 +304,9 @@ public class AccountController implements AccountService {
 	}
 
 	@Override
-	@GetMapping(value = "/expenses", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping(value = "/expenses", produces = "application/hal+json")
 	public List<AccountTO> retrieveExpenseAccounts() {
-		final BasicAccounts basicAccs = basicAccRepo.getOne(1L);
+		final BasicAccounts basicAccs = basicAccRepo.findById(1L).get();
 
 		final List<Account> accs = new ArrayList<>();
 		accs.addAll(retrieveAnalyticalAccounts(basicAccs.getExpense()));
@@ -319,12 +320,12 @@ public class AccountController implements AccountService {
 	}
 
 	@Override
-	@GetMapping(value = "/{id}/cashflow", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping(value = "/{id}/cashflow", produces = "application/hal+json")
 	public List<DayResultTO> retrieveCashFlow(@PathVariable("id") Long id,
 			@RequestParam("start") @DateTimeFormat(iso = ISO.DATE) LocalDate start,
 			@RequestParam("end") @DateTimeFormat(iso = ISO.DATE) LocalDate end) {
 
-		final Account root = repo.getOne(id);
+		final Account root = repo.findById(id).get();
 		final List<Account> accs = retrieveAnalyticalAccounts(root);
 		final Set<Long> accIds = accs.stream().map(a -> a.getAccountId()).collect(Collectors.toSet());
 

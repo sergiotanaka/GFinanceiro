@@ -84,8 +84,8 @@ public class BalanceReport extends AnchorPane {
 				// 2. Montar a hierarquia e guardar os roots
 				for (TreeItem<BalanceTO> item : map.values()) {
 					if (item.getValue().getAccount().getParent() != null) {
-						@SuppressWarnings("unlikely-arg-type")
-						TreeItem<BalanceTO> parent = map.get(item.getValue().getAccount().getParent().getId());
+						TreeItem<BalanceTO> parent = map
+								.get(item.getValue().getAccount().getParent().getAccountId());
 						parent.getChildren().add(item);
 					} else {
 						root.getChildren().add(item);

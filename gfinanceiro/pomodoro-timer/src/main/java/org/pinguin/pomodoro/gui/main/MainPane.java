@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -28,17 +29,18 @@ import org.pinguin.pomodoro.domain.task.Task;
 import org.pinguin.pomodoro.domain.task.TaskRepository;
 import org.pinguin.pomodoro.domain.task.TaskState;
 import org.pinguin.pomodoro.domain.taskstatetransition.TaskStateTransition;
+import org.pinguin.pomodoro.domain.taskstatetransition.TaskStateTransitionRepository;
 import org.pinguin.pomodoro.domain.transition.Transition;
 import org.pinguin.pomodoro.gui.mini.MiniPane;
 import org.pinguin.pomodoro.gui.report.DailyReportPane;
 import org.pinguin.pomodoro.gui.report.ReportPane;
 import org.pinguin.pomodoro.gui.report.ReportRow;
 import org.pinguin.pomodoro.gui.timer.Timer.State;
+import org.pinguin.pomodoro.gui.util.Scroller;
+import org.pinguin.pomodoro.service.report.ReportService.Period;
 
 import com.google.inject.Injector;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -46,15 +48,13 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollBar;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.image.Image;
@@ -67,15 +67,11 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.RowConstraints;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import javafx.util.Duration;
 
 public class MainPane extends BorderPane {
 
+	@SuppressWarnings("unused")
 	private static final DataFormat SERIALIZED_MIME_TYPE = new DataFormat("application/x-java-serialized-object");
-
-	private Runnable callFocus;
-
-	private final DoubleProperty progressProp = new SimpleDoubleProperty(0);
 
 	@Inject
 	private Injector injector;
@@ -83,30 +79,38 @@ public class MainPane extends BorderPane {
 	private EntityManager em;
 	@Inject
 	private TaskRepository taskRepo;
+	@Inject
+	private TaskStateTransitionRepository taskStateTranstRepo;
 
-	private TreeTableView<TaskRow> taskTableView;
-	private final Label remainingLbl = new Label();
-	private final Button pauseBtn = new Button("Pausar");
-	private final Button stopBtn = new Button("Parar");
-	private final Timeline scrolltimeline = new Timeline();
-
+	private Runnable callFocus;
+	private final DoubleProperty progressProp = new SimpleDoubleProperty(0);
 	private final StringProperty remainingProp = new SimpleStringProperty();
 	private final StringProperty executingTasks = new SimpleStringProperty();
 
-	private double scrollDirection = 0;
+	// Componentes graficos //
+	private TreeTableView<TaskRow> taskTableView;
+	private Label remainingLbl;
+	private Button pauseBtn;
+	private Button stopBtn;
 
+	// Classes de apoio //
 	private Pomodoro actual = new Pomodoro();
+	private Scroller scroller = new Scroller();
 
 	public MainPane() {
 	}
-	
+
 	@Inject
 	public void init() {
 		// Margem
 		this.setPadding(new Insets(10.0));
 
 		taskTableView = injector.getInstance(TaskTreeTableView.class);
-		setupScrolling();
+		remainingLbl = createRemainingLabel();
+		pauseBtn = createPauseButton();
+		stopBtn = createStopButton();
+		final Button startBtn = createStartButton();
+		scroller.setup(taskTableView);
 
 		final GridPane grid = new GridPane();
 		grid.setGridLinesVisible(false);
@@ -115,19 +119,158 @@ public class MainPane extends BorderPane {
 		grid.add(new Label("Tempo restante: "), 0, 0);
 		grid.add(remainingLbl, 1, 0);
 		grid.add(taskTableView, 0, 1, 2, 1);
-		final Button startBtn = new Button("Iniciar");
-		grid.add(new HBox(startBtn, pauseBtn, stopBtn), 0, 2, 2, 1);
+		grid.add(new HBox(3.0, startBtn, pauseBtn, stopBtn), 0, 2, 2, 1);
 
-		startBtn.setOnAction(e -> actual.onEvent(PomodoroEvent.START));
-		pauseBtn.setOnAction(e -> actual.onEvent(PomodoroEvent.PAUSE));
-		stopBtn.setOnAction(e -> actual.onEvent(PomodoroEvent.FINISH));
+		final Button saveBtn = createSaveButton();
+		final Button clockBtn = createClockButton();
+		final Button reportBtn = createReportButton();
+		final Button dailyReportBtn = createDailyReportButton();
+		final Button refreshBtn = createRefreshButton();
+		grid.add(new HBox(3.0, saveBtn, refreshBtn, clockBtn, reportBtn, dailyReportBtn), 0, 3, 2, 1);
 
-		final Button saveBtn = new Button("Salvar");
-		saveBtn.setOnAction(e -> {
-			em.getTransaction().commit();
-			em.getTransaction().begin();
+		configConstraints(grid);
+
+		this.centerProperty().set(grid);
+
+		this.actual.stateProperty().addListener((r, o, n) -> {
+			System.out.println(String.format("%s - Mudança de estado: %s -> %s", new Date(), o, n));
+			em.persist(new Transition(o, n));
 		});
 
+		this.actual.setOnTimeout(() -> {
+			if (callFocus != null) {
+				callFocus.run();
+			}
+			stopAllTasks();
+			playAlarm();
+		});
+
+		final Thread thread1 = new Thread(() -> {
+			while (true) {
+				long remaining = actual.getRemaining();
+				if (actual.stateProperty().get().equals(PomodoroState.EXECUTING)
+						|| actual.stateProperty().get().equals(PomodoroState.RESTING)) {
+					remaining -= (System.currentTimeMillis() - actual.getLastUpdate());
+				}
+				if (remaining <= 0) {
+					remaining = 0;
+				}
+
+				long seconds = (remaining / 1000) % 60;
+				long minutes = ((remaining / 1000) - seconds) / 60;
+				Platform.runLater(() -> remainingProp.set(String.format("%02d:%02d", minutes, seconds)));
+
+				final long finalRemaining = remaining;
+				Platform.runLater(() -> {
+					final double totalTime = actual.stateProperty().get().equals(PomodoroState.RESTING) ? 5.0 : 25.0;
+					progressProp.set(1.0 - ((finalRemaining * 1.0) / (totalTime * 60.0 * 1000.0)));
+				});
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e1) {
+				}
+			}
+		});
+		thread1.setDaemon(true);
+		thread1.start();
+
+		// Thread para atualizacao do tempo gasto
+		final Thread thread2 = new Thread(() -> {
+			while (true) {
+				updateSpentTime();
+				try {
+					Thread.sleep(1000 * 10);
+				} catch (InterruptedException e1) {
+				}
+			}
+		});
+		thread2.setDaemon(true);
+		thread2.start();
+
+	}
+
+	private void configConstraints(final GridPane grid) {
+		final ColumnConstraints cc1 = new ColumnConstraints();
+		cc1.setHgrow(Priority.ALWAYS);
+		final ColumnConstraints cc2 = new ColumnConstraints();
+		cc2.setHgrow(Priority.ALWAYS);
+		grid.getColumnConstraints().addAll(cc1, cc2);
+
+		final RowConstraints rc1 = new RowConstraints();
+		rc1.setVgrow(Priority.NEVER);
+		final RowConstraints rc2 = new RowConstraints();
+		rc2.setPrefHeight(700.0);
+		rc2.setVgrow(Priority.ALWAYS);
+		final RowConstraints rc3 = new RowConstraints();
+		rc3.setVgrow(Priority.NEVER);
+		final RowConstraints rc4 = new RowConstraints();
+		rc4.setVgrow(Priority.NEVER);
+		grid.getRowConstraints().addAll(rc1, rc2, rc3, rc4);
+	}
+
+	private Button createRefreshButton() {
+		final Button refreshBtn = new Button("Atualizar");
+		refreshBtn.setOnAction(e -> {
+			final ObservableList<TaskRow> items = FXCollections.observableArrayList();
+			taskRepo.getAllUndone().forEach(t -> items.add(buildTaskRow(t)));
+			this.setItems(items);
+		});
+		return refreshBtn;
+	}
+
+	private Button createDailyReportButton() {
+		final Button dailyReportBtn = new Button("R. diário");
+		dailyReportBtn.setOnAction(e -> {
+			try {
+				final Stage reportStage = new Stage();
+				reportStage.getIcons().add(new Image(MainPane.class.getResourceAsStream("/META-INF/256x256bb.jpg")));
+				final DailyReportPane pane = injector.getInstance(DailyReportPane.class);
+				reportStage.setScene(new Scene(pane));
+				reportStage.setTitle("Relatório diário");
+
+				reportStage.sizeToScene();
+				reportStage.toFront();
+				Platform.runLater(reportStage::centerOnScreen);
+
+				reportStage.show();
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		});
+		return dailyReportBtn;
+	}
+
+	private Button createReportButton() {
+		final Button reportBtn = new Button("Relatório");
+		reportBtn.setOnAction(e -> {
+			final Stage reportStage = new Stage();
+			reportStage.getIcons().add(new Image(MainPane.class.getResourceAsStream("/META-INF/256x256bb.jpg")));
+			final ReportPane pane = new ReportPane();
+			reportStage.setScene(new Scene(pane));
+			reportStage.setTitle("Relatório");
+			final ObservableList<ReportRow> items = FXCollections.observableArrayList();
+			getHistory().forEach(st -> {
+				final Task task = st.getTaskId() == null ? null : em.find(Task.class, st.getTaskId());
+				items.add(new ReportRow(st.getTimeStamp(),
+						task != null ? task.getName() : st.getTaskId() != null ? st.getTaskId().toString() : "no ref",
+						st.getBefore(), st.getAfter()));
+			});
+			pane.setItems(items);
+
+			reportStage.sizeToScene();
+			reportStage.toFront();
+			Platform.runLater(reportStage::centerOnScreen);
+
+			reportStage.show();
+
+		});
+		return reportBtn;
+	}
+
+	/**
+	 * @return
+	 */
+	private Button createClockButton() {
 		final Button clockBtn = new Button("Relógio");
 		clockBtn.setOnAction(e -> {
 			final Stage clock = new Stage(StageStyle.TRANSPARENT);
@@ -197,118 +340,112 @@ public class MainPane extends BorderPane {
 			Platform.runLater(clock::centerOnScreen);
 
 			clock.show();
-
 		});
+		return clockBtn;
+	}
 
-		final Button reportBtn = new Button("Relatório");
-		reportBtn.setOnAction(e -> {
-			final Stage reportStage = new Stage();
-			reportStage.getIcons().add(new Image(MainPane.class.getResourceAsStream("/META-INF/256x256bb.jpg")));
-			final ReportPane pane = new ReportPane();
-			reportStage.setScene(new Scene(pane));
-			reportStage.setTitle("Relatório");
-			final ObservableList<ReportRow> items = FXCollections.observableArrayList();
-			getHistory().forEach(st -> {
-				final Task task = st.getTaskId() == null ? null : em.find(Task.class, st.getTaskId());
-				items.add(new ReportRow(st.getTimeStamp(),
-						task != null ? task.getName() : st.getTaskId() != null ? st.getTaskId().toString() : "no ref",
-						st.getBefore(), st.getAfter()));
-			});
-			pane.setItems(items);
-
-			reportStage.sizeToScene();
-			reportStage.toFront();
-			Platform.runLater(reportStage::centerOnScreen);
-
-			reportStage.show();
-
+	/**
+	 * 
+	 * @return
+	 */
+	private Button createSaveButton() {
+		final Button saveBtn = new Button("Salvar");
+		saveBtn.setOnAction(e -> {
+			em.getTransaction().commit();
+			em.getTransaction().begin();
 		});
+		return saveBtn;
+	}
 
-		final Button dailyReportBtn = new Button("R. diário");
-		dailyReportBtn.setOnAction(e -> {
-			try {
-				final Stage reportStage = new Stage();
-				reportStage.getIcons().add(new Image(MainPane.class.getResourceAsStream("/META-INF/256x256bb.jpg")));
-				final DailyReportPane pane = injector.getInstance(DailyReportPane.class);
-				reportStage.setScene(new Scene(pane));
-				reportStage.setTitle("Relatório diário");
+	/**
+	 * 
+	 * @return
+	 */
+	private Button createStartButton() {
+		final Button startBtn = new Button("Iniciar");
+		startBtn.setOnAction(e -> actual.onEvent(PomodoroEvent.START));
+		return startBtn;
+	}
 
-				reportStage.sizeToScene();
-				reportStage.toFront();
-				Platform.runLater(reportStage::centerOnScreen);
-
-				reportStage.show();
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-		});
-
-		final Button refreshBtn = new Button("Atualizar");
-		refreshBtn.setOnAction(e -> {
-			final ObservableList<TaskRow> items = FXCollections.observableArrayList();
-			taskRepo.getAllUndone().forEach(t -> items.add(buildTaskRow(t)));
-			this.setItems(items);
-		});
-
-		final HBox auxButtons = new HBox(3.0);
-		auxButtons.getChildren().addAll(saveBtn, refreshBtn, clockBtn, reportBtn, dailyReportBtn);
-		grid.add(auxButtons, 0, 3, 2, 1);
-
-		final ColumnConstraints cc1 = new ColumnConstraints();
-		cc1.setHgrow(Priority.ALWAYS);
-		final ColumnConstraints cc2 = new ColumnConstraints();
-		cc2.setHgrow(Priority.ALWAYS);
-		grid.getColumnConstraints().addAll(cc1, cc2);
-
-		final RowConstraints rc1 = new RowConstraints();
-		final RowConstraints rc2 = new RowConstraints();
-		rc2.setPrefHeight(200.0);
-		final RowConstraints rc3 = new RowConstraints();
-		grid.getRowConstraints().addAll(rc1, rc3, rc3);
-
-		this.centerProperty().set(grid);
-
-		this.actual.stateProperty().addListener((r, o, n) -> {
-			System.out.println(String.format("%s - Mudança de estado: %s -> %s", new Date(), o, n));
-			em.persist(new Transition(o, n));
-		});
-
-		this.actual.setOnTimeout(() -> {
-			if (callFocus != null) {
-				callFocus.run();
-			}
-			stopAllTasks();
-			playAlarm();
-		});
-
+	/**
+	 * @return
+	 */
+	private Label createRemainingLabel() {
+		final Label remainingLbl = new Label();
 		remainingLbl.textProperty().bind(remainingProp);
+		return remainingLbl;
+	}
 
-		new Thread(() -> {
-			while (true) {
-				long remaining = actual.getRemaining();
-				if (actual.stateProperty().get().equals(PomodoroState.EXECUTING)
-						|| actual.stateProperty().get().equals(PomodoroState.RESTING)) {
-					remaining -= (System.currentTimeMillis() - actual.getLastUpdate());
-				}
-				if (remaining <= 0) {
-					remaining = 0;
-				}
+	/**
+	 * @return
+	 */
+	private Button createPauseButton() {
+		final Button pauseBtn = new Button("Pausar");
+		pauseBtn.setOnAction(e -> actual.onEvent(PomodoroEvent.PAUSE));
+		return pauseBtn;
+	}
 
-				long seconds = (remaining / 1000) % 60;
-				long minutes = ((remaining / 1000) - seconds) / 60;
-				Platform.runLater(() -> remainingProp.set(String.format("%02d:%02d", minutes, seconds)));
+	/**
+	 * @return
+	 */
+	private Button createStopButton() {
+		final Button stopBtn = new Button("Parar");
+		stopBtn.setOnAction(e -> actual.onEvent(PomodoroEvent.FINISH));
+		return stopBtn;
+	}
 
-				final long finalRemaining = remaining;
-				Platform.runLater(() -> {
-					final double totalTime = actual.stateProperty().get().equals(PomodoroState.RESTING) ? 5.0 : 25.0;
-					progressProp.set(1.0 - ((finalRemaining * 1.0) / (totalTime * 60.0 * 1000.0)));
-				});
-				try {
-					Thread.sleep(500);
-				} catch (InterruptedException e1) {
+	private void updateSpentTime() {
+		Platform.runLater(() -> {
+			taskTableView.getRoot().getChildren().forEach(ti -> {
+				sumChildSpentTime(ti);
+			});
+		});
+	}
+
+	private long sumChildSpentTime(final TreeItem<TaskRow> item) {
+		long sum = calcSpentTime(item.getValue().getTask().getId());
+		for (final TreeItem<TaskRow> ti : item.getChildren()) {
+			sum += sumChildSpentTime(ti);
+		}
+		item.getValue().spentProperty().set((int) (sum / 60));
+		return sum;
+	}
+
+	private long calcSpentTime(final Long taskId) {
+		final List<TaskStateTransition> transitions = taskStateTranstRepo.retrieveByTaskId(taskId);
+
+		final List<Period> periodList = new ArrayList<>();
+
+		for (final TaskStateTransition transition : transitions) {
+			switch (transition.getAfter()) {
+			case DONE:
+			case STOPPED:
+				if (periodList.isEmpty()) {
+					periodList.add(new Period());
 				}
+				final Period last = periodList.get(periodList.size() - 1);
+				if (last.getEnd() != null) {
+					System.out.println("warn! final do periodo preenchido.");
+				} else {
+					last.setEnd(transition.getTimeStamp());
+				}
+				break;
+			case EXECUTING:
+				final Period period = new Period();
+				period.setStart(transition.getTimeStamp());
+				periodList.add(period);
+				break;
+			default:
+				break;
 			}
-		}).start();
+		}
+
+		long sum = 0;
+		for (Period p : periodList) {
+			sum += p.duration();
+		}
+
+		return sum;
 	}
 
 	// records relative x and y co-ordinates.
@@ -366,13 +503,31 @@ public class MainPane extends BorderPane {
 		this.callFocus = callFocus;
 	}
 
+	private void listenChilds(final TreeItem<TaskRow> item) {
+		item.getChildren().addListener((ListChangeListener<TreeItem<TaskRow>>) c -> {
+			while (c.next()) {
+				if (c.wasRemoved()) {
+					int sum = 0;
+					for (final TreeItem<TaskRow> child : item.getChildren()) {
+						sum += child.getValue().estimatedProperty().get();
+					}
+					item.getValue().estimatedProperty().set(sum);
+				}
+			}
+		});
+	}
+
 	public void setItems(final ObservableList<TaskRow> items) {
 		final TreeItem<TaskRow> root = new TreeItem<TaskRow>(new TaskRow(new Task()));
 		taskTableView.setRoot(root);
 
 		// Transformando em Map
 		final Map<Long, TreeItem<TaskRow>> map = items.stream()
-				.collect(Collectors.toMap(r -> r.getTask().getId(), r -> new TreeItem<TaskRow>(r)));
+				.collect(Collectors.toMap(r -> r.getTask().getId(), r -> {
+					final TreeItem<TaskRow> newItem = new TreeItem<TaskRow>(r);
+					listenChilds(newItem);
+					return newItem;
+				}));
 
 		// Montando a arvore
 		for (final Entry<Long, TreeItem<TaskRow>> entry : map.entrySet()) {
@@ -402,58 +557,31 @@ public class MainPane extends BorderPane {
 		}
 	}
 
-	private void setupScrolling() {
-		scrolltimeline.setCycleCount(Timeline.INDEFINITE);
-		scrolltimeline.getKeyFrames().add(new KeyFrame(Duration.millis(20), "Scoll", (ActionEvent) -> {
-			dragScroll();
-		}));
-		taskTableView.setOnDragExited(event -> {
-			if (event.getY() > 0) {
-				scrollDirection = 1.0 / taskTableView.getExpandedItemCount();
-			} else {
-				scrollDirection = -1.0 / taskTableView.getExpandedItemCount();
-			}
-			scrolltimeline.play();
-		});
-		taskTableView.setOnDragEntered(event -> {
-			scrolltimeline.stop();
-		});
-		taskTableView.setOnDragDone(event -> {
-			scrolltimeline.stop();
-		});
-
-	}
-
-	private void dragScroll() {
-		ScrollBar sb = getVerticalScrollbar();
-		if (sb != null) {
-			double newValue = sb.getValue() + scrollDirection;
-			newValue = Math.min(newValue, 1.0);
-			newValue = Math.max(newValue, 0.0);
-			sb.setValue(newValue);
-		}
-	}
-
-	private ScrollBar getVerticalScrollbar() {
-		ScrollBar result = null;
-		for (Node n : taskTableView.lookupAll(".scroll-bar")) {
-			if (n instanceof ScrollBar) {
-				ScrollBar bar = (ScrollBar) n;
-				if (bar.getOrientation().equals(Orientation.VERTICAL)) {
-					result = bar;
-				}
-			}
-		}
-		return result;
-	}
-
 	private TaskRow buildTaskRow(final Task task) {
 		final TaskRow taskRow = new TaskRow(task);
 		taskRow.stateProperty().addListener((r, o, n) -> {
 			em.persist(new TaskStateTransition(task.getId(), o, n));
 			updateExecutingTasks();
 		});
+		taskRow.estimatedProperty().addListener((r, o, n) -> {
+			updateParentEstimated(taskRow);
+		});
 		return taskRow;
+	}
+
+	public void updateParentEstimated(TaskRow taskRow) {
+		final Optional<TreeItem<TaskRow>> found = getAllTaskTreeItems(this.taskTableView.getRoot()).stream()
+				.filter(ti -> ti.getValue() == taskRow).findAny();
+		if (found.isPresent()) {
+			final TreeItem<TaskRow> parent = found.get().getParent();
+			if (parent != null) {
+				int sum = 0;
+				for (final TreeItem<TaskRow> child : parent.getChildren()) {
+					sum += child.getValue().estimatedProperty().get();
+				}
+				parent.getValue().estimatedProperty().set(sum);
+			}
+		}
 	}
 
 	public List<TaskStateTransition> getHistory() {

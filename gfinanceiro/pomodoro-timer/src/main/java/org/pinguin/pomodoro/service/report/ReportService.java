@@ -199,6 +199,16 @@ public class ReportService {
 			this.end = end;
 		}
 
+		public long duration() {
+			if (start == null) {
+				return 0;
+			}
+			if (end == null) {
+				return ChronoUnit.SECONDS.between(start, LocalDateTime.now());
+			}
+			return ChronoUnit.SECONDS.between(start, end);
+		}
+
 		@Override
 		public String toString() {
 			return "Period [start=" + start + ", end=" + end + "]";

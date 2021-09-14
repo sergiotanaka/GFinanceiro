@@ -1,5 +1,7 @@
 package org.pinguin.gf.app.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -11,6 +13,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 public class JournalEntryServiceProxy implements JournalEntryService {
 
@@ -24,6 +27,13 @@ public class JournalEntryServiceProxy implements JournalEntryService {
 	@Override
 	public JournalEntryTO createEntry(JournalEntryTO entry) {
 		return restTemplate.postForObject(entryResourceUrl, new HttpEntity<>(entry), JournalEntryTO.class);
+	}
+
+	@Override
+	public boolean exists(final LocalDateTime date, final BigDecimal value, final String description) {
+		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(entryResourceUrl + "/exists")
+				.queryParam("date", date).queryParam("value", value).queryParam("description", description);
+		return restTemplate.getForObject(builder.build().encode().toUri(), Boolean.class);
 	}
 
 	@Override

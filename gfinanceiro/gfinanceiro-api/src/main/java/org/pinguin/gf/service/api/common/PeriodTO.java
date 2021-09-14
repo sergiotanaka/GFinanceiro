@@ -2,32 +2,14 @@ package org.pinguin.gf.service.api.common;
 
 import java.util.Calendar;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class PeriodTO {
 	private Calendar start;
 	private Calendar end;
-
-	public PeriodTO() {
-	}
-
-	public PeriodTO(Calendar start, Calendar end) {
-		this.start = start;
-		this.end = end;
-	}
-
-	public Calendar getStart() {
-		return start;
-	}
-
-	public void setStart(Calendar start) {
-		this.start = start;
-	}
-
-	public Calendar getEnd() {
-		return end;
-	}
-
-	public void setEnd(Calendar end) {
-		this.end = end;
-	}
-
 }

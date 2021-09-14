@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.0.2.RELEASE</version>
+		<version>2.5.4</version>
 	</parent>
 
 	<artifactId>gfinanceiro-domain</artifactId>
@@ -39,6 +39,12 @@
 			<artifactId>querydsl-jpa</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
 		<!-- Test scope -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -49,6 +55,13 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>16</source>
+					<target>16</target>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>com.helger.maven</groupId>
 				<artifactId>ph-javacc-maven-plugin</artifactId>
@@ -61,7 +74,7 @@
 							<goal>javacc</goal>
 						</goals>
 						<configuration>
-							<jdkVersion>1.8</jdkVersion>
+							<jdkVersion>16</jdkVersion>
 							<javadocFriendlyComments>true</javadocFriendlyComments>
 							<packageName>org.pinguin.gf.domain.common.impl</packageName>
 							<sourceDirectory>src/main/parser</sourceDirectory>

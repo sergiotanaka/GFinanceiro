@@ -13,12 +13,14 @@ public class Task {
 	private Long index;
 	private String name;
 	private TaskState state = TaskState.STOPPED;
+	private Integer estimated;
 	private Long parentId;
 	private String description;
 
 	public Task(String name, TaskState state) {
 		this.name = name;
 		this.state = state;
+		this.estimated = 0;
 	}
 
 	public Task(String name) {
@@ -61,6 +63,14 @@ public class Task {
 		this.state = state;
 	}
 
+	public Integer getEstimated() {
+		return estimated;
+	}
+
+	public void setEstimated(Integer estimated) {
+		this.estimated = estimated;
+	}
+
 	public Long getParentId() {
 		return parentId;
 	}
@@ -79,7 +89,8 @@ public class Task {
 
 	@Override
 	public String toString() {
-		return "Task [id=" + id + ", index=" + index + ", name=" + name + ", state=" + state + ", parentId=" + parentId
-				+ ", description=" + description + "]";
+		return "Task [id=" + id + ", index=" + index + ", name=" + name + ", state=" + state + ", estimated="
+				+ estimated + ", parentId=" + parentId + ", description=" + description + "]";
 	}
+
 }

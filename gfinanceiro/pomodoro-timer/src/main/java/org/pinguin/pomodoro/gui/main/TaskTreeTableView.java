@@ -2,6 +2,7 @@ package org.pinguin.pomodoro.gui.main;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -17,6 +18,7 @@ import com.google.inject.Injector;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -27,10 +29,10 @@ import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableRow;
 import javafx.scene.control.TreeTableView;
-import javafx.scene.control.cell.ComboBoxTreeTableCell;
 import javafx.scene.control.cell.TextFieldTreeTableCell;
 import javafx.scene.control.cell.TreeItemPropertyValueFactory;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.Dragboard;
@@ -42,6 +44,7 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import javafx.util.converter.IntegerStringConverter;
 
 /**
  * TreeTableView de Tasks.
@@ -49,6 +52,13 @@ import javafx.util.Callback;
 public class TaskTreeTableView extends TreeTableView<TaskRow> {
 
 	private static final DataFormat SERIALIZED_MIME_TYPE = buildMimeType();
+
+	private static final Image START_IMAGE = new Image(
+			TaskTreeTableView.class.getResourceAsStream("/META-INF/play.png"));
+	private static final Image STOP_IMAGE = new Image(
+			TaskTreeTableView.class.getResourceAsStream("/META-INF/stop.png"));
+	private static final Image DONE_IMAGE = new Image(
+			TaskTreeTableView.class.getResourceAsStream("/META-INF/confirm.png"));
 
 	@Inject
 	private Injector injector;
@@ -65,6 +75,7 @@ public class TaskTreeTableView extends TreeTableView<TaskRow> {
 	public TaskTreeTableView() {
 	}
 
+	@SuppressWarnings("unchecked")
 	@Inject
 	public void init() {
 		this.setShowRoot(false);
@@ -72,22 +83,24 @@ public class TaskTreeTableView extends TreeTableView<TaskRow> {
 
 		// Tornar editavel
 		this.setEditable(true);
-		// Tornar celula selecionavel
-		this.getSelectionModel().setCellSelectionEnabled(true);
 		this.setRowFactory(rowFactory());
 
 		final TreeTableColumn<TaskRow, String> nameColumn = new TreeTableColumn<>("Tarefa");
-		nameColumn.setPrefWidth(300.0);
+		nameColumn.setPrefWidth(500.0);
 		nameColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("name"));
 		nameColumn.setCellFactory(TextFieldTreeTableCell.forTreeTableColumn());
 
-		final TreeTableColumn<TaskRow, TaskState> stateColumn = new TreeTableColumn<>("Estado");
-		stateColumn.setPrefWidth(100.0);
-		stateColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("state"));
-		stateColumn.setCellFactory(ComboBoxTreeTableCell.forTreeTableColumn(TaskState.values()));
+		final TreeTableColumn<TaskRow, Integer> expectColumn = new TreeTableColumn<>("Estim.");
+		expectColumn.setPrefWidth(60.0);
+		expectColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("estimated"));
+		expectColumn.setCellFactory(TextFieldTreeTableCell.forTreeTableColumn(new IntegerStringConverter()));
 
-		final TreeTableColumn<TaskRow, TaskState> actionColumn = new TreeTableColumn<>("Estado");
-		actionColumn.setPrefWidth(160.0);
+		final TreeTableColumn<TaskRow, Integer> spentColumn = new TreeTableColumn<>("Gasto");
+		spentColumn.setPrefWidth(60.0);
+		spentColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("spent"));
+
+		final TreeTableColumn<TaskRow, TaskState> actionColumn = new TreeTableColumn<>("Ações");
+		actionColumn.setPrefWidth(80.0);
 		actionColumn.setCellValueFactory(new TreeItemPropertyValueFactory<>("state"));
 		final Callback<TreeTableColumn<TaskRow, TaskState>, TreeTableCell<TaskRow, TaskState>> actionColCellFactory = new Callback<TreeTableColumn<TaskRow, TaskState>, TreeTableCell<TaskRow, TaskState>>() {
 
@@ -96,8 +109,25 @@ public class TaskTreeTableView extends TreeTableView<TaskRow> {
 				final TreeTableCell<TaskRow, TaskState> cell = new TreeTableCell<TaskRow, TaskState>() {
 					final HBox hBox = new HBox(5.0);
 					final Button execBtn = new Button();
-					final Button finishBtn = new Button("Concluir");
+					final Button finishBtn = new Button();
+					final ImageView startImage = new ImageView(START_IMAGE);
+					final ImageView stopImage = new ImageView(STOP_IMAGE);
+					final ImageView doneImage = new ImageView(DONE_IMAGE);
 					{
+						execBtn.setPrefSize(16, 16);
+						execBtn.setTranslateX(0);
+						execBtn.setTranslateY(0);
+						execBtn.setFocusTraversable(false);
+						startImage.setFitHeight(16);
+						startImage.setPreserveRatio(true);
+						stopImage.setFitHeight(16);
+						stopImage.setPreserveRatio(true);
+						finishBtn.setPrefSize(16, 16);
+						finishBtn.setTranslateX(0);
+						finishBtn.setTranslateY(0);
+						finishBtn.setGraphic(doneImage);
+						finishBtn.setFocusTraversable(false);
+
 						hBox.getChildren().addAll(execBtn, finishBtn);
 						execBtn.setOnAction(e -> {
 							final TaskRow taskRow = this.getTreeTableRow().getTreeItem().getValue();
@@ -121,9 +151,9 @@ public class TaskTreeTableView extends TreeTableView<TaskRow> {
 							setText(null);
 						} else {
 							if (item.equals(TaskState.STOPPED) || item.equals(TaskState.DONE)) {
-								execBtn.setText("Executar");
+								execBtn.setGraphic(startImage);
 							} else if (item.equals(TaskState.EXECUTING)) {
-								execBtn.setText("Parar");
+								execBtn.setGraphic(stopImage);
 							}
 							execBtn.setDisable(item.equals(TaskState.DONE));
 							finishBtn.setDisable(item.equals(TaskState.DONE));
@@ -138,8 +168,7 @@ public class TaskTreeTableView extends TreeTableView<TaskRow> {
 		};
 		actionColumn.setCellFactory(actionColCellFactory);
 
-		this.getColumns().add(nameColumn);
-		this.getColumns().add(actionColumn);
+		this.getColumns().addAll(nameColumn, expectColumn, spentColumn, actionColumn);
 
 		final KeyCodeCombination ctrlUp = new KeyCodeCombination(KeyCode.UP, KeyCombination.CONTROL_DOWN);
 		final KeyCodeCombination ctrlDown = new KeyCodeCombination(KeyCode.DOWN, KeyCombination.CONTROL_DOWN);
@@ -176,13 +205,13 @@ public class TaskTreeTableView extends TreeTableView<TaskRow> {
 					final TreeItem<TaskRow> newItem = new TreeItem<TaskRow>(buildTaskRow(newTask));
 					sel.setExpanded(true);
 					sel.getChildren().add(newItem);
+					listenChilds(newItem);
 					em.persist(newTask);
 					this.getSelectionModel().select(newItem);
 					this.edit(this.getSelectionModel().getSelectedIndex(), nameColumn);
 				} else if (ins.match(e)) {
 					// Deslocar os proximos
 					final Task newTask = new Task();
-
 					final TreeItem<TaskRow> newItem = new TreeItem<TaskRow>(buildTaskRow(newTask));
 					TreeItem<TaskRow> parent = null;
 					if (sel != null) {
@@ -194,6 +223,7 @@ public class TaskTreeTableView extends TreeTableView<TaskRow> {
 					parent.getChildren().add(indexOfSel + 1, newItem);
 					// Deslocando os indices
 					shift(indexOfSel, parent.getChildren());
+					listenChilds(newItem);
 					this.getSelectionModel().select(newItem);
 					this.edit(this.getSelectionModel().getSelectedIndex(), nameColumn);
 				} else if (del.match(e) && sel != null) {
@@ -223,7 +253,7 @@ public class TaskTreeTableView extends TreeTableView<TaskRow> {
 			pane.taskProperty().setValue(sel.getValue().getTask());
 			pane.setCloseAction(c -> stage.close());
 			stage.setScene(new Scene(pane));
-			stage.setTitle("Descrição");
+			stage.setTitle("Descrição - " + sel.getValue().getTask().getName());
 			stage.sizeToScene();
 			stage.toFront();
 			Platform.runLater(stage::centerOnScreen);
@@ -232,6 +262,21 @@ public class TaskTreeTableView extends TreeTableView<TaskRow> {
 		contextMenu.getItems().add(descrItem);
 		this.setContextMenu(contextMenu);
 
+	}
+
+	private void listenChilds(final TreeItem<TaskRow> item) {
+		item.getChildren().addListener((ListChangeListener<TreeItem<TaskRow>>) c -> {
+			while (c.next()) {
+				if (c.wasRemoved()) {
+					int sum = 0;
+					for (final TreeItem<TaskRow> child : item.getChildren()) {
+						sum += child.getValue().estimatedProperty().get();
+					}
+					item.getValue().estimatedProperty().set(sum);
+
+				}
+			}
+		});
 	}
 
 	private void doneChilds(final TreeItem<TaskRow> ref) {
@@ -270,7 +315,25 @@ public class TaskTreeTableView extends TreeTableView<TaskRow> {
 			em.persist(new TaskStateTransition(task.getId(), o, n));
 			updateExecutingTasks();
 		});
+		taskRow.estimatedProperty().addListener((r, o, n) -> {
+			updateParentEstimated(taskRow);
+		});
 		return taskRow;
+	}
+
+	private void updateParentEstimated(TaskRow taskRow) {
+		final Optional<TreeItem<TaskRow>> found = getAllTaskTreeItems(this.getRoot()).stream()
+				.filter(ti -> ti.getValue() == taskRow).findAny();
+		if (found.isPresent()) {
+			final TreeItem<TaskRow> parent = found.get().getParent();
+			if (parent != null) {
+				int sum = 0;
+				for (final TreeItem<TaskRow> child : parent.getChildren()) {
+					sum += child.getValue().estimatedProperty().get();
+				}
+				parent.getValue().estimatedProperty().set(sum);
+			}
+		}
 	}
 
 	private void switchIdx(final TaskRow one, final TaskRow another) {

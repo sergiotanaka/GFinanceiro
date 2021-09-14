@@ -4,6 +4,13 @@ import java.math.BigDecimal;
 
 import org.pinguin.gf.service.api.account.AccountTO;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class AccountPlanningTO {
 	private Long accPlanId;
 	private AccountTO account;
@@ -47,7 +54,5 @@ public class AccountPlanningTO {
 		return "AccountPlanningTO [accPlanId=" + accPlanId + ", account=" + account + ", value=" + value + ", comment="
 				+ comment + "]";
 	}
-	
-	
 
 }

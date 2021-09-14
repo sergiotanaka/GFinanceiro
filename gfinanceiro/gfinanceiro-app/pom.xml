@@ -23,12 +23,12 @@
 		<dependency>
 			<groupId>com.google.inject</groupId>
 			<artifactId>guice</artifactId>
-			<version>3.0</version>
+			<version>5.0.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.inject.extensions</groupId>
 			<artifactId>guice-persist</artifactId>
-			<version>3.0</version>
+			<version>5.0.1</version>
 		</dependency>
 
 		<dependency>
@@ -64,6 +64,13 @@
 	<build>
 		<plugins>
 			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>16</source>
+					<target>16</target>
+				</configuration>
+			</plugin>
+			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<configuration>
 					<archive>
@@ -84,6 +91,18 @@
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.openjfx</groupId>
+				<artifactId>javafx-maven-plugin</artifactId>
+				<version>0.0.6</version>
+				<configuration>
+					<options>
+						<option>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:8001</option>
+					</options>
+					<mainClass>org.pinguin.gf.app.MainApp</mainClass>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

@@ -36,8 +36,10 @@ public class CashFlowReport extends AnchorPane {
 	private CalendarTextField startDateText;
 	@FXML
 	private CalendarTextField endDateText;
+	@SuppressWarnings("rawtypes")
 	@FXML
 	private BarChart barChart;
+	@SuppressWarnings("rawtypes")
 	@FXML
 	private LineChart lineChart;
 	@FXML
@@ -51,6 +53,7 @@ public class CashFlowReport extends AnchorPane {
 	@Inject
 	private OpenAccStatementCommand openAccStatement;
 
+	@SuppressWarnings("unchecked")
 	public CashFlowReport() {
 		loadFxml();
 		final StringConverter<AccountTO> stringConverter = new AccountStringConverter();
@@ -80,7 +83,7 @@ public class CashFlowReport extends AnchorPane {
 
 		// lineChart.setMouseTransparent(true);
 //		lineChart.setPickOnBounds(false);
-		
+
 		lineChart.mouseTransparentProperty().bind(balanceRadio.selectedProperty().not());
 	}
 

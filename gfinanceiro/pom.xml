@@ -8,13 +8,13 @@
 	<packaging>pom</packaging>
 	<modules>
 		<module>gfinanceiro-domain</module>
-<!-- 		<module>gfinanceiro-gui</module> -->
-		<!-- <module>gfinanceiro-app</module> -->
+		<module>gfinanceiro-gui</module>
+		<module>gfinanceiro-app</module>
 		<!-- <module>gfinanceiro-facade</module> -->
 		<!-- <module>domain-core</module> -->
 		<!-- <module>gui-utils</module> -->
 		<module>gfinanceiro-service</module>
-		<module>pomodoro-timer</module>
+		<!-- <module>pomodoro-timer</module> -->
 		<module>gfinanceiro-api</module>
 	</modules>
 
@@ -24,8 +24,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.3.2</version>
 				<configuration>
-					<source>10</source>
-					<target>10</target>
+					<source>16</source>
+					<target>16</target>
 				</configuration>
 			</plugin>
 		</plugins>

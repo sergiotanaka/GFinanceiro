@@ -26,66 +26,72 @@ public class GFinanceiroApplication {
 	@Bean
 	public CommandLineRunner commandLineRunner(ApplicationContext ctx) {
 		return args -> {
+			
+			try {
+//				final EntityManagerFactory emf = ctx.getBean(EntityManagerFactory.class);
+//				final EntityManager em = emf.createEntityManager();
+//
+//				em.getTransaction().begin();
+//				final Query qry1 = em.createNativeQuery("DELETE from journal_entry WHERE date < ?;");
+//				qry1.setParameter(1, LocalDateTime.of(2020, 9, 1, 0, 0));
+////				List result = qry1.getResultList();
+//				qry1.executeUpdate();
+//				em.getTransaction().commit();
 
-			// final EntityManagerFactory emf = ctx.getBean(EntityManagerFactory.class);
-			// final EntityManager em = emf.createEntityManager();
-			//
-			// em.getTransaction().begin();
-			// final Query qry1 = em.createNativeQuery("UPDATE journal_entry SET future =
-			// false;");
-			// List result = qry1.getResultList();
-			// em.getTransaction().commit();
+				final AccountRepository repo = ctx.getBean(AccountRepository.class);
 
-			final AccountRepository repo = ctx.getBean(AccountRepository.class);
+				if (!repo.findAll().isEmpty()) {
+					return;
+				}
 
-			if (!repo.findAll().isEmpty()) {
-				return;
+				// Contas basicas
+				final Account asset = repo.save(new Account("Ativo", AccountNature.DEBIT));
+				final Account liability = repo.save(new Account("Passivo", AccountNature.CREDIT));
+				final Account income = repo.save(new Account("Receita", AccountNature.CREDIT));
+				final Account expense = repo.save(new Account("Despesa", AccountNature.DEBIT));
+				final Account capital = repo.save(new Account("Capital", AccountNature.CREDIT));
+				// Ativos
+				repo.save(new Account("Caixa", AccountNature.DEBIT, asset));
+				repo.save(new Account("C/C Santander", AccountNature.DEBIT, asset));
+				repo.save(new Account("Poupança Santander", AccountNature.DEBIT, asset));
+				repo.save(new Account("Investimento - GP", AccountNature.DEBIT, asset));
+				repo.save(new Account("Investimento - CDB", AccountNature.DEBIT, asset));
+				// Passivo
+				repo.save(new Account("C. Crédito Santander", AccountNature.CREDIT, liability));
+				// Receitas
+				repo.save(new Account("Salário", AccountNature.CREDIT, income, "LIQUIDO DE VENCIMENTO"));
+				repo.save(new Account("Renda investimento - GP", AccountNature.CREDIT, income));
+				repo.save(new Account("Renda investimento - CDB", AccountNature.CREDIT, income));
+				repo.save(new Account("Outras receitas", AccountNature.CREDIT, income));
+				// Despesas
+				repo.save(new Account("Contas residenciais", AccountNature.DEBIT, expense, "INTERNET COMGAS CIA DE GA",
+						"INTERNET AES ELETROPAULO"));
+				repo.save(new Account("Mercado", AccountNature.DEBIT, expense, "QUITANDA BURITI", "PAO DE ACUCAR"));
+				repo.save(new Account("Moradia", AccountNature.DEBIT, expense, "CONDOMINIO EDIFICIOS C CO"));
+				repo.save(new Account("Saúde", AccountNature.DEBIT, expense, "MAYARA J F SILVA", "DIEGO FREITAS TAVARES",
+						"DROG SAO PAULO", "STUDIO F F BAST"));
+				repo.save(new Account("Transporte", AccountNature.DEBIT, expense, "PRODATA MOBILIT"));
+				repo.save(new Account("Bares / Restaurantes", AccountNature.DEBIT, expense, "SANTO TEMAKI", "RAGAZZO"));
+				repo.save(new Account("Compras", AccountNature.DEBIT, expense));
+				repo.save(new Account("Cuidados pessoais", AccountNature.DEBIT, expense));
+				repo.save(new Account("Impostos / Taxas", AccountNature.DEBIT, expense));
+				repo.save(new Account("Lazer", AccountNature.DEBIT, expense));
+				repo.save(new Account("Presentes / Doações", AccountNature.DEBIT, expense));
+				repo.save(new Account("TV / Internet / Telefonia", AccountNature.DEBIT, expense, "CLARO SP"));
+
+				final BasicAccounts ba = new BasicAccounts();
+				ba.setAsset(asset);
+				ba.setLiability(liability);
+				ba.setIncome(income);
+				ba.setExpense(expense);
+				ba.setCapital(capital);
+
+				final BasicAccountsRepository baRepo = ctx.getBean(BasicAccountsRepository.class);
+				baRepo.save(ba);
+				
+			} catch (final Exception e) {
+				e.printStackTrace();
 			}
-
-			// Contas basicas
-			final Account asset = repo.save(new Account("Ativo", AccountNature.DEBIT));
-			final Account liability = repo.save(new Account("Passivo", AccountNature.CREDIT));
-			final Account income = repo.save(new Account("Receita", AccountNature.CREDIT));
-			final Account expense = repo.save(new Account("Despesa", AccountNature.DEBIT));
-			final Account capital = repo.save(new Account("Capital", AccountNature.CREDIT));
-			// Ativos
-			repo.save(new Account("Caixa", AccountNature.DEBIT, asset));
-			repo.save(new Account("C/C Santander", AccountNature.DEBIT, asset));
-			repo.save(new Account("Poupança Santander", AccountNature.DEBIT, asset));
-			repo.save(new Account("Investimento - GP", AccountNature.DEBIT, asset));
-			repo.save(new Account("Investimento - CDB", AccountNature.DEBIT, asset));
-			// Passivo
-			repo.save(new Account("C. Crédito Santander", AccountNature.CREDIT, liability));
-			// Receitas
-			repo.save(new Account("Salário", AccountNature.CREDIT, income, "LIQUIDO DE VENCIMENTO"));
-			repo.save(new Account("Renda investimento - GP", AccountNature.CREDIT, income));
-			repo.save(new Account("Renda investimento - CDB", AccountNature.CREDIT, income));
-			repo.save(new Account("Outras receitas", AccountNature.CREDIT, income));
-			// Despesas
-			repo.save(new Account("Contas residenciais", AccountNature.DEBIT, expense, "INTERNET COMGAS CIA DE GA",
-					"INTERNET AES ELETROPAULO"));
-			repo.save(new Account("Mercado", AccountNature.DEBIT, expense, "QUITANDA BURITI", "PAO DE ACUCAR"));
-			repo.save(new Account("Moradia", AccountNature.DEBIT, expense, "CONDOMINIO EDIFICIOS C CO"));
-			repo.save(new Account("Saúde", AccountNature.DEBIT, expense, "MAYARA J F SILVA", "DIEGO FREITAS TAVARES",
-					"DROG SAO PAULO", "STUDIO F F BAST"));
-			repo.save(new Account("Transporte", AccountNature.DEBIT, expense, "PRODATA MOBILIT"));
-			repo.save(new Account("Bares / Restaurantes", AccountNature.DEBIT, expense, "SANTO TEMAKI", "RAGAZZO"));
-			repo.save(new Account("Compras", AccountNature.DEBIT, expense));
-			repo.save(new Account("Cuidados pessoais", AccountNature.DEBIT, expense));
-			repo.save(new Account("Impostos / Taxas", AccountNature.DEBIT, expense));
-			repo.save(new Account("Lazer", AccountNature.DEBIT, expense));
-			repo.save(new Account("Presentes / Doações", AccountNature.DEBIT, expense));
-			repo.save(new Account("TV / Internet / Telefonia", AccountNature.DEBIT, expense, "CLARO SP"));
-
-			final BasicAccounts ba = new BasicAccounts();
-			ba.setAsset(asset);
-			ba.setLiability(liability);
-			ba.setIncome(income);
-			ba.setExpense(expense);
-			ba.setCapital(capital);
-
-			final BasicAccountsRepository baRepo = ctx.getBean(BasicAccountsRepository.class);
-			baRepo.save(ba);
 		};
 	}
 

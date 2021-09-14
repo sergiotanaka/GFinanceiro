@@ -1,7 +1,5 @@
 package org.pinguin.gf.service.api.planning;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +12,6 @@ import org.pinguin.gf.domain.planning.PlanningRepository;
 import org.pinguin.gf.service.infra.PlanningMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -47,33 +44,33 @@ public class PlanningController implements PlanningService {
 	}
 
 	@Override
-	@PostMapping(produces = MediaTypes.HAL_JSON_VALUE)
+	@PostMapping(produces = "application/hal+json")
 	@ResponseStatus(HttpStatus.CREATED)
 	public PlanningTO createPlanning(@Valid @RequestBody PlanningTO to) {
 
 		Planning saved = repo.save(mapper.asEntity(to));
 
 		PlanningTO response = mapper.asTO(saved);
-		response.add(linkTo(PlanningController.class).slash(response.getPlanId()).withSelfRel());
+//		response.add(linkTo(PlanningController.class).slash(response.getPlanId()).withSelfRel());
 
 		return response;
 	}
 
 	@Override
-	@PutMapping(value = "/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+	@PutMapping(value = "/{id}", produces = "application/hal+json")
 	public PlanningTO updatePlanning(@PathVariable("id") Long planningId, @Valid @RequestBody PlanningTO to) {
 
 		to.setPlanId(planningId);
 		Planning saved = repo.save(mapper.asEntity(to));
 
 		PlanningTO response = mapper.asTO(saved);
-		response.add(linkTo(PlanningController.class).slash(response.getPlanId()).withSelfRel());
+//		response.add(linkTo(PlanningController.class).slash(response.getPlanId()).withSelfRel());
 
 		return response;
 	}
 
 	@Override
-	@DeleteMapping(value = "/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+	@DeleteMapping(value = "/{id}", produces = "application/hal+json")
 	public PlanningTO deletePlanning(@PathVariable("id") Long id) {
 		Optional<Planning> found = repo.findById(id);
 		if (!found.isPresent()) {
@@ -82,24 +79,24 @@ public class PlanningController implements PlanningService {
 
 		repo.delete(found.get());
 		PlanningTO response = mapper.asTO(found.get());
-		response.add(linkTo(PlanningController.class).slash(response.getPlanId()).withSelfRel());
+//		response.add(linkTo(PlanningController.class).slash(response.getPlanId()).withSelfRel());
 		return response;
 	}
 
 	@Override
-	@GetMapping(value = "/{id}", produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping(value = "/{id}", produces = "application/hal+json")
 	public PlanningTO retrieveById(@PathVariable("id") Long id) {
 		Optional<Planning> found = repo.findById(id);
 		if (!found.isPresent()) {
 			return null;
 		}
 		PlanningTO response = mapper.asTO(found.get());
-		response.add(linkTo(PlanningController.class).slash(response.getPlanId()).withSelfRel());
+//		response.add(linkTo(PlanningController.class).slash(response.getPlanId()).withSelfRel());
 		return response;
 	}
 
 	@Override
-	@GetMapping(produces = MediaTypes.HAL_JSON_VALUE)
+	@GetMapping(produces = "application/hal+json")
 	public List<PlanningTO> retrieveAll() {
 
 		final List<PlanningTO> result = new ArrayList<>();
