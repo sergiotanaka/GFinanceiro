@@ -2,6 +2,8 @@ package org.pinguin.gf.service.api.journalentry;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.pinguin.gf.service.api.account.AccountTO;
 
@@ -24,4 +26,5 @@ public class JournalEntryTO {
 	private LocalDateTime date;
 	private String description;
 	private Boolean future;
+	private List<TagTO> tags = new ArrayList<>();
 }

@@ -46,6 +46,9 @@ import javafx.scene.layout.AnchorPane;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
+/**
+ * IHM "Planejamento" 
+ */
 public class PlanningForm extends AnchorPane {
 
 	@Inject

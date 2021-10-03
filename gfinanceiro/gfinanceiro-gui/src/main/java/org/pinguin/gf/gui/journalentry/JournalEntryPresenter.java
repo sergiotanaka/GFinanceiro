@@ -13,6 +13,7 @@ import javax.inject.Inject;
 import org.pinguin.gf.service.api.account.AccountTO;
 import org.pinguin.gf.service.api.journalentry.JournalEntryService;
 import org.pinguin.gf.service.api.journalentry.JournalEntryTO;
+import org.pinguin.gf.service.api.journalentry.TagTO;
 import org.pinguin.gui.util.BindHelper;
 import org.pinguin.gui.util.EditMode;
 import org.pinguin.gui.util.PropertyAdapter;
@@ -34,6 +35,8 @@ public class JournalEntryPresenter {
 
 	private final ObservableList<AccountTO> debitAccounts = FXCollections.observableArrayList();
 	private final ObservableList<AccountTO> creditAccounts = FXCollections.observableArrayList();
+	private final ObservableList<TagTO> tags = FXCollections.observableArrayList();
+	private final ObservableList<TagTO> candidateTags = FXCollections.observableArrayList();
 	private final Property<AccountTO> debitProperty = new SimpleObjectProperty<>();
 	private final Property<AccountTO> creditProperty = new SimpleObjectProperty<>();
 	private final Property<String> valueProperty = new SimpleObjectProperty<>("");
@@ -55,6 +58,14 @@ public class JournalEntryPresenter {
 
 	public ObservableList<AccountTO> getCreditAccounts() {
 		return creditAccounts;
+	}
+
+	public ObservableList<TagTO> getTags() {
+		return tags;
+	}
+
+	public ObservableList<TagTO> getCandidateTags() {
+		return candidateTags;
 	}
 
 	public Property<String> valueProperty() {
@@ -157,6 +168,8 @@ public class JournalEntryPresenter {
 		bindHelper.bind("date", adapter);
 		bindHelper.bind("description", descriptionProperty);
 		bindHelper.bind("future", futureProperty);
+		tags.addAll(to.getTags());
+		to.setTags(tags);
 	}
 
 	public void save() {

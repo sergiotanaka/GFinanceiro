@@ -9,6 +9,8 @@ import javax.inject.Inject;
 
 import org.pinguin.gf.service.api.account.AccountService;
 import org.pinguin.gf.service.api.account.AccountTO;
+import org.pinguin.gf.service.api.journalentry.TagService;
+import org.pinguin.gf.service.api.journalentry.TagTO;
 
 import com.google.inject.Injector;
 
@@ -25,9 +27,11 @@ public class OpenJournalEntryCommand implements Function<OpenJournalEntryParam, 
 
 		final Stage formStage = new Stage();
 		formStage.setTitle("Lançamento");
-		JournalEntryForm form = injector.getInstance(JournalEntryForm.class);
-		AccountService accService = injector.getInstance(AccountService.class);
-		List<AccountTO> accs = accService.retrieveAnalytical();
+		final JournalEntryForm form = injector.getInstance(JournalEntryForm.class);
+		final AccountService accService = injector.getInstance(AccountService.class);
+		final TagService tagService = injector.getInstance(TagService.class);
+		final List<AccountTO> accs = accService.retrieveAnalytical();
+		final List<TagTO> allTags = tagService.retrieveAll();
 		Collections.sort(accs, new Comparator<AccountTO>() {
 			@Override
 			public int compare(AccountTO o1, AccountTO o2) {
@@ -36,6 +40,7 @@ public class OpenJournalEntryCommand implements Function<OpenJournalEntryParam, 
 		});
 		form.getPresenter().getDebitAccounts().addAll(accs);
 		form.getPresenter().getCreditAccounts().addAll(accs);
+		form.getPresenter().getCandidateTags().addAll(allTags);
 		form.getPresenter().setTo(param.getTo());
 		form.getPresenter().setEditMode(param.getEditMode());
 		form.getPresenter().setCloseWindowCommand((param2) -> {

@@ -13,6 +13,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 
+/**
+ * IHM "Adicionar planejamento"
+ */
 public class AddPlanningForm extends AnchorPane {
 
 	@FXML
@@ -23,6 +26,9 @@ public class AddPlanningForm extends AnchorPane {
 	@Inject
 	private AddPlanningFormPresenter presenter;
 
+	/**
+	 * Construtor.
+	 */
 	public AddPlanningForm() {
 		loadFxml();
 	}
@@ -37,7 +43,7 @@ public class AddPlanningForm extends AnchorPane {
 			throw new IllegalStateException(exception);
 		}
 	}
-	
+
 	@Inject
 	private void init() {
 		monthCombo.setOriginalItems(presenter.getMonths());
@@ -48,12 +54,12 @@ public class AddPlanningForm extends AnchorPane {
 	public AddPlanningFormPresenter getPresenter() {
 		return presenter;
 	}
-	
+
 	@FXML
 	public void save(ActionEvent evt) {
 		presenter.save();
 	}
-	
+
 	@FXML
 	public void cancel(ActionEvent evt) {
 		presenter.cancel();

@@ -5,9 +5,7 @@ import org.pinguin.gf.service.api.journalentry.JournalEntryTO;
 
 import fr.xebia.extras.selma.Mapper;
 
-@Mapper(withIgnoreFields = { "org.pinguin.gf.service.api.journalentry.JournalEntryTO.id",
-		"org.pinguin.gf.service.api.journalentry.JournalEntryTO.links",
-		"org.pinguin.gf.service.api.account.AccountTO.id", "org.pinguin.gf.service.api.account.AccountTO.links" })
+@Mapper(withIgnoreFields="org.pinguin.gf.domain.journalentry.Tag.entries")
 public interface JournalEntryMapper {
 
 	JournalEntryTO asTO(JournalEntry entity);

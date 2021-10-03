@@ -100,6 +100,9 @@
 				<configuration>
 					<options>
 						<option>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:8001</option>
+						<option>--add-exports=javafx.base/com.sun.javafx.event=ALL-UNNAMED</option>
+						<option>--add-exports=javafx.base/com.sun.javafx.collections=ALL-UNNAMED</option>
+						<option>--add-exports=javafx.base/javafx.collections=ALL-UNNAMED</option>
 					</options>
 					<mainClass>org.pinguin.gf.app.MainApp</mainClass>
 				</configuration>

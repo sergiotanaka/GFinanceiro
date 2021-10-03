@@ -37,7 +37,7 @@ public class JournalEntryServiceProxy implements JournalEntryService {
 	}
 
 	@Override
-	public JournalEntryTO updateEntry(Long id, JournalEntryTO entry) {
+	public JournalEntryTO updateEntry(final Long id, final JournalEntryTO entry) {
 		String resourceUrl = entryResourceUrl + '/' + id;
 		ResponseEntity<JournalEntryTO> response = restTemplate.exchange(resourceUrl, HttpMethod.PUT,
 				new HttpEntity<>(entry), JournalEntryTO.class);
@@ -45,7 +45,7 @@ public class JournalEntryServiceProxy implements JournalEntryService {
 	}
 
 	@Override
-	public JournalEntryTO deleteEntry(Long id) {
+	public JournalEntryTO deleteEntry(final Long id) {
 		String entityUrl = entryResourceUrl + "/" + id;
 		restTemplate.delete(entityUrl);
 		return null;

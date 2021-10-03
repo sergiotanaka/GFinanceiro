@@ -198,7 +198,7 @@ public class MainApp extends Application {
 			repStage.centerOnScreen();
 			repStage.show();
 		});
-		
+
 		mainPane.setOnCalendarHandler(e -> {
 			CalendarView calendarView = new CalendarView();
 
@@ -209,11 +209,11 @@ public class MainApp extends Application {
 			birthdays.setStyle(Style.STYLE1);
 			holidays.setStyle(Style.STYLE2);
 			holidays.setStyle(Style.STYLE3);
-			
+
 			Entry<String> entry = new Entry<>();
 			entry.setCalendar(financas);
 			entry.setTitle("Abcd");
-			
+
 			CalendarSource myCalendarSource = new CalendarSource("My Calendars");
 			myCalendarSource.getCalendars().addAll(birthdays, holidays, financas);
 

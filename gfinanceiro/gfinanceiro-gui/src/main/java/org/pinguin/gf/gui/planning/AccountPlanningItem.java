@@ -11,7 +11,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 
 /**
- * 
+ * Objeto que representa uma conta planejada
  */
 public class AccountPlanningItem {
 

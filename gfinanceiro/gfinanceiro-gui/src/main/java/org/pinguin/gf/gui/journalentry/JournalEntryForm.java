@@ -4,12 +4,15 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
 import org.pinguin.gf.gui.control.AutoCompleteComboBox;
+import org.pinguin.gf.gui.control.TagBar;
 import org.pinguin.gf.gui.util.AccountStringConverter;
 import org.pinguin.gf.service.api.account.AccountTO;
+import org.pinguin.gf.service.api.journalentry.TagTO;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -37,6 +40,8 @@ public class JournalEntryForm extends AnchorPane {
 	@FXML
 	private TextField descriptionText;
 	@FXML
+	private TagBar<TagTO> tagBar;
+	@FXML
 	private CheckBox futureCheck;
 
 	@Inject
@@ -50,7 +55,7 @@ public class JournalEntryForm extends AnchorPane {
 		dateText.setDateFormat(new SimpleDateFormat("dd/MM/yy HH:mm:ss"));
 		dateText.setCalendar(Calendar.getInstance());
 		dateText.setShowTime(true);
-		StringConverter<BigDecimal> bigDecimalConverter = new StringConverter<BigDecimal>() {
+		StringConverter<BigDecimal> bigDecimalConverter = new StringConverter<>() {
 
 			@Override
 			public String toString(BigDecimal object) {
@@ -69,6 +74,23 @@ public class JournalEntryForm extends AnchorPane {
 			}
 		};
 		valueText.setTextFormatter(new TextFormatter<>(bigDecimalConverter));
+		tagBar.setConverter(new StringConverter<TagTO>() {
+
+			@Override
+			public String toString(final TagTO object) {
+				return object.getName();
+			}
+
+			@Override
+			public TagTO fromString(final String string) {
+				final Optional<TagTO> found = tagBar.getCandidates().stream().filter(t -> t.getName().equals(string))
+						.findFirst();
+				if (!found.isEmpty()) {
+					return found.get();
+				}
+				return new TagTO(string);
+			}
+		});
 	}
 
 	@Inject
@@ -80,7 +102,10 @@ public class JournalEntryForm extends AnchorPane {
 		valueText.textProperty().bindBidirectional(presenter.valueProperty());
 		dateText.calendarProperty().bindBidirectional(presenter.dateProperty());
 		descriptionText.textProperty().bindBidirectional(presenter.descriptionProperty());
+		tagBar.setTags(presenter.getTags());
+		tagBar.setCandidates(presenter.getCandidateTags());
 		futureCheck.selectedProperty().bindBidirectional(presenter.futureProperty());
+
 	}
 
 	public JournalEntryPresenter getPresenter() {

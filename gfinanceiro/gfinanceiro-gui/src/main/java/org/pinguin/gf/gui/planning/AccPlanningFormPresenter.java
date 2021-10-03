@@ -14,6 +14,9 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+/**
+ * Presenter da IHM "Planejamento da conta".
+ */
 public class AccPlanningFormPresenter {
 
 	private final ObservableList<AccountTO> accounts = FXCollections.observableArrayList();

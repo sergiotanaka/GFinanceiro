@@ -79,7 +79,7 @@ public class CashFlowReport extends AnchorPane {
 		((NumberAxis) barChart.getYAxis()).setLowerBound(0.0);
 		((NumberAxis) barChart.getYAxis()).setUpperBound(10000.0);
 		((NumberAxis) barChart.getYAxis()).setTickUnit(1000.0);
-		lineChart.getStylesheets().addAll(getClass().getResource("/chart.css").toExternalForm());
+		lineChart.getStylesheets().addAll(getClass().getResource("/META-INF/css/chart.css").toExternalForm());
 
 		// lineChart.setMouseTransparent(true);
 //		lineChart.setPickOnBounds(false);

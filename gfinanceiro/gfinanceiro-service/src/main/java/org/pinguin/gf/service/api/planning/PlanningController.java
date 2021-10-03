@@ -86,13 +86,11 @@ public class PlanningController implements PlanningService {
 	@Override
 	@GetMapping(value = "/{id}", produces = "application/hal+json")
 	public PlanningTO retrieveById(@PathVariable("id") Long id) {
-		Optional<Planning> found = repo.findById(id);
+		final Optional<Planning> found = repo.findById(id);
 		if (!found.isPresent()) {
 			return null;
 		}
-		PlanningTO response = mapper.asTO(found.get());
-//		response.add(linkTo(PlanningController.class).slash(response.getPlanId()).withSelfRel());
-		return response;
+		return mapper.asTO(found.get());
 	}
 
 	@Override

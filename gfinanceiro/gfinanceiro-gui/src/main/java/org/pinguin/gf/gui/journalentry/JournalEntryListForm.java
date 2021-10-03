@@ -19,7 +19,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.AnchorPane;
 import javafx.util.StringConverter;
@@ -76,8 +75,7 @@ public class JournalEntryListForm extends AnchorPane {
 		startDateText.calendarProperty().bindBidirectional(presenter.startDateProperty());
 		endDateText.calendarProperty().bindBidirectional(presenter.endDateProperty());
 
-		originColumn.setCellFactory(
-				ComboBoxTableCell.forTableColumn(AccountStringConverter.instance(), presenter.getAccounts()));
+		originColumn.setCellFactory(forTableColumn(AccountStringConverter.instance(), presenter.getAccounts()));
 		accountColumn.setCellFactory(forTableColumn(AccountStringConverter.instance(), presenter.getAccounts()));
 		descriptionColumn.setCellFactory(TextFieldTableCell.forTableColumn());
 	}
@@ -96,12 +94,12 @@ public class JournalEntryListForm extends AnchorPane {
 	public void cancel(ActionEvent evt) {
 		presenter.cancel();
 	}
-	
+
 	@FXML
 	public void clean(ActionEvent evt) {
 		presenter.clean();
 	}
-	
+
 	@FXML
 	public void reloadAccounts(ActionEvent evt) {
 		presenter.reloadAccounts();

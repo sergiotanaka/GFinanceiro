@@ -52,8 +52,14 @@
 				<TextField fx:id="descriptionText" GridPane.rowIndex="4"
 					GridPane.columnIndex="1" />
 
+				<Label text="Tags:" GridPane.rowIndex="5" GridPane.columnIndex="0" />
+				<TagBar fx:id="tagBar" GridPane.rowIndex="5" GridPane.columnIndex="1" />
+
 				<CheckBox fx:id="futureCheck" text="Futuro"
-					GridPane.rowIndex="5" GridPane.columnIndex="0" />
+					GridPane.rowIndex="6" GridPane.columnIndex="0" />
+
+
+
 			</GridPane>
 			<HBox spacing="10" alignment="CENTER_RIGHT">
 				<Button text="Salvar" onAction="#save" />

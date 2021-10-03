@@ -1,7 +1,9 @@
 package org.pinguin.gf.gui.control;
 
-import java.util.ArrayList;
+import static org.apache.commons.lang3.StringUtils.stripAccents;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
@@ -78,7 +80,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
 		restoreOriginalItems();
 	}
 
-	private void handleFilterChanged(String newValue) {
+	private void handleFilterChanged(final String newValue) {
 		if (!newValue.isEmpty()) {
 			show();
 			if (newValue.isEmpty()) {
@@ -101,7 +103,7 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
 		}
 	}
 
-	private List<T> filter(String filter, List<T> original) {
+	private List<T> filter(final String filter, final List<T> original) {
 
 		if (filter.length() == 0) {
 			return original;
@@ -109,17 +111,15 @@ public class AutoCompleteComboBox<T> extends ComboBox<T> {
 
 		final String filterLower = filter.toString().toLowerCase();
 
-		ArrayList<T> filteredList = new ArrayList<>();
-		original.stream().filter(element -> {
+		return original.stream().filter(element -> {
 			final StringConverter<T> converter = getConverter();
-			if (converter == null) {
-				return element.toString().toLowerCase().contains(filterLower);
-			} else {
-				return converter.toString(element).toLowerCase().contains(filterLower);
-			}
-		}).forEach(filteredList::add);
 
-		return filteredList;
+			if (converter == null) {
+				return stripAccents(element.toString().toLowerCase()).contains(filterLower);
+			} else {
+				return stripAccents(converter.toString(element).toLowerCase()).contains(filterLower);
+			}
+		}).collect(Collectors.toList());
 	}
 
 	private void restoreOriginalItems() {

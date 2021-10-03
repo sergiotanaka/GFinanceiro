@@ -68,7 +68,7 @@ public class PlanningFormPresenter {
 		});
 	}
 
-	protected List<AccountPlanningItem> map(Collection<AccountPlanningTO> plannings) {
+	protected List<AccountPlanningItem> map(final Collection<AccountPlanningTO> plannings) {
 
 		final List<AccountPlanningItem> result = new ArrayList<>();
 
@@ -84,7 +84,7 @@ public class PlanningFormPresenter {
 		return result;
 	}
 
-	private Set<AccountPlanningTO> map2(Collection<AccountPlanningItem> plannings) {
+	private Set<AccountPlanningTO> map2(final Collection<AccountPlanningItem> plannings) {
 		final Set<AccountPlanningTO> result = new HashSet<>();
 		for (final AccountPlanningItem item : plannings) {
 			final AccountPlanningTO plan = new AccountPlanningTO();
