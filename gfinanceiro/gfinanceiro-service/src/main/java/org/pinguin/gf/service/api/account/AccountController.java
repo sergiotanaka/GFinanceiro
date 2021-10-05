@@ -1,9 +1,12 @@
 package org.pinguin.gf.service.api.account;
 
+import static com.querydsl.core.types.dsl.Expressions.ONE;
+import static com.querydsl.core.types.dsl.Expressions.predicate;
 import static com.querydsl.jpa.JPAExpressions.select;
 import static org.pinguin.gf.domain.account.QAccount.account;
 import static org.pinguin.gf.domain.journalentry.QJournalEntry.journalEntry;
 
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -22,10 +25,13 @@ import org.pinguin.gf.domain.account.AccountNature;
 import org.pinguin.gf.domain.account.AccountRepository;
 import org.pinguin.gf.domain.account.BasicAccounts;
 import org.pinguin.gf.domain.account.BasicAccountsRepository;
+import org.pinguin.gf.domain.common.impl.ParseException;
 import org.pinguin.gf.domain.common.impl.RequestParamsMapper;
 import org.pinguin.gf.domain.common.impl.RequestParamsMapper.Result;
+import org.pinguin.gf.domain.common.impl.TagsFilterParser;
 import org.pinguin.gf.domain.journalentry.JournalEntry;
 import org.pinguin.gf.domain.journalentry.JournalEntryRepository;
+import org.pinguin.gf.domain.journalentry.Tag;
 import org.pinguin.gf.service.infra.AccountMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -42,6 +48,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.querydsl.core.types.Ops;
+import com.querydsl.core.types.dsl.BooleanExpression;
 
 import fr.xebia.extras.selma.Selma;
 
@@ -60,7 +69,9 @@ public class AccountController implements AccountService {
 	private BasicAccountsRepository basicAccRepo;
 
 	private AccountMapper mapper;
-	private RequestParamsMapper<Account> reqMapper = new RequestParamsMapper<>(Account.class);
+
+	private final RequestParamsMapper<Account> reqMapper = new RequestParamsMapper<>(Account.class);
+	private final TagsFilterParser tagFilterParser = new TagsFilterParser();
 
 	public AccountController() {
 		mapper = Selma.mapper(AccountMapper.class);
@@ -160,7 +171,7 @@ public class AccountController implements AccountService {
 	public List<AccStatementEntryTO> retrieveStatements(@PathVariable("id") Long id,
 			@RequestParam("start") @DateTimeFormat(iso = ISO.DATE) LocalDate start,
 			@RequestParam("end") @DateTimeFormat(iso = ISO.DATE) LocalDate end,
-			@RequestParam("periodBalance") boolean periodBalance) {
+			@RequestParam("tagFilter") String tagFilter, @RequestParam("periodBalance") boolean periodBalance) {
 
 		final Account root = repo.findById(id).get();
 		final List<Account> accs = retrieveAnalyticalAccounts(root);
@@ -169,11 +180,12 @@ public class AccountController implements AccountService {
 		if (periodBalance) {
 			retrieved = jEntryRepo.findAll(journalEntry.debitAccount.in(accs).or(journalEntry.creditAccount.in(accs))
 					.and(journalEntry.date.after(start.atStartOfDay()).or(journalEntry.date.eq(start.atStartOfDay()))
-							.and(journalEntry.date.before(end.plusDays(1).atStartOfDay()))),
-					Sort.by("date", "entryId"));
+							.and(journalEntry.date.before(end.plusDays(1).atStartOfDay())))
+					.and(parseTagsFilter(tagFilter)), Sort.by("date", "entryId"));
 		} else {
 			retrieved = jEntryRepo.findAll(journalEntry.debitAccount.in(accs).or(journalEntry.creditAccount.in(accs))
-					.and(journalEntry.date.before(end.plusDays(1).atStartOfDay())), Sort.by("date", "entryId"));
+					.and(journalEntry.date.before(end.plusDays(1).atStartOfDay())).and(parseTagsFilter(tagFilter)),
+					Sort.by("date", "entryId"));
 		}
 
 		final Set<Long> accIds = accs.stream().map(a -> a.getAccountId()).collect(Collectors.toSet());
@@ -204,6 +216,7 @@ public class AccountController implements AccountService {
 			}
 
 			entry.setDescription(item.getDescription());
+			entry.setTags(map(item.getTags()));
 			entry.setFuture(item.getFuture());
 
 			// Calculo do saldo
@@ -216,6 +229,10 @@ public class AccountController implements AccountService {
 		}
 
 		return result;
+	}
+
+	private String map(final List<Tag> tags) {
+		return tags.stream().map(t -> t.getName()).collect(Collectors.joining(","));
 	}
 
 	private BigDecimal safe(final BigDecimal value) {
@@ -375,6 +392,18 @@ public class AccountController implements AccountService {
 		}
 
 		return result;
+	}
+
+	private synchronized BooleanExpression parseTagsFilter(final String filter) {
+		try {
+			if (filter == null || filter.isBlank()) {
+				return predicate(Ops.EQ, ONE, ONE);
+			}
+			tagFilterParser.ReInit(new StringReader(filter.toUpperCase()));
+			return tagFilterParser.expr();
+		} catch (final ParseException e) {
+			throw new IllegalStateException("Falha ao executar o parse do filtro.", e);
+		}
 	}
 
 }

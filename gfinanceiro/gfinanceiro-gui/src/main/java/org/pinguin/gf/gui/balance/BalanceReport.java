@@ -26,6 +26,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableColumn.CellDataFeatures;
@@ -37,6 +38,9 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 import jfxtras.scene.control.CalendarTextField;
 
+/**
+ * Form de "Resumo".
+ */
 public class BalanceReport extends AnchorPane {
 
 	@Inject
@@ -48,6 +52,8 @@ public class BalanceReport extends AnchorPane {
 	private CalendarTextField startDateText;
 	@FXML
 	private CalendarTextField endDateText;
+	@FXML
+	private TextField tagFilterText;
 	@FXML
 	private TreeTableView<BalanceTO> balanceTree;
 	@FXML
@@ -62,7 +68,7 @@ public class BalanceReport extends AnchorPane {
 	public void init() {
 		startDateText.calendarProperty().bindBidirectional(presenter.startDateProperty());
 		endDateText.calendarProperty().bindBidirectional(presenter.endDateProperty());
-
+		tagFilterText.textProperty().bindBidirectional(presenter.tagFilterProperty());
 		presenter.getBalanceList().addListener(new ListChangeListener<BalanceTO>() {
 
 			@Override
@@ -84,8 +90,7 @@ public class BalanceReport extends AnchorPane {
 				// 2. Montar a hierarquia e guardar os roots
 				for (TreeItem<BalanceTO> item : map.values()) {
 					if (item.getValue().getAccount().getParent() != null) {
-						TreeItem<BalanceTO> parent = map
-								.get(item.getValue().getAccount().getParent().getAccountId());
+						TreeItem<BalanceTO> parent = map.get(item.getValue().getAccount().getParent().getAccountId());
 						parent.getChildren().add(item);
 					} else {
 						root.getChildren().add(item);
@@ -101,8 +106,9 @@ public class BalanceReport extends AnchorPane {
 		balanceTree.setOnMouseClicked(event -> {
 			if (event.getClickCount() == 3) {
 				BalanceTO selected = balanceTree.getSelectionModel().getSelectedItem().getValue();
-				openAccStatement.apply(new OpenAccStatementParam(null, selected.getAccount(),
-						presenter.startDateProperty().getValue(), presenter.endDateProperty().getValue()));
+				openAccStatement.apply(
+						new OpenAccStatementParam(null, selected.getAccount(), presenter.startDateProperty().getValue(),
+								presenter.endDateProperty().getValue(), presenter.tagFilterProperty().get()));
 			}
 		});
 

@@ -10,12 +10,21 @@ import java.util.Calendar;
 import javax.inject.Inject;
 
 import org.pinguin.gf.gui.control.AutoCompleteComboBox;
+import org.pinguin.gf.gui.control.TagBarCellFactory;
 import org.pinguin.gf.gui.util.AccountStringConverter;
+import org.pinguin.gf.gui.util.TagStringConverter;
 import org.pinguin.gf.service.api.account.AccountTO;
+import org.pinguin.gf.service.api.journalentry.TagTO;
 
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonBar.ButtonData;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
@@ -24,6 +33,9 @@ import javafx.scene.layout.AnchorPane;
 import javafx.util.StringConverter;
 import jfxtras.scene.control.CalendarTextField;
 
+/**
+ * Form do "Lançamento coletivo".
+ */
 public class JournalEntryListForm extends AnchorPane {
 
 	@FXML
@@ -45,6 +57,8 @@ public class JournalEntryListForm extends AnchorPane {
 	private TableColumn<JournalEntryItem, AccountTO> accountColumn;
 	@FXML
 	private TableColumn<JournalEntryItem, String> descriptionColumn;
+	@FXML
+	private TableColumn<JournalEntryItem, ObservableList<TagTO>> tagsColumn;
 
 	@Inject
 	private JournalEntryListPresenter presenter;
@@ -78,6 +92,9 @@ public class JournalEntryListForm extends AnchorPane {
 		originColumn.setCellFactory(forTableColumn(AccountStringConverter.instance(), presenter.getAccounts()));
 		accountColumn.setCellFactory(forTableColumn(AccountStringConverter.instance(), presenter.getAccounts()));
 		descriptionColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+		tagsColumn.setCellFactory(TagBarCellFactory.forTableColumn(
+				TagStringConverter.instance(presenter.getCandidateTags()), presenter.getCandidateTags()));
+
 	}
 
 	@FXML
@@ -87,7 +104,19 @@ public class JournalEntryListForm extends AnchorPane {
 
 	@FXML
 	public void save(ActionEvent evt) {
-		presenter.save();
+		try {
+			final String message = presenter.save();
+			final ButtonType okBtnType = new ButtonType("Ok", ButtonData.OK_DONE);
+			final Dialog<String> dialog = new Dialog<>();
+			dialog.setTitle("Information");
+			dialog.setContentText(message);
+			dialog.getDialogPane().getButtonTypes().add(okBtnType);
+			dialog.showAndWait();
+		} catch (final Exception e) {
+			final Alert a = new Alert(AlertType.ERROR);
+			a.setContentText(e.getMessage());
+			a.show();
+		}
 	}
 
 	@FXML

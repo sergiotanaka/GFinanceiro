@@ -22,9 +22,14 @@ import com.google.inject.Injector;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+/**
+ * Presenter do Form de "Historico".
+ */
 public class AccStatementPresenter {
 	@Inject
 	private Injector injector;
@@ -37,6 +42,7 @@ public class AccStatementPresenter {
 	private final Property<AccountTO> accountProperty = new SimpleObjectProperty<>();
 	private final Property<Calendar> startDateProperty = new SimpleObjectProperty<>();
 	private final Property<Calendar> endDateProperty = new SimpleObjectProperty<>();
+	private final StringProperty tagFilterProperty = new SimpleStringProperty();
 	private final Property<Boolean> periodBalanceProperty = new SimpleBooleanProperty(false);
 	private final ObservableList<AccStatementEntryTO> accStatementEntries = FXCollections.observableArrayList();
 
@@ -68,6 +74,10 @@ public class AccStatementPresenter {
 		return endDateProperty;
 	}
 
+	public StringProperty tagFilterProperty() {
+		return tagFilterProperty;
+	}
+
 	public Property<Boolean> periodBalanceProperty() {
 		return periodBalanceProperty;
 	}
@@ -78,7 +88,8 @@ public class AccStatementPresenter {
 
 	public void retrieve() {
 		List<AccStatementEntryTO> result = accService.retrieveStatements(accountProperty.getValue().getAccountId(),
-				map(startDateProperty.getValue()), map(endDateProperty.getValue()), periodBalanceProperty.getValue());
+				map(startDateProperty.getValue()), map(endDateProperty.getValue()), tagFilterProperty.get(),
+				periodBalanceProperty.getValue());
 		accStatementEntries.clear();
 		accStatementEntries.addAll(result);
 	}

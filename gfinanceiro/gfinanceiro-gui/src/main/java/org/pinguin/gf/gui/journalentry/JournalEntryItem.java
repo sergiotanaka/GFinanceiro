@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import org.pinguin.gf.service.api.account.AccountTO;
+import org.pinguin.gf.service.api.journalentry.TagTO;
 
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
@@ -11,6 +12,8 @@ import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 public class JournalEntryItem {
 
@@ -20,6 +23,7 @@ public class JournalEntryItem {
 	private final ObjectProperty<BigDecimal> valueProperty = new SimpleObjectProperty<>();
 	private final ObjectProperty<LocalDateTime> dateProperty = new SimpleObjectProperty<>();
 	private final StringProperty descriptionProperty = new SimpleStringProperty();
+	private final ObservableList<TagTO> tags = FXCollections.observableArrayList();
 
 	public LongProperty entryIdProperty() {
 		return entryIdProperty;
@@ -43,5 +47,9 @@ public class JournalEntryItem {
 
 	public StringProperty descriptionProperty() {
 		return descriptionProperty;
+	}
+
+	public ObservableList<TagTO> getTags() {
+		return tags;
 	}
 }

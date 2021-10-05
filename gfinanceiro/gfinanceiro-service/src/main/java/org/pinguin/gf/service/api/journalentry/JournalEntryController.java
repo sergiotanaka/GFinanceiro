@@ -5,12 +5,15 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.pinguin.gf.domain.journalentry.JournalEntry;
 import org.pinguin.gf.domain.journalentry.JournalEntryRepository;
+import org.pinguin.gf.domain.journalentry.Tag;
+import org.pinguin.gf.domain.journalentry.TagRepository;
 import org.pinguin.gf.service.infra.JournalEntryMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -38,6 +41,9 @@ public class JournalEntryController implements JournalEntryService {
 
 	@Autowired
 	private JournalEntryRepository repo;
+	@Autowired
+	private TagRepository tagRepo;
+
 	private JournalEntryMapper mapper;
 
 	public JournalEntryController() {
@@ -59,7 +65,7 @@ public class JournalEntryController implements JournalEntryService {
 			throw new IllegalArgumentException("Ja' existe lançamento semelhante.");
 		}
 
-		final JournalEntry saved = repo.save(mapper.asEntity(entry));
+		final JournalEntry saved = repo.save(mergeTags(mapper.asEntity(entry)));
 
 		JournalEntryTO response = mapper.asTO(saved);
 
@@ -115,9 +121,8 @@ public class JournalEntryController implements JournalEntryService {
 			return null;
 		}
 
-		repo.delete(found.get());
 		JournalEntryTO response = mapper.asTO(found.get());
-//		response.add(linkTo(JournalEntryController.class).slash(response.getEntryId()).withSelfRel());
+		repo.delete(found.get());
 		return response;
 	}
 
@@ -175,4 +180,13 @@ public class JournalEntryController implements JournalEntryService {
 			return first.length() >= second.length() ? first : second;
 		}
 	}
+
+	private JournalEntry mergeTags(final JournalEntry entity) {
+		final List<Tag> tagWithIds = entity.getTags().stream().filter(t -> t.getTagId() != null)
+				.collect(Collectors.toList());
+		entity.getTags().removeAll(tagWithIds);
+		tagWithIds.forEach(t -> tagRepo.findById(t.getTagId()).ifPresent(f -> entity.getTags().add(f)));
+		return entity;
+	}
+
 }

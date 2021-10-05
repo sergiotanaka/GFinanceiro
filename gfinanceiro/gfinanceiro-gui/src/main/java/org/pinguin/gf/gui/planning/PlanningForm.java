@@ -47,7 +47,7 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 /**
- * IHM "Planejamento" 
+ * IHM "Planejamento"
  */
 public class PlanningForm extends AnchorPane {
 
@@ -144,7 +144,7 @@ public class PlanningForm extends AnchorPane {
 				final LocalDate start = LocalDate.of(monthYear.getYear(), monthYear.getMonth(), 1);
 				final LocalDate end = LocalDate.of(monthYear.getYear(), monthYear.getMonth(), 1).plusMonths(1)
 						.minusDays(1);
-				final List<BalanceTO> balance = presenter.getBalService().retrieveBalance(start, end, false);
+				final List<BalanceTO> balance = presenter.getBalService().retrieveBalance(start, end, "", false);
 				final Map<Long, BigDecimal> balanceMap = balance.stream()
 						.collect(Collectors.toMap(b -> b.getAccount().getAccountId(), BalanceTO::getBalance));
 				return balanceMap;
@@ -209,7 +209,8 @@ public class PlanningForm extends AnchorPane {
 			end.add(Calendar.MONTH, 1);
 			end.add(Calendar.SECOND, -1);
 			AccountPlanningItem selected = accPlanTree.getSelectionModel().getSelectedItem().getValue();
-			openAccStatement.apply(new OpenAccStatementParam(null, selected.accountProperty().getValue(), ini, end));
+			openAccStatement
+					.apply(new OpenAccStatementParam(null, selected.accountProperty().getValue(), ini, end, ""));
 		});
 
 		final MenuItem edit = new MenuItem("Editar");

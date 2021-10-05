@@ -22,4 +22,11 @@ public class Tag {
 	private String name;
 	@ManyToMany(mappedBy = "tags")
 	private List<JournalEntry> entries = new ArrayList<>();
+
+	/**
+	 * Construtor.
+	 */
+	public Tag(final String name) {
+		this.name = name;
+	}
 }

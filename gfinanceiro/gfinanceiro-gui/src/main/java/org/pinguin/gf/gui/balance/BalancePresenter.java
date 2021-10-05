@@ -13,15 +13,21 @@ import org.pinguin.gf.service.api.balance.BalanceTO;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+/**
+ * Presenter do form "Resumo"
+ */
 public class BalancePresenter {
 	@Inject
 	private BalanceService service;
 
 	private final Property<Calendar> startDateProperty = new SimpleObjectProperty<>();
 	private final Property<Calendar> endDateProperty = new SimpleObjectProperty<>();
+	private final StringProperty tagFilterProperty = new SimpleStringProperty();
 
 	private final ObservableList<BalanceTO> balanceList = FXCollections.observableArrayList();
 
@@ -46,13 +52,17 @@ public class BalancePresenter {
 		return endDateProperty;
 	}
 
+	public StringProperty tagFilterProperty() {
+		return tagFilterProperty;
+	}
+
 	public ObservableList<BalanceTO> getBalanceList() {
 		return balanceList;
 	}
 
 	public void retrieve() {
 		final List<BalanceTO> result = service.retrieveBalance(map(startDateProperty.getValue()),
-				map(endDateProperty.getValue()), false);
+				map(endDateProperty.getValue()), tagFilterProperty.getValue(), false);
 		balanceList.clear();
 		balanceList.addAll(result);
 	}

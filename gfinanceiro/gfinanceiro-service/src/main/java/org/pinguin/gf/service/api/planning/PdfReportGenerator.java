@@ -223,7 +223,7 @@ public class PdfReportGenerator {
 		MonthYear monthYear = planning.getMonthYear();
 		final LocalDate start = LocalDate.of(monthYear.getYear(), monthYear.getMonth(), 1);
 		final LocalDate end = LocalDate.of(monthYear.getYear(), monthYear.getMonth(), 1).plusMonths(1).minusDays(1);
-		final List<BalanceTO> balance = balService.retrieveBalance(start, end, false);
+		final List<BalanceTO> balance = balService.retrieveBalance(start, end, "", false);
 		final Map<Long, BigDecimal> balanceMap = balance.stream()
 				.collect(Collectors.toMap(b -> b.getAccount().getAccountId(), BalanceTO::getBalance));
 		return balanceMap;

@@ -3,6 +3,7 @@ package org.pinguin.gf.domain.journalentry;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -39,16 +40,17 @@ public class JournalEntry {
 
 	private String description;
 
-	@ManyToMany(cascade = CascadeType.ALL)
+	@ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH })
 	private List<Tag> tags = new ArrayList<>();
 
 	public JournalEntry(Account debitAccount, Account creditAccount, BigDecimal value, LocalDateTime date,
-			String description) {
+			String description, Tag... tags) {
 		super();
 		this.debitAccount = debitAccount;
 		this.creditAccount = creditAccount;
 		this.value = value;
 		this.date = date;
 		this.description = description;
+		this.tags.addAll(Arrays.asList(tags));
 	}
 }

@@ -1,0 +1,99 @@
+options {
+  UNICODE_INPUT = true;
+  LOOKAHEAD = 2;
+  CHOICE_AMBIGUITY_CHECK = 2;
+  OTHER_AMBIGUITY_CHECK = 1;
+  STATIC = false;
+  DEBUG_PARSER = false;
+}
+
+PARSER_BEGIN(TagsFilterParser)
+
+package org.pinguin.gf.domain.common.impl;
+
+import org.pinguin.gf.domain.journalentry.QJournalEntry;
+
+import com.querydsl.core.types.dsl.BooleanExpression;
+
+public class TagsFilterParser {
+	
+	public TagsFilterParser() {
+	}
+}
+
+PARSER_END(TagsFilterParser)
+
+< DEFAULT > SKIP: {
+	" " | "\t"
+}
+
+TOKEN: {
+  	< AND_OP:		"AND" >
+|  	< OR_OP:		"OR" >
+|	< NOT_OP:		"NOT" >
+|	< OPEN_PAR:		"(" >
+|	< CLOSE_PAR:	")" >
+|	< TAG:			(["A"-"Z","a"-"z","0"-"9","."])+ >
+}
+
+BooleanExpression expr():
+{
+	BooleanExpression p;
+	BooleanExpression p2;
+}
+{
+	p=term() 
+	(
+	<OR_OP> p2=expr() 		{ p = p.or(p2); }
+	)*
+	
+	{
+		return p;
+	}
+}
+
+BooleanExpression term():
+{
+	BooleanExpression p;
+	BooleanExpression p2;
+}
+{
+	p=unary() 
+	(
+	<AND_OP> p2=term()		{ p = p.and(p2); }
+	)*
+	
+	{
+		return p;
+	}
+}
+
+BooleanExpression unary():
+{
+	BooleanExpression p;
+}
+{
+	<NOT_OP> p=element()	{ p = p.not(); return p; }
+	| p=element()			{ return p; }
+}
+
+BooleanExpression element():
+{
+	BooleanExpression p;
+}
+{
+	p=tag() 			{ return p;	}
+	| <OPEN_PAR> p=expr() <CLOSE_PAR>	{ return p;	}
+}
+
+BooleanExpression tag():
+{
+	Token t = null;
+	String tagName;
+}
+{
+	t=<TAG>			{ tagName = t.image; }
+	{
+	    return QJournalEntry.journalEntry.tags.any().name.upper().eq(tagName);
+	}
+}

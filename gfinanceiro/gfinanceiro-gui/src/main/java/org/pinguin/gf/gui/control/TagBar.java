@@ -9,10 +9,13 @@ import org.controlsfx.control.textfield.TextFields;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ObjectPropertyBase;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -48,6 +51,11 @@ public class TagBar<T> extends HBox {
 	private final TextField inputTextField;
 	private ObjectProperty<StringConverter<T>> converter = new SimpleObjectProperty<StringConverter<T>>(this,
 			"converter", defaultStringConverter());
+	private ObjectProperty<EventHandler<ActionEvent>> onAction = new SimpleObjectProperty<>();
+
+	public final ObjectProperty<EventHandler<ActionEvent>> onActionProperty() {
+		return onAction;
+	}
 
 	private boolean tagsContainsText(final String text) {
 		return tags.stream().map(tag -> getConverter().toString(tag)).anyMatch(tagText -> tagText.equals(text));
@@ -64,7 +72,9 @@ public class TagBar<T> extends HBox {
 		inputTextField = new TextField();
 		inputTextField.setOnAction(evt -> {
 			final String text = inputTextField.getText();
-			if (!text.isEmpty() && !tagsContainsText(text)) {
+			if (text.isEmpty()) {
+				onAction.get().handle(new ActionEvent());
+			} else if (!text.isEmpty() && !tagsContainsText(text)) {
 				tags.add(getConverter().fromString(text));
 				inputTextField.clear();
 			}

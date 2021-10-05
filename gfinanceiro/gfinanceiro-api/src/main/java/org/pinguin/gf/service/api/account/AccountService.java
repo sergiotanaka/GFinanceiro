@@ -14,7 +14,8 @@ public interface AccountService {
 
 	AccountTO retrieveById(Long id);
 
-	List<AccStatementEntryTO> retrieveStatements(Long id, LocalDate start, LocalDate end, boolean periodBalance);
+	List<AccStatementEntryTO> retrieveStatements(Long id, LocalDate start, LocalDate end, String tagFilter,
+			boolean periodBalance);
 
 	/**
 	 * TODO: parametros.

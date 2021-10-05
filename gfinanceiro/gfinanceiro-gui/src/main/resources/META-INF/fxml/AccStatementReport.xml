@@ -12,9 +12,10 @@
 <?import jfxtras.scene.control.*?>
 <?import org.pinguin.gf.gui.control.*?>
 
-<fx:root type="javafx.scene.layout.AnchorPane" xmlns:fx="http://javafx.com/fxml"
-	AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-	AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+<fx:root type="javafx.scene.layout.AnchorPane"
+	xmlns:fx="http://javafx.com/fxml" AnchorPane.bottomAnchor="0.0"
+	AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+	AnchorPane.topAnchor="0.0">
 	<children>
 		<VBox spacing="10" AnchorPane.bottomAnchor="0.0"
 			AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
@@ -32,8 +33,8 @@
 
 				<Label text="Conta" GridPane.rowIndex="0"
 					GridPane.columnIndex="0" />
-				<AutoCompleteComboBox fx:id="accountCombo" GridPane.rowIndex="0"
-					GridPane.columnIndex="1" />
+				<AutoCompleteComboBox fx:id="accountCombo"
+					GridPane.rowIndex="0" GridPane.columnIndex="1" />
 
 				<Label text="Data início:" GridPane.rowIndex="0"
 					GridPane.columnIndex="2" />
@@ -44,18 +45,26 @@
 					GridPane.columnIndex="4" />
 				<CalendarTextField fx:id="endDateText"
 					GridPane.rowIndex="0" GridPane.columnIndex="5" />
-				<CheckBox fx:id="periodBalanceChkBox" text="Saldo do período"
-					GridPane.rowIndex="0" GridPane.columnIndex="6" />
+
+				<Label text="TAG(s)" GridPane.rowIndex="0"
+					GridPane.columnIndex="6" />
+				<TextField fx:id="tagFilterText" GridPane.rowIndex="0"
+					GridPane.columnIndex="7" />
+
+				<CheckBox fx:id="periodBalanceChkBox"
+					text="Saldo do período" GridPane.rowIndex="0"
+					GridPane.columnIndex="8" />
 
 				<Button text="Consultar" onAction="#retrieve"
-					GridPane.rowIndex="0" GridPane.columnIndex="7" />
+					GridPane.rowIndex="0" GridPane.columnIndex="9" />
 			</GridPane>
 			<TableView fx:id="accStatementTView" VBox.vgrow="ALWAYS">
 				<!-- <columnResizePolicy> -->
 				<!-- <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" /> -->
 				<!-- </columnResizePolicy> -->
 				<columns>
-					<TableColumn fx:id="dateColumn" text="Data" prefWidth="150">
+					<TableColumn fx:id="dateColumn" text="Data"
+						prefWidth="150">
 						<cellValueFactory>
 							<PropertyValueFactory property="date" />
 						</cellValueFactory>
@@ -70,6 +79,12 @@
 						prefWidth="400">
 						<cellValueFactory>
 							<PropertyValueFactory property="description" />
+						</cellValueFactory>
+					</TableColumn>
+					<TableColumn fx:id="tagColumn" text="TAG(s)"
+						prefWidth="150">
+						<cellValueFactory>
+							<PropertyValueFactory property="tags" />
 						</cellValueFactory>
 					</TableColumn>
 					<TableColumn fx:id="valueColumn" text="Valor"

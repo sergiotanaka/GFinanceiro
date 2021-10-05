@@ -132,7 +132,7 @@ public class CashFlowReport extends AnchorPane {
 			d.getNode().setOnMouseClicked(e -> {
 				if (e.getClickCount() == 2) {
 					openAccStatement.apply(new OpenAccStatementParam(null, accountCombo.getValue(),
-							map((LocalDate) d.getExtraValue()), map((LocalDate) d.getExtraValue())));
+							map((LocalDate) d.getExtraValue()), map((LocalDate) d.getExtraValue()), ""));
 				}
 			});
 		});
@@ -143,7 +143,7 @@ public class CashFlowReport extends AnchorPane {
 			d.getNode().setOnMouseClicked(e -> {
 				if (e.getClickCount() == 2) {
 					openAccStatement.apply(new OpenAccStatementParam(null, accountCombo.getValue(),
-							map((LocalDate) d.getExtraValue()), map((LocalDate) d.getExtraValue())));
+							map((LocalDate) d.getExtraValue()), map((LocalDate) d.getExtraValue()), ""));
 				}
 			});
 		});

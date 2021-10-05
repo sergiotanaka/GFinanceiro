@@ -59,6 +59,12 @@
 							<PropertyValueFactory property="description" />
 						</cellValueFactory>
 					</TableColumn>
+					<TableColumn fx:id="tagsColumn" text="TAG(s)"
+						prefWidth="150">
+						<cellValueFactory>
+							<PropertyValueFactory property="tags" />
+						</cellValueFactory>
+					</TableColumn>
 					<TableColumn fx:id="valueColumn" text="Valor"
 						prefWidth="100">
 						<cellValueFactory>

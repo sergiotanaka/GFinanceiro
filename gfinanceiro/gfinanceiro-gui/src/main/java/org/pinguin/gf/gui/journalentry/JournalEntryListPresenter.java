@@ -20,6 +20,8 @@ import org.pinguin.gf.service.api.account.AccountService;
 import org.pinguin.gf.service.api.account.AccountTO;
 import org.pinguin.gf.service.api.journalentry.JournalEntryService;
 import org.pinguin.gf.service.api.journalentry.JournalEntryTO;
+import org.pinguin.gf.service.api.journalentry.TagService;
+import org.pinguin.gf.service.api.journalentry.TagTO;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
@@ -37,6 +39,8 @@ public class JournalEntryListPresenter {
 	@Inject
 	private AccountService accService;
 	@Inject
+	private TagService tagService;
+	@Inject
 	private JournalEntryService journalEntryService;
 
 	private final ObservableList<JournalEntryItem> entries = FXCollections.observableArrayList();
@@ -45,6 +49,7 @@ public class JournalEntryListPresenter {
 	private Property<String> textAreaProperty = new SimpleStringProperty();
 	private Property<Calendar> startDateProperty = new SimpleObjectProperty<>();
 	private Property<Calendar> endDateProperty = new SimpleObjectProperty<>();
+	private ObservableList<TagTO> candidateTags = FXCollections.observableArrayList();
 
 	public JournalEntryListPresenter() {
 		nf.setParseBigDecimal(true);
@@ -53,6 +58,7 @@ public class JournalEntryListPresenter {
 	@Inject
 	public void init() {
 		getAccounts().addAll(accService.retrieveAnalytical());
+		getCandidateTags().addAll(tagService.retrieveAll());
 
 		LocalDate endDate = LocalDate.now().withDayOfMonth(15);
 		if (LocalDate.now().isAfter(endDate)) {
@@ -82,6 +88,10 @@ public class JournalEntryListPresenter {
 
 	public ObservableList<AccountTO> getAccounts() {
 		return accounts;
+	}
+
+	public ObservableList<TagTO> getCandidateTags() {
+		return candidateTags;
 	}
 
 	public ObservableList<JournalEntryItem> getEntries() {
@@ -114,7 +124,9 @@ public class JournalEntryListPresenter {
 		}
 	}
 
-	public void save() {
+	public String save() {
+		int success = 0;
+		int exists = 0;
 		for (JournalEntryItem item : entries) {
 			JournalEntryTO to = new JournalEntryTO();
 			to.setEntryId(item.entryIdProperty().get());
@@ -123,13 +135,18 @@ public class JournalEntryListPresenter {
 			to.setValue(item.valueProperty().get());
 			to.setDate(item.dateProperty().get());
 			to.setDescription(item.descriptionProperty().get());
+			to.getTags().addAll(item.getTags());
 			to.setFuture(false);
 			if (journalEntryService.exists(to.getDate(), to.getValue(), to.getDescription())) {
+				exists++;
 				log.warn("Entrada ja' existente: {}", to.toString());
 			} else {
 				journalEntryService.createEntry(to);
+				success++;
 			}
 		}
+		return String.format("Foram salvos %d registros e descartados %d registros por já existir.", success, exists);
+
 	}
 
 	public void cancel() {
@@ -144,6 +161,8 @@ public class JournalEntryListPresenter {
 	public void reloadAccounts() {
 		getAccounts().clear();
 		getAccounts().addAll(accService.retrieveAnalytical());
+		getCandidateTags().clear();
+		getCandidateTags().addAll(tagService.retrieveAll());
 	}
 
 	// METODOS DE APOIO //

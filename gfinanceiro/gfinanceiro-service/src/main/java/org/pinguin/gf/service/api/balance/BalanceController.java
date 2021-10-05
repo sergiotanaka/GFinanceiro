@@ -1,7 +1,10 @@
 package org.pinguin.gf.service.api.balance;
 
+import static com.querydsl.core.types.dsl.Expressions.ONE;
+import static com.querydsl.core.types.dsl.Expressions.predicate;
 import static org.pinguin.gf.domain.journalentry.QJournalEntry.journalEntry;
 
+import java.io.StringReader;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -13,6 +16,8 @@ import java.util.Map.Entry;
 import org.pinguin.gf.domain.account.Account;
 import org.pinguin.gf.domain.account.BasicAccounts;
 import org.pinguin.gf.domain.account.BasicAccountsRepository;
+import org.pinguin.gf.domain.common.impl.ParseException;
+import org.pinguin.gf.domain.common.impl.TagsFilterParser;
 import org.pinguin.gf.domain.journalentry.JournalEntry;
 import org.pinguin.gf.domain.journalentry.JournalEntryRepository;
 import org.pinguin.gf.service.api.account.AccountNatureTO;
@@ -26,6 +31,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.querydsl.core.types.Ops;
+import com.querydsl.core.types.dsl.BooleanExpression;
+
 import fr.xebia.extras.selma.Selma;
 
 @RestController
@@ -36,7 +44,10 @@ public class BalanceController implements BalanceService {
 	private JournalEntryRepository repo;
 	@Autowired
 	private BasicAccountsRepository basicAccRepo;
-	private AccountMapper accMapper = Selma.mapper(AccountMapper.class);
+
+	private final AccountMapper accMapper = Selma.mapper(AccountMapper.class);
+
+	private final TagsFilterParser tagFilterParser = new TagsFilterParser();
 
 	/*
 	 * (non-Javadoc)
@@ -47,12 +58,12 @@ public class BalanceController implements BalanceService {
 	@GetMapping(produces = "application/hal+json")
 	public List<BalanceTO> retrieveBalance(@RequestParam("start") @DateTimeFormat(iso = ISO.DATE) LocalDate start,
 			@RequestParam("end") @DateTimeFormat(iso = ISO.DATE) LocalDate end,
-			@RequestParam("considerFuture") boolean considerFuture) {
+			@RequestParam("tagFilter") String tagFilter, @RequestParam("considerFuture") boolean considerFuture) {
 
 		Iterable<JournalEntry> retrieved = repo
 				.findAll((journalEntry.date.after(start.atStartOfDay()).or(journalEntry.date.eq(start.atStartOfDay())))
 						.and(journalEntry.date.before(end.plusDays(1).atStartOfDay()))
-						.and(journalEntry.future.eq(considerFuture)));
+						.and(journalEntry.future.eq(considerFuture)).and(parseTagsFilter(tagFilter)));
 
 		final Map<Account, BalanceTO> balance = new HashMap<>();
 
@@ -111,6 +122,18 @@ public class BalanceController implements BalanceService {
 			}
 		} catch (final Exception e) {
 			e.printStackTrace();
+		}
+	}
+
+	private synchronized BooleanExpression parseTagsFilter(final String filter) {
+		try {
+			if (filter == null || filter.isBlank()) {
+				return predicate(Ops.EQ, ONE, ONE);
+			}
+			tagFilterParser.ReInit(new StringReader(filter.toUpperCase()));
+			return tagFilterParser.expr();
+		} catch (final ParseException e) {
+			throw new IllegalStateException("Falha ao executar o parse do filtro.", e);
 		}
 	}
 

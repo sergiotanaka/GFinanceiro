@@ -34,7 +34,9 @@ public class OpenAccStatementCommand implements Function<OpenAccStatementParam, 
 		if (param.getEndDate() != null) {
 			report.getPresenter().endDateProperty().setValue(param.getEndDate());
 		}
-
+		if (param.getTagFilter() != null) {
+			report.getPresenter().tagFilterProperty().set(param.getTagFilter());
+		}
 		Stage listStage = new Stage();
 		listStage.setTitle("Historico");
 		listStage.setScene(new Scene(report));

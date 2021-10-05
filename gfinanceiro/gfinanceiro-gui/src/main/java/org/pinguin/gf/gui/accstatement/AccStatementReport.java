@@ -31,6 +31,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
@@ -41,6 +42,9 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 import jfxtras.scene.control.CalendarTextField;
 
+/**
+ * Form do "Historico".
+ */
 public class AccStatementReport extends AnchorPane {
 
 	private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -51,6 +55,8 @@ public class AccStatementReport extends AnchorPane {
 	private CalendarTextField startDateText;
 	@FXML
 	private CalendarTextField endDateText;
+	@FXML
+	private TextField tagFilterText;
 	@FXML
 	private TableView<AccStatementEntryTO> accStatementTView;
 	@FXML
@@ -209,6 +215,7 @@ public class AccStatementReport extends AnchorPane {
 		accountCombo.valueProperty().bindBidirectional(presenter.accountProperty());
 		startDateText.calendarProperty().bindBidirectional(presenter.startDateProperty());
 		endDateText.calendarProperty().bindBidirectional(presenter.endDateProperty());
+		tagFilterText.textProperty().bindBidirectional(presenter.tagFilterProperty());
 		periodBalanceChkBox.selectedProperty().bindBidirectional(presenter.periodBalanceProperty());
 		accStatementTView.setItems(presenter.accStatementEntries());
 	}

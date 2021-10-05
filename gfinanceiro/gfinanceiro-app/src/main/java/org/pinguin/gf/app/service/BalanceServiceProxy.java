@@ -23,11 +23,11 @@ public class BalanceServiceProxy implements BalanceService {
 	private RestTemplate restTemplate;
 
 	@Override
-	public List<BalanceTO> retrieveBalance(LocalDate start, LocalDate end, boolean considerFuture) {
+	public List<BalanceTO> retrieveBalance(LocalDate start, LocalDate end, String tagFilter, boolean considerFuture) {
 		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(balanceResourceUrl).queryParam("start", start)
-				.queryParam("end", end).queryParam("considerFuture", considerFuture);
-		final ResponseEntity<List<BalanceTO>> response = restTemplate.exchange(builder.toUriString(), HttpMethod.GET,
-				null, balanceTypeRef);
+				.queryParam("end", end).queryParam("tagFilter", tagFilter).queryParam("considerFuture", considerFuture);
+		final ResponseEntity<List<BalanceTO>> response = restTemplate.exchange(builder.build().encode().toUri(),
+				HttpMethod.GET, null, balanceTypeRef);
 		return response.getBody();
 	}
 

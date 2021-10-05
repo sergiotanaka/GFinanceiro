@@ -56,13 +56,13 @@ public class AccountServiceProxy implements AccountService {
 	}
 
 	@Override
-	public List<AccStatementEntryTO> retrieveStatements(Long id, LocalDate start, LocalDate end,
+	public List<AccStatementEntryTO> retrieveStatements(Long id, LocalDate start, LocalDate end, String tagFilter,
 			boolean periodBalance) {
 		String resourceUrl = accountResourceUrl + '/' + id + "/statements";
 		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(resourceUrl).queryParam("start", start)
-				.queryParam("end", end).queryParam("periodBalance", periodBalance);
-		final ResponseEntity<List<AccStatementEntryTO>> response = restTemplate.exchange(builder.toUriString(),
-				HttpMethod.GET, null, accStateListTypeRef);
+				.queryParam("end", end).queryParam("tagFilter", tagFilter).queryParam("periodBalance", periodBalance);
+		final ResponseEntity<List<AccStatementEntryTO>> response = restTemplate
+				.exchange(builder.build().encode().toUri(), HttpMethod.GET, null, accStateListTypeRef);
 		return response.getBody();
 	}
 
@@ -100,8 +100,8 @@ public class AccountServiceProxy implements AccountService {
 		String resourceUrl = accountResourceUrl + '/' + id + "/cashflow";
 		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(resourceUrl).queryParam("start", start)
 				.queryParam("end", end);
-		final ResponseEntity<List<DayResultTO>> response = restTemplate.exchange(builder.toUriString(),
-				HttpMethod.GET, null, dayResultListTypeRef);
+		final ResponseEntity<List<DayResultTO>> response = restTemplate.exchange(builder.toUriString(), HttpMethod.GET,
+				null, dayResultListTypeRef);
 		return response.getBody();
 	}
 

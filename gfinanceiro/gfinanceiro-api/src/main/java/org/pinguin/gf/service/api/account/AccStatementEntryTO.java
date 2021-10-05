@@ -17,16 +17,18 @@ public class AccStatementEntryTO {
 	private AccountTO account;
 	private BigDecimal value;
 	private String description;
+	private String tags;
 	private BigDecimal balance;
 	private Boolean future;
 
 	public AccStatementEntryTO(LocalDateTime date, AccountTO origin, AccountTO account, BigDecimal value,
-			String description, BigDecimal balance, Boolean future) {
+			String description, String tags, BigDecimal balance, Boolean future) {
 		this.date = date;
 		this.origin = origin;
 		this.account = account;
 		this.value = value;
 		this.description = description;
+		this.tags = tags;
 		this.balance = balance;
 		this.future = future;
 	}
