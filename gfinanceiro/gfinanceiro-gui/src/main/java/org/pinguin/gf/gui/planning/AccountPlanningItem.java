@@ -25,13 +25,15 @@ public class AccountPlanningItem {
 
 	public AccountPlanningItem() {
 		final ChangeListener<? super BigDecimal> listener = (r, o, n) -> {
-			if (!valueProperty.get().equals(BigDecimal.ZERO) && !accomplishedProperty.get().equals(BigDecimal.ZERO)) {
+			if (!valueProperty.get().setScale(2).equals(BigDecimal.ZERO.setScale(2))) {
 				percentProperty.set(
 						accomplishedProperty.get().divide(valueProperty.get(), 2, RoundingMode.HALF_UP).doubleValue());
 			}
+			if (accomplishedProperty.get().doubleValue() < 0.0) {
+				percentProperty.set(Double.valueOf(0.0));
+			}
 			balanceProperty.set(valueProperty.get().subtract(accomplishedProperty.get()));
 		};
-
 		valueProperty.addListener(listener);
 		accomplishedProperty.addListener(listener);
 	}

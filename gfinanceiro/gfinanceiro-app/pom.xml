@@ -99,7 +99,7 @@
 				<version>0.0.6</version>
 				<configuration>
 					<options>
-						<option>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:8001</option>
+						<option>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:8001</option>
 						<option>--add-exports=javafx.base/com.sun.javafx.event=ALL-UNNAMED</option>
 						<option>--add-exports=javafx.base/com.sun.javafx.collections=ALL-UNNAMED</option>
 						<option>--add-exports=javafx.base/javafx.collections=ALL-UNNAMED</option>

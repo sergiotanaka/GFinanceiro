@@ -23,7 +23,8 @@ public class JournalEntryItem {
 	private final ObjectProperty<BigDecimal> valueProperty = new SimpleObjectProperty<>();
 	private final ObjectProperty<LocalDateTime> dateProperty = new SimpleObjectProperty<>();
 	private final StringProperty descriptionProperty = new SimpleStringProperty();
-	private final ObservableList<TagTO> tags = FXCollections.observableArrayList();
+	private final ObjectProperty<ObservableList<TagTO>> tagsProperty = new SimpleObjectProperty<>(
+			FXCollections.observableArrayList());
 
 	public LongProperty entryIdProperty() {
 		return entryIdProperty;
@@ -49,7 +50,8 @@ public class JournalEntryItem {
 		return descriptionProperty;
 	}
 
-	public ObservableList<TagTO> getTags() {
-		return tags;
+	public ObjectProperty<ObservableList<TagTO>> tagsProperty() {
+		return tagsProperty;
 	}
+
 }

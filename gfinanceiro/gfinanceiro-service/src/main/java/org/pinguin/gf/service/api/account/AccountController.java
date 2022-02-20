@@ -271,13 +271,7 @@ public class AccountController implements AccountService {
 
 		List<AccountTO> list = new ArrayList<>();
 		for (Account entity : repo.findAll(result.getPredicate(), result.getPageable())) {
-			AccountTO to = mapper.asTO(entity);
-//			to.add(linkTo(AccountController.class).slash(to.getAccountId()).withSelfRel());
-			if (to.getParent() != null) {
-//				to.add(linkTo(AccountController.class).slash(to.getParent().getAccountId()).withRel("parent"));
-			}
-			to.setParent(null);
-			list.add(to);
+			list.add(mapper.asTO(entity));
 		}
 		return list;
 	}

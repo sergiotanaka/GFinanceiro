@@ -135,13 +135,13 @@ public class JournalEntryListPresenter {
 			to.setValue(item.valueProperty().get());
 			to.setDate(item.dateProperty().get());
 			to.setDescription(item.descriptionProperty().get());
-			to.getTags().addAll(item.getTags());
+			to.getTags().addAll(item.tagsProperty().get());
 			to.setFuture(false);
 			if (journalEntryService.exists(to.getDate(), to.getValue(), to.getDescription())) {
 				exists++;
 				log.warn("Entrada ja' existente: {}", to.toString());
 			} else {
-				journalEntryService.createEntry(to);
+				journalEntryService.createEntry(to, null);
 				success++;
 			}
 		}

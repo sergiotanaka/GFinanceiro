@@ -1,5 +1,6 @@
 package org.pinguin.gf.service.api.journalentry;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -7,9 +8,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.apache.commons.text.similarity.LevenshteinDistance;
+import org.pinguin.gf.domain.attachment.Attachment;
+import org.pinguin.gf.domain.attachment.AttachmentRepository;
 import org.pinguin.gf.domain.journalentry.JournalEntry;
 import org.pinguin.gf.domain.journalentry.JournalEntryRepository;
 import org.pinguin.gf.domain.journalentry.Tag;
@@ -17,8 +21,10 @@ import org.pinguin.gf.domain.journalentry.TagRepository;
 import org.pinguin.gf.service.infra.JournalEntryMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,8 +33,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import fr.xebia.extras.selma.Selma;
 
@@ -43,6 +51,8 @@ public class JournalEntryController implements JournalEntryService {
 	private JournalEntryRepository repo;
 	@Autowired
 	private TagRepository tagRepo;
+	@Autowired
+	private AttachmentRepository attachmRepo;
 
 	private JournalEntryMapper mapper;
 
@@ -58,18 +68,28 @@ public class JournalEntryController implements JournalEntryService {
 	 * pinguin.gf.service.api.journalentry.JournalEntryTO)
 	 */
 	@Override
-	@PostMapping(produces = "application/hal+json")
+	@Transactional
+	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "application/hal+json")
 	@ResponseStatus(HttpStatus.CREATED)
-	public JournalEntryTO createEntry(@Valid @RequestBody JournalEntryTO entry) {
+	public JournalEntryTO createEntry(@Valid @RequestPart("entry") JournalEntryTO entry,
+			@RequestPart(value = "attachment", required = false) MultipartFile attachment) {
 		if (exists(entry.getDate(), entry.getValue(), entry.getDescription())) {
 			throw new IllegalArgumentException("Ja' existe lançamento semelhante.");
 		}
 
-		final JournalEntry saved = repo.save(mergeTags(mapper.asEntity(entry)));
+		final JournalEntry mapped = mergeTags(mapper.asEntity(entry));
+		final JournalEntry saved = repo.save(mapped);
 
-		JournalEntryTO response = mapper.asTO(saved);
+		if (attachment != null) {
+			try {
+				attachmRepo.save(
+						new Attachment(saved.getEntryId(), attachment.getOriginalFilename(), attachment.getBytes()));
+			} catch (final IOException e) {
+				throw new IllegalStateException("Falha ao converter bytes em Bytes.", e);
+			}
+		}
 
-		return response;
+		return mapper.asTO(saved);
 	}
 
 	@Override
@@ -100,9 +120,7 @@ public class JournalEntryController implements JournalEntryService {
 		account.setEntryId(id);
 		JournalEntry saved = repo.save(mapper.asEntity(account));
 
-		JournalEntryTO response = mapper.asTO(saved);
-
-		return response;
+		return mapper.asTO(saved);
 	}
 
 	/*
@@ -140,8 +158,7 @@ public class JournalEntryController implements JournalEntryService {
 		if (!found.isPresent()) {
 			return null;
 		}
-		JournalEntryTO response = mapper.asTO(found.get());
-		return response;
+		return mapper.asTO(found.get());
 	}
 
 	/*
@@ -187,6 +204,24 @@ public class JournalEntryController implements JournalEntryService {
 		entity.getTags().removeAll(tagWithIds);
 		tagWithIds.forEach(t -> tagRepo.findById(t.getTagId()).ifPresent(f -> entity.getTags().add(f)));
 		return entity;
+	}
+
+	@Override
+	@GetMapping(value = "/{id}/attachment")
+	public ResponseEntity<byte[]> retrieveAttachment(@PathVariable("id") Long id) {
+		final Optional<JournalEntry> found = repo.findById(id);
+		if (!found.isPresent()) {
+			return ResponseEntity.notFound().build();
+		}
+		final Optional<Attachment> attachment = attachmRepo.findByEntryId(found.get().getEntryId());
+		if (attachment.isPresent()) {
+			return ResponseEntity.ok()
+					.header(HttpHeaders.CONTENT_DISPOSITION,
+							"attachment; filename=\"" + attachment.get().getFileName() + "\"")
+					.body(attachment.get().getContent());
+		} else {
+			return ResponseEntity.notFound().build();
+		}
 	}
 
 }

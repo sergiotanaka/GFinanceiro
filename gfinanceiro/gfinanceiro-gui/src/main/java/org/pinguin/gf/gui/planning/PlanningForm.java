@@ -47,7 +47,7 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 /**
- * IHM "Planejamento"
+ * IHM "Planejamento". É a janela principal do planejamento.
  */
 public class PlanningForm extends AnchorPane {
 

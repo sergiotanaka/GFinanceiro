@@ -4,6 +4,7 @@ import static java.util.Optional.empty;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -41,10 +42,8 @@ public class AccountListPresenter {
 		if (nameProperty.getValue() == null || nameProperty.getValue().isEmpty()) {
 			retrieved.addAll(service.retrieveAll(empty(), empty(), empty(), empty(), empty()));
 		} else {
-			// retrieved.addAll(
-			// service.retrieveAccountByParams("select a from Account a where upper(name)
-			// like upper(:name)",
-			// new ParameterTO<String>("name", "%" + nameProperty.getValue() + "%")));
+			retrieved.addAll(service.retrieveAll(Optional.of("name=@" + nameProperty.getValue()), empty(), empty(),
+					empty(), empty()));
 		}
 		this.accounts.clear();
 		this.accounts.addAll(retrieved);

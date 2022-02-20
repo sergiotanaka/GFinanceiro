@@ -4,10 +4,13 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
+
 public interface JournalEntryService {
 
-	JournalEntryTO createEntry(JournalEntryTO entry);
-
+	JournalEntryTO createEntry(JournalEntryTO entry, MultipartFile file);
+	
 	boolean exists(LocalDateTime date, BigDecimal value, String description);
 
 	JournalEntryTO updateEntry(Long id, JournalEntryTO account);
@@ -17,5 +20,7 @@ public interface JournalEntryService {
 	JournalEntryTO retrieveById(Long id);
 
 	List<JournalEntryTO> retrieveAll();
+	
+	ResponseEntity<byte[]> retrieveAttachment(Long id);
 
 }

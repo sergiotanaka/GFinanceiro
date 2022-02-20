@@ -1,5 +1,7 @@
 package org.pinguin.gf.app.service;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -9,10 +11,16 @@ import javax.inject.Inject;
 import org.pinguin.gf.service.api.journalentry.JournalEntryService;
 import org.pinguin.gf.service.api.journalentry.JournalEntryTO;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 public class JournalEntryServiceProxy implements JournalEntryService {
@@ -25,8 +33,22 @@ public class JournalEntryServiceProxy implements JournalEntryService {
 	private RestTemplate restTemplate;
 
 	@Override
-	public JournalEntryTO createEntry(JournalEntryTO entry) {
-		return restTemplate.postForObject(entryResourceUrl, new HttpEntity<>(entry), JournalEntryTO.class);
+	public JournalEntryTO createEntry(JournalEntryTO entry, MultipartFile attachment) {
+		final HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+		final MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+		body.add("entry", entry);
+		if (attachment != null) {
+			try {
+				final File tempFile = new File(System.getProperty("java.io.tmpdir"), attachment.getOriginalFilename());
+				tempFile.deleteOnExit();
+				attachment.transferTo(tempFile);
+				body.add("attachment", new FileSystemResource(tempFile));
+			} catch (IllegalStateException | IOException e) {
+				throw new IllegalStateException("Falha ao anexar.", e);
+			}
+		}
+		return restTemplate.postForObject(entryResourceUrl, new HttpEntity<>(body, headers), JournalEntryTO.class);
 	}
 
 	@Override
@@ -61,6 +83,12 @@ public class JournalEntryServiceProxy implements JournalEntryService {
 		final ResponseEntity<List<JournalEntryTO>> response = restTemplate.exchange(entryResourceUrl, HttpMethod.GET,
 				null, entryListTypeRef);
 		return response.getBody();
+	}
+
+	@Override
+	public ResponseEntity<byte[]> retrieveAttachment(Long id) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

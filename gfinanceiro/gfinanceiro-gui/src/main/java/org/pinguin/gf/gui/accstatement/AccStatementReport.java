@@ -126,6 +126,7 @@ public class AccStatementReport extends AnchorPane {
 			sb.append(item.getOrigin().getName()).append("\t");
 			sb.append(item.getAccount().getName()).append("\t");
 			sb.append(item.getDescription()).append("\t");
+			sb.append(item.getTags()).append("\t");
 			sb.append(format(item.getValue())).append("\t");
 			sb.append(format(item.getBalance())).append("\n");
 		}

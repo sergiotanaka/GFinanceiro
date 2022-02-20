@@ -1,6 +1,12 @@
 package org.pinguin.gf.gui.journalentry;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Calendar;
@@ -10,6 +16,9 @@ import java.util.function.Function;
 
 import javax.inject.Inject;
 
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.disk.DiskFileItem;
+import org.apache.commons.io.IOUtils;
 import org.pinguin.gf.service.api.account.AccountTO;
 import org.pinguin.gf.service.api.journalentry.JournalEntryService;
 import org.pinguin.gf.service.api.journalentry.JournalEntryTO;
@@ -18,6 +27,7 @@ import org.pinguin.gui.util.BindHelper;
 import org.pinguin.gui.util.EditMode;
 import org.pinguin.gui.util.PropertyAdapter;
 import org.pinguin.gui.util.ValueConverter;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -42,6 +52,7 @@ public class JournalEntryPresenter {
 	private final Property<String> valueProperty = new SimpleObjectProperty<>("");
 	private final Property<Calendar> dateProperty = new SimpleObjectProperty<>(GregorianCalendar.getInstance());
 	private final Property<String> descriptionProperty = new SimpleObjectProperty<>("");
+	private final Property<String> attachmentProperty = new SimpleObjectProperty<>("");
 	private final Property<Boolean> futureProperty = new SimpleBooleanProperty(false);
 
 	private EditMode editMode = EditMode.CREATE;
@@ -88,6 +99,10 @@ public class JournalEntryPresenter {
 		return descriptionProperty;
 	}
 
+	public Property<String> attachmentProperty() {
+		return attachmentProperty;
+	}
+
 	public Property<Boolean> futureProperty() {
 		return futureProperty;
 	}
@@ -127,8 +142,8 @@ public class JournalEntryPresenter {
 
 					@Override
 					public LocalDateTime convert1(Calendar value) {
-						TimeZone tz = value.getTimeZone();
-						ZoneId zid = tz == null ? ZoneId.systemDefault() : tz.toZoneId();
+						final TimeZone tz = value.getTimeZone();
+						final ZoneId zid = tz == null ? ZoneId.systemDefault() : tz.toZoneId();
 						return LocalDateTime.ofInstant(value.toInstant(), zid);
 					}
 
@@ -175,7 +190,21 @@ public class JournalEntryPresenter {
 	public void save() {
 		if (editMode.equals(EditMode.CREATE)) {
 			try {
-				service.createEntry(to);
+				final File file = new File(attachmentProperty.getValue());
+
+				final FileItem fileItem = new DiskFileItem("mainFile", Files.probeContentType(file.toPath()), false,
+						file.getName(), (int) file.length(), file.getParentFile());
+
+				try {
+					InputStream input = new FileInputStream(file);
+					OutputStream os = fileItem.getOutputStream();
+					IOUtils.copy(input, os);
+				} catch (IOException ex) {
+					// do something.
+					throw new IllegalStateException("Falha ao anexar arquivo.", ex);
+				}
+
+				service.createEntry(to, new CommonsMultipartFile(fileItem));
 				clearForm();
 			} catch (final Exception e) {
 				final Alert a = new Alert(AlertType.ERROR);

@@ -69,8 +69,24 @@ public class AccountServiceProxy implements AccountService {
 	@Override
 	public List<AccountTO> retrieveAll(Optional<String> filters, Optional<String> sort, Optional<String> page,
 			Optional<String> pageSize, Optional<String> fields) {
-		final ResponseEntity<List<AccountTO>> response = restTemplate.exchange(accountResourceUrl, HttpMethod.GET, null,
-				accListTypeRef);
+		final UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(accountResourceUrl);
+		if (filters.isPresent()) {
+			builder.queryParam("filters", filters.get());
+		}
+		if (sort.isPresent()) {
+			builder.queryParam("sort", sort.get());
+		}
+		if (page.isPresent()) {
+			builder.queryParam("page", page.get());
+		}
+		if (pageSize.isPresent()) {
+			builder.queryParam("pageSize", pageSize.get());
+		}
+		if (fields.isPresent()) {
+			builder.queryParam("fields", fields.get());
+		}
+		final ResponseEntity<List<AccountTO>> response = restTemplate.exchange(builder.build().encode().toUri(),
+				HttpMethod.GET, null, accListTypeRef);
 		return response.getBody();
 	}
 

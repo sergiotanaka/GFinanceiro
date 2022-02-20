@@ -37,9 +37,7 @@ public class JournalEntry {
 	private BigDecimal value;
 	private LocalDateTime date;
 	private Boolean future = false;
-
 	private String description;
-
 	@ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH })
 	private List<Tag> tags = new ArrayList<>();
 

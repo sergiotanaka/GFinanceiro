@@ -52,13 +52,20 @@
 				<TextField fx:id="descriptionText" GridPane.rowIndex="4"
 					GridPane.columnIndex="1" />
 
-				<Label text="Tags:" GridPane.rowIndex="5" GridPane.columnIndex="0" />
-				<TagBar fx:id="tagBar" GridPane.rowIndex="5" GridPane.columnIndex="1" />
+				<Label text="Anexo:" GridPane.rowIndex="5"
+					GridPane.columnIndex="0" />
+				<TextField fx:id="attachmentText" GridPane.rowIndex="5"
+					GridPane.columnIndex="1" />
+				<Button text="..." onAction="#attach" GridPane.rowIndex="5"
+					GridPane.columnIndex="2" />
+
+				<Label text="Tags:" GridPane.rowIndex="6"
+					GridPane.columnIndex="0" />
+				<TagBar fx:id="tagBar" GridPane.rowIndex="6"
+					GridPane.columnIndex="1" />
 
 				<CheckBox fx:id="futureCheck" text="Futuro"
-					GridPane.rowIndex="6" GridPane.columnIndex="0" />
-
-
+					GridPane.rowIndex="7" GridPane.columnIndex="0" />
 
 			</GridPane>
 			<HBox spacing="10" alignment="CENTER_RIGHT">

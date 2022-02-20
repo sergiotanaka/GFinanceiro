@@ -1,5 +1,6 @@
 package org.pinguin.gf.gui.journalentry;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
@@ -21,6 +22,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.AnchorPane;
+import javafx.stage.FileChooser;
 import javafx.util.StringConverter;
 import jfxtras.scene.control.CalendarTextField;
 
@@ -39,6 +41,8 @@ public class JournalEntryForm extends AnchorPane {
 	private CalendarTextField dateText;
 	@FXML
 	private TextField descriptionText;
+	@FXML
+	private TextField attachmentText;
 	@FXML
 	private TagBar<TagTO> tagBar;
 	@FXML
@@ -102,6 +106,7 @@ public class JournalEntryForm extends AnchorPane {
 		valueText.textProperty().bindBidirectional(presenter.valueProperty());
 		dateText.calendarProperty().bindBidirectional(presenter.dateProperty());
 		descriptionText.textProperty().bindBidirectional(presenter.descriptionProperty());
+		attachmentText.textProperty().bindBidirectional(presenter.attachmentProperty());
 		tagBar.setTags(presenter.getTags());
 		tagBar.setCandidates(presenter.getCandidateTags());
 		futureCheck.selectedProperty().bindBidirectional(presenter.futureProperty());
@@ -132,4 +137,13 @@ public class JournalEntryForm extends AnchorPane {
 	public void cancel(ActionEvent evt) {
 		presenter.cancel();
 	}
+
+	@FXML
+	public void attach(ActionEvent evt) {
+		final FileChooser fileChooser = new FileChooser();
+		fileChooser.setTitle("Select attachment");
+		final File selected = fileChooser.showOpenDialog(this.getScene().getWindow());
+		presenter.attachmentProperty().setValue(selected.getAbsolutePath());
+	}
+
 }
